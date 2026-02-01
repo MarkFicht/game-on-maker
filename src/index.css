@@ -2,95 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* 
+  WORD GAME - Design System
+  Vibrant, playful mobile-first design for party word game
+  Inspired by: Heads Up!, Taboo, modern gaming apps
 */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    /* Core game palette - Energetic warm tones */
+    --background: 240 15% 8%;
+    --foreground: 45 20% 95%;
+    
+    --card: 240 12% 12%;
+    --card-foreground: 45 20% 95%;
+    
+    --popover: 240 12% 10%;
+    --popover-foreground: 45 20% 95%;
+    
+    /* Primary - Electric orange/coral for actions */
+    --primary: 18 95% 55%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Deep purple accent */
+    --secondary: 265 60% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Success - Neon green for correct */
+    --success: 145 80% 45%;
+    --success-foreground: 0 0% 100%;
+    
+    /* Warning/Skip - Amber */
+    --warning: 38 95% 55%;
+    --warning-foreground: 0 0% 10%;
+    
+    /* Muted surfaces */
+    --muted: 240 10% 16%;
+    --muted-foreground: 240 5% 55%;
+    
+    /* Accent - Cyan highlight */
+    --accent: 185 85% 50%;
+    --accent-foreground: 0 0% 10%;
+    
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 240 10% 20%;
+    --input: 240 10% 18%;
+    --ring: 18 95% 55%;
+    
+    --radius: 1rem;
+    
+    /* Game-specific tokens */
+    --timer-gradient: linear-gradient(135deg, hsl(18 95% 55%), hsl(38 95% 55%));
+    --card-gradient: linear-gradient(145deg, hsl(240 12% 14%), hsl(240 12% 10%));
+    --success-gradient: linear-gradient(135deg, hsl(145 80% 45%), hsl(160 75% 40%));
+    --skip-gradient: linear-gradient(135deg, hsl(38 95% 55%), hsl(28 90% 50%));
+    --premium-gradient: linear-gradient(135deg, hsl(265 60% 50%), hsl(285 70% 55%));
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    
+    /* Shadows */
+    --shadow-glow: 0 0 40px -10px hsl(18 95% 55% / 0.4);
+    --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+    --shadow-button: 0 4px 20px -4px;
+    
+    /* Sidebar - keeping defaults */
+    --sidebar-background: 240 12% 10%;
+    --sidebar-foreground: 45 20% 95%;
+    --sidebar-primary: 18 95% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 240 10% 16%;
+    --sidebar-accent-foreground: 45 20% 95%;
+    --sidebar-border: 240 10% 20%;
+    --sidebar-ring: 18 95% 55%;
+  }
+  
+  /* Light mode for those who prefer it */
+  .light {
+    --background: 45 30% 97%;
+    --foreground: 240 15% 10%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 240 15% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 15% 10%;
+    
+    --primary: 18 95% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 265 55% 55%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 45 20% 92%;
+    --muted-foreground: 240 5% 40%;
+    
+    --accent: 185 75% 45%;
+    --accent-foreground: 0 0% 100%;
+    
+    --border: 45 15% 88%;
+    --input: 45 15% 90%;
+    --ring: 18 95% 50%;
+    
+    --card-gradient: linear-gradient(145deg, hsl(0 0% 100%), hsl(45 20% 97%));
+    --glass: rgba(0, 0, 0, 0.02);
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.12);
   }
 }
 
@@ -98,8 +118,161 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
+  
+  html {
+    font-family: 'Outfit', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+@layer components {
+  /* Game typography */
+  .font-display {
+    font-family: 'Space Grotesk', 'Outfit', system-ui, sans-serif;
+    font-weight: 700;
+  }
+  
+  /* Glass morphism card */
+  .glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+  }
+  
+  /* Game card with gradient */
+  .game-card {
+    background: var(--card-gradient);
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius);
+  }
+  
+  /* Primary action button */
+  .btn-game {
+    @apply relative overflow-hidden font-semibold transition-all duration-200;
+    background: var(--timer-gradient);
+    box-shadow: var(--shadow-button) hsl(var(--primary) / 0.4);
+  }
+  
+  .btn-game:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-button) hsl(var(--primary) / 0.6);
+  }
+  
+  .btn-game:active {
+    transform: translateY(0);
+  }
+  
+  /* Success button */
+  .btn-success {
+    background: var(--success-gradient);
+    box-shadow: var(--shadow-button) hsl(var(--success) / 0.4);
+  }
+  
+  .btn-success:hover {
+    box-shadow: var(--shadow-button) hsl(var(--success) / 0.6);
+  }
+  
+  /* Skip/Warning button */
+  .btn-skip {
+    background: var(--skip-gradient);
+    box-shadow: var(--shadow-button) hsl(var(--warning) / 0.4);
+  }
+  
+  /* Premium gradient */
+  .premium-gradient {
+    background: var(--premium-gradient);
+  }
+  
+  /* Glow effect */
+  .glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  /* Timer ring animation */
+  .timer-ring {
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.1s linear;
+  }
+  
+  /* Word card animation */
+  .word-card {
+    @apply game-card;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+  
+  /* Safe area padding for mobile */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  .safe-x {
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* Text gradients */
+  .text-gradient-primary {
+    background: var(--timer-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .text-gradient-premium {
+    background: var(--premium-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Prevent text selection during game */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
   }
 }

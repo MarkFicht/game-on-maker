@@ -1,73 +1,53 @@
-# Welcome to your Lovable project
+# WordRush 🎯
 
-## Project info
+Fast-paced word guessing party game built as a Progressive Web App (PWA).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🎮 Features
 
-## How can I edit this code?
+- **Multiple Decks**: Movies, Animals, Sports, Food + Premium decks
+- **Timer-based gameplay**: 60 seconds to guess as many words as possible
+- **Offline support**: PWA works without internet, installable on home screen
+- **Premium features**: Remove ads + unlock premium decks (mock implementation)
 
-There are several ways of editing your application.
+## 🚀 Quick Start
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 📱 PWA Installation
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **iOS**: Share → "Add to Home Screen"
+- **Android**: Menu → "Install app"
 
-**Use GitHub Codespaces**
+## 📁 Structure
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+src/
+├── game/        # Game engine (UI-independent, portable)
+├── services/    # Ads, billing, storage, analytics (mocks)
+├── hooks/       # React hooks for game state
+├── components/  # UI components
+└── pages/       # App screens
+```
 
-## What technologies are used for this project?
+## 💰 Monetization (Mock)
 
-This project is built with:
+- **Ads**: `src/services/ads.ts` - feature flag controlled
+- **Billing**: `src/services/billing.ts` - localStorage persistence
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+For production, replace with RevenueCat (mobile) or Stripe (web).
 
-## How can I deploy this project?
+## 🔄 Converting to React Native
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+1. Copy `src/game/` and `src/services/` (100% portable)
+2. Replace localStorage with AsyncStorage
+3. Reimplement UI with React Native components
 
-## Can I connect a custom domain to my Lovable project?
+## 📋 Publication Checklist
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- [ ] Real Privacy Policy
+- [ ] GDPR consent for ads (EU)
+- [ ] App Store/Play Store IAP setup
+- [ ] ATT prompt (iOS 14.5+)
