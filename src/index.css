@@ -179,10 +179,10 @@
     @apply relative overflow-hidden font-semibold transition-all duration-200;
     background: var(--timer-gradient);
     box-shadow: var(--shadow-button) hsl(var(--primary) / 0.4);
+
   }
   
   .btn-game:hover {
-    transform: translateY(-2px);
     box-shadow: var(--shadow-button) hsl(var(--primary) / 0.6);
   }
   

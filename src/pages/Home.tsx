@@ -78,6 +78,7 @@ export default function Home() {
           >
             <Link to="/paywall">
               <Button
+                onClick={() => audioService.play('tap')}
                 variant="outline"
                 className="rounded-xl border-secondary/50 hover:border-secondary text-secondary hover:bg-secondary/10"
               >

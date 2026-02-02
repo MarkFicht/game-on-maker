@@ -28,6 +28,7 @@ export default function Game() {
     markCorrect,
     markSkipped,
     endGame,
+    reset,
   } = useGame();
   
   const deck = deckId ? getDeckById(deckId) : null;
@@ -105,6 +106,7 @@ export default function Game() {
   
   const handleCancelGame = () => {
     audioService.play('tap');
+    reset();
     navigate('/decks');
   };
   
@@ -141,7 +143,8 @@ export default function Game() {
   
   const handleEndGame = () => {
     audioService.play('tap');
-    endGame();
+    reset();
+    navigate('/decks');
   };
   
   return (

@@ -49,6 +49,7 @@ export function GameActions({
         {allowSkip && (
           <motion.div 
             className="flex-1"
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
           >
             <Button
@@ -65,6 +66,7 @@ export function GameActions({
         {/* Correct button */}
         <motion.div 
           className="flex-1"
+          whileHover={{ scale: 1.01 }}    
           whileTap={{ scale: 0.98 }}
         >
           <Button
