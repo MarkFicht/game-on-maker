@@ -12,6 +12,7 @@ export interface UseGameReturn {
   resumeGame: () => void;
   markCorrect: () => void;
   markSkipped: () => void;
+  endGame: () => void;
   reset: () => void;
   updateConfig: (config: Partial<GameConfig>) => void;
 }
@@ -79,6 +80,10 @@ export function useGame(initialConfig?: Partial<GameConfig>): UseGameReturn {
     engine.reset();
   }, [engine]);
   
+  const endGame = useCallback(() => {
+    engine.endGame();
+  }, [engine]);
+  
   const updateConfig = useCallback((config: Partial<GameConfig>) => {
     engine.updateConfig(config);
     setState(engine.getState());
@@ -93,6 +98,7 @@ export function useGame(initialConfig?: Partial<GameConfig>): UseGameReturn {
     resumeGame,
     markCorrect,
     markSkipped,
+    endGame,
     reset,
     updateConfig,
   };

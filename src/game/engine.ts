@@ -168,7 +168,7 @@ export class GameEngine {
     const nextIndex = this.state.currentWordIndex + 1;
     
     if (nextIndex >= this.state.shuffledWords.length) {
-      this.endGame();
+      this.finishGame();
       return;
     }
     
@@ -181,7 +181,7 @@ export class GameEngine {
   private startTimer(): void {
     this.timerInterval = setInterval(() => {
       if (this.state.timeRemaining <= 0) {
-        this.endGame();
+        this.finishGame();
         return;
       }
       
@@ -189,7 +189,7 @@ export class GameEngine {
       this.emit({ type: 'TIME_UPDATED', timeRemaining: this.state.timeRemaining });
       
       if (this.state.timeRemaining <= 0) {
-        this.endGame();
+        this.finishGame();
       }
     }, 1000);
   }
@@ -201,10 +201,16 @@ export class GameEngine {
     }
   }
   
-  private endGame(): void {
+  private finishGame(): void {
     this.stopTimer();
     this.state.status = 'finished';
     this.emit({ type: 'GAME_FINISHED', stats: this.getStats() });
+  }
+  
+  // Public method to end game early
+  endGame(): void {
+    if (this.state.status !== 'playing' && this.state.status !== 'paused') return;
+    this.finishGame();
   }
   
   // Reset

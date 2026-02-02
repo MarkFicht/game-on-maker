@@ -3,20 +3,28 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Crown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { SoundToggle } from '@/components/SoundToggle';
 import { DeckCard } from '@/components/game/DeckCard';
 import { sampleDecks } from '@/game/decks';
 import { useHasPremiumDecks } from '@/hooks/usePremium';
+import { audioService } from '@/services/audio';
 
 export default function Decks() {
   const navigate = useNavigate();
   const hasPremiumDecks = useHasPremiumDecks();
   
   const handleSelectDeck = (deck: typeof sampleDecks[0]) => {
+    audioService.play('tap');
     navigate(`/game/${deck.id}`);
   };
   
   const handleUnlockPremium = () => {
+    audioService.play('tap');
     navigate('/paywall');
+  };
+  
+  const handleBack = () => {
+    audioService.play('tap');
   };
   
   const freeDecks = sampleDecks.filter(d => !d.isPremium);
@@ -25,8 +33,8 @@ export default function Decks() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
       {/* Header */}
-      <header className="flex items-center gap-4 p-4 border-b border-border/50">
-        <Link to="/">
+      <header className="flex items-center justify-between p-4 border-b border-border/50">
+        <Link to="/" onClick={handleBack}>
           <Button variant="ghost" size="icon">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -34,6 +42,7 @@ export default function Decks() {
         <h1 className="font-display text-xl font-bold text-foreground">
           Choose a Deck
         </h1>
+        <SoundToggle />
       </header>
       
       {/* Deck list */}

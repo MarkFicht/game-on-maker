@@ -3,7 +3,9 @@ import { motion } from 'framer-motion';
 import { Play, Settings, Crown, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { SoundToggle } from '@/components/SoundToggle';
 import { useHasRemoveAds } from '@/hooks/usePremium';
+import { audioService } from '@/services/audio';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ export default function Home() {
     <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
       {/* Header */}
       <header className="flex items-center justify-between p-4">
-        <div className="w-10" /> {/* Spacer */}
+        <SoundToggle />
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -51,13 +53,15 @@ export default function Home() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="w-full max-w-xs"
         >
           <Button
             size="lg"
-            onClick={() => navigate('/decks')}
+            onClick={() => {
+              audioService.play('tap');
+              navigate('/decks');
+            }}
             className="w-full h-16 text-xl font-bold btn-game rounded-2xl glow text-primary-foreground"
           >
             <Play className="w-6 h-6 mr-3" fill="currentColor" />

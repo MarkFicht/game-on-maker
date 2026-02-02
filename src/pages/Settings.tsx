@@ -1,4 +1,5 @@
 // Settings Page
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Volume2, Vibrate, Shield, RefreshCw, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -8,15 +9,31 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useSettings } from '@/hooks/useSettings';
 import { usePremium } from '@/hooks/usePremium';
+import { audioService } from '@/services/audio';
 import { toast } from 'sonner';
 
 export default function Settings() {
   const { settings, updateSettings, loading: settingsLoading } = useSettings();
   const { restore, status, loading: premiumLoading } = usePremium();
+  const [soundMuted, setSoundMuted] = useState(audioService.isMuted());
+  
+  useEffect(() => {
+    const unsubscribe = audioService.subscribe(muted => setSoundMuted(muted));
+    return unsubscribe;
+  }, []);
+  
+  const handleSoundToggle = (enabled: boolean) => {
+    audioService.setMuted(!enabled);
+    if (enabled) {
+      audioService.play('tap');
+    }
+  };
   
   const handleRestorePurchases = async () => {
+    audioService.play('tap');
     await restore();
     if (status.isActive) {
+      audioService.play('unlock');
       toast.success('Purchases restored!');
     } else {
       toast.info('No purchases found.');
@@ -96,8 +113,8 @@ export default function Settings() {
               <p className="font-medium text-foreground">Sound Effects</p>
             </div>
             <Switch
-              checked={settings.soundEnabled}
-              onCheckedChange={(checked) => updateSettings({ soundEnabled: checked })}
+              checked={!soundMuted}
+              onCheckedChange={handleSoundToggle}
             />
           </div>
           
