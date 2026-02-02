@@ -23,7 +23,6 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock }: DeckCardProps) 
   return (
     <motion.button
       onClick={handleClick}
-      whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
         "game-card w-full p-5 text-left transition-all relative overflow-hidden",
