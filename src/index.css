@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* 
   WORD GAME - Design System
   Vibrant, playful mobile-first design for party word game
@@ -9,6 +5,10 @@
 */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   :root {
@@ -116,7 +116,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   
   html {
@@ -126,7 +126,10 @@
   }
   
   body {
-    @apply bg-background text-foreground antialiased;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     min-height: 100dvh;
     overscroll-behavior: none;
   }
@@ -176,10 +179,12 @@
   
   /* Primary action button */
   .btn-game {
-    @apply relative overflow-hidden font-semibold transition-all duration-200;
+    position: relative;
+    overflow: hidden;
+    font-weight: 600;
+    transition: all 200ms;
     background: var(--timer-gradient);
     box-shadow: var(--shadow-button) hsl(var(--primary) / 0.4);
-
   }
   
   .btn-game:hover {
@@ -224,7 +229,9 @@
   
   /* Word card animation */
   .word-card {
-    @apply game-card;
+    background: var(--card-gradient);
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius);
     transform-style: preserve-3d;
     perspective: 1000px;
   }

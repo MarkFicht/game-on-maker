@@ -48,7 +48,7 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock }: DeckCardProps) 
         <span className="text-4xl">{deck.icon}</span>
         
         {/* Content */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pr-14">
           <div className="flex items-center gap-2">
             <h3 className="font-display text-lg font-bold text-foreground truncate">
               {deck.name}
@@ -60,17 +60,18 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock }: DeckCardProps) 
           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
             {deck.description}
           </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            {deck.words.length} words
-          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <p className="text-xs text-muted-foreground">
+              {deck.words.length} words
+            </p>
+            {/* Premium badge inline */}
+            {deck.isPremium && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full premium-gradient text-white whitespace-nowrap">
+                PRO
+              </span>
+            )}
+          </div>
         </div>
-        
-        {/* Premium badge */}
-        {deck.isPremium && (
-          <span className="absolute top-3 right-3 text-xs font-semibold px-2 py-1 rounded-full premium-gradient text-white">
-            PRO
-          </span>
-        )}
       </div>
     </motion.button>
   );

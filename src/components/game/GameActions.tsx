@@ -42,9 +42,9 @@ export function GameActions({
   }
   
   return (
-    <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
+    <div className="flex flex-col gap-3 w-full max-w-md mx-auto px-1">
       {/* Main action buttons */}
-      <div className="flex gap-4">
+      <div className="flex gap-2">
         {/* Skip button */}
         {allowSkip && (
           <motion.div 
@@ -55,10 +55,10 @@ export function GameActions({
             <Button
               size="lg"
               onClick={onSkip}
-              className="btn-skip w-full h-20 text-xl font-bold text-warning-foreground rounded-2xl"
+              className="btn-skip w-full h-14 text-base font-bold text-warning-foreground rounded-xl px-2"
             >
-              <SkipForward className="w-7 h-7 mr-2" />
-              Pass
+              <SkipForward className="w-5 h-5" />
+              <span className="ml-1">Pass</span>
             </Button>
           </motion.div>
         )}
@@ -72,10 +72,10 @@ export function GameActions({
           <Button
             size="lg"
             onClick={onCorrect}
-            className="btn-success w-full h-20 text-xl font-bold text-success-foreground rounded-2xl"
+            className="btn-success w-full h-14 text-base font-bold text-success-foreground rounded-xl px-2"
           >
-            <Check className="w-7 h-7 mr-2" />
-            Correct!
+            <Check className="w-5 h-5" />
+            <span className="ml-1">Got it!</span>
           </Button>
         </motion.div>
       </div>

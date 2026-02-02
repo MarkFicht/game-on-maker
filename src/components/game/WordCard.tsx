@@ -9,7 +9,7 @@ interface WordCardProps {
 
 export function WordCard({ word, deckIcon }: WordCardProps) {
   return (
-    <div className="relative w-full max-w-md mx-auto aspect-[4/3]">
+    <div className="relative w-full max-w-md mx-auto aspect-[4/3] md:aspect-[5/3]">
       <AnimatePresence mode="wait">
         {word && (
           <motion.div
@@ -23,11 +23,11 @@ export function WordCard({ word, deckIcon }: WordCardProps) {
               damping: 25,
               duration: 0.3 
             }}
-            className="word-card absolute inset-0 flex flex-col items-center justify-center p-8 no-select"
+            className="word-card absolute inset-0 flex flex-col items-center justify-center p-6 md:p-8 no-select"
           >
             {/* Deck icon */}
             {deckIcon && (
-              <span className="absolute top-4 left-4 text-3xl opacity-50">
+              <span className="absolute top-3 left-3 md:top-4 md:left-4 text-2xl md:text-3xl opacity-50">
                 {deckIcon}
               </span>
             )}

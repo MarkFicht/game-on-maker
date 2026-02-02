@@ -63,8 +63,11 @@ export function TimerRing({
       {/* Time display */}
       <div className="absolute inset-0 flex items-center justify-center">
         <span 
-          className="font-display text-3xl font-bold transition-colors duration-300"
-          style={{ color: getColor() }}
+          className="font-display font-bold transition-colors duration-300"
+          style={{ 
+            color: getColor(),
+            fontSize: size > 100 ? '1.875rem' : '1.25rem'
+          }}
         >
           {formatTime(timeRemaining)}
         </span>

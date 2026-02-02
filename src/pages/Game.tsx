@@ -1,5 +1,5 @@
 // Game Play Page
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, XCircle, Home } from 'lucide-react';
@@ -17,6 +17,7 @@ export default function Game() {
   const navigate = useNavigate();
   const [gamePhase, setGamePhase] = useState<'ready' | 'countdown' | 'playing'>('ready');
   const [countdown, setCountdown] = useState(3);
+  const lastWarningTimeRef = useRef<number>(-1);
   
   const {
     state,
@@ -58,10 +59,19 @@ export default function Game() {
     return () => clearInterval(timer);
   }, [deck, gamePhase, startGame]);
   
-  // Play time warning sounds in last 10 seconds
+  // Play time warning sounds in last 10 seconds - only once per second
   useEffect(() => {
     if (state.status === 'playing' && state.timeRemaining <= 10 && state.timeRemaining > 0) {
-      audioService.playTimeWarning();
+      // Only play if we haven't played for this time value yet
+      if (lastWarningTimeRef.current !== state.timeRemaining) {
+        lastWarningTimeRef.current = state.timeRemaining;
+        audioService.playTimeWarning();
+      }
+    }
+    
+    // Reset ref when game is not playing
+    if (state.status !== 'playing') {
+      lastWarningTimeRef.current = -1;
     }
   }, [state.timeRemaining, state.status]);
   
@@ -262,49 +272,57 @@ export default function Game() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col p-4"
+            className="flex-1 flex flex-col overflow-hidden"
           >
-            {/* Header with sound toggle */}
-            <div className="flex justify-end mb-2">
+            {/* Header - consistent across all views */}
+            <header className="flex items-center justify-end p-4 shrink-0">
               <SoundToggle size="sm" />
-            </div>
+            </header>
             
-            {/* Timer */}
-            <div className="flex justify-center pb-6">
-              <TimerRing
-                timeRemaining={state.timeRemaining}
-                totalTime={state.totalTime}
-                size={140}
-                strokeWidth={10}
-              />
-            </div>
-            
-            {/* Score indicator */}
-            <div className="flex justify-center gap-8 mb-6">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-success">{stats.correctCount}</p>
-                <p className="text-xs text-muted-foreground">Correct</p>
+            <div className="flex-1 flex flex-col px-3 pb-3 md:px-4 md:pb-4 overflow-y-auto">
+              {/* Timer - always centered, size changes based on screen */}
+              <div className="flex justify-center pb-2 pt-2">
+                <div className="md:hidden">
+                  <TimerRing
+                    timeRemaining={state.timeRemaining}
+                    totalTime={state.totalTime}
+                    size={70}
+                    strokeWidth={6}
+                  />
+                </div>
+                <div className="hidden md:block">
+                  <TimerRing
+                    timeRemaining={state.timeRemaining}
+                    totalTime={state.totalTime}
+                    size={110}
+                    strokeWidth={8}
+                  />
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-warning">{stats.skippedCount}</p>
-                <p className="text-xs text-muted-foreground">Skipped</p>
+              
+              {/* Score indicator */}
+              <div className="flex justify-center gap-6 md:gap-8 mb-3 md:mb-4">
+                <div className="text-center">
+                  <p className="text-2xl md:text-3xl font-bold text-success">{stats.correctCount}</p>
+                  <p className="text-xs text-muted-foreground">Correct</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl md:text-3xl font-bold text-warning">{stats.skippedCount}</p>
+                  <p className="text-xs text-muted-foreground">Skipped</p>
+                </div>
               </div>
-            </div>
-            
-            {/* Word card */}
-            <div className="flex-1 flex items-center justify-center px-4">
-              <WordCard word={currentWord} deckIcon={deck.icon} />
-            </div>
-            
-            {/* Actions */}
-            <div className="py-6">
-              <GameActions
-                onCorrect={handleCorrect}
-                onSkip={handleSkip}
-                onPause={handlePause}
-                onResume={handleResume}
-                isPaused={false}
-              />
+              
+              {/* Word card and actions centered together */}
+              <div className="flex-1 flex flex-col items-center justify-center gap-4 md:gap-5 px-2 md:px-4 min-h-0">
+                <WordCard word={currentWord} deckIcon={deck.icon} />
+                <GameActions
+                  onCorrect={handleCorrect}
+                  onSkip={handleSkip}
+                  onPause={handlePause}
+                  onResume={handleResume}
+                  isPaused={false}
+                />
+              </div>
             </div>
           </motion.div>
         )}

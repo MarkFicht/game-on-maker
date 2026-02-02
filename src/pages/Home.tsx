@@ -80,7 +80,7 @@ export default function Home() {
               <Button
                 onClick={() => audioService.play('tap')}
                 variant="outline"
-                className="rounded-xl border-secondary/50 hover:border-secondary text-secondary hover:bg-secondary/10"
+                className="rounded-xl border-secondary/50 hover:border-secondary text-secondary hover:bg-secondary/20 hover:text-secondary-foreground"
               >
                 <Crown className="w-4 h-4 mr-2" />
                 Go Premium

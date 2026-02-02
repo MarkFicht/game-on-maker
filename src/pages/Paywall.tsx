@@ -158,20 +158,22 @@ export default function Paywall() {
               <Button
                 onClick={() => handlePurchase(product.id)}
                 disabled={purchasing}
-                className={`w-full h-auto py-4 rounded-xl justify-between ${
+                className={`w-full h-auto py-3 px-3 rounded-xl flex-col items-start gap-2 ${
                   product.id === 'premium_bundle' 
                     ? 'premium-gradient text-white border-0' 
                     : 'bg-card border border-border'
                 }`}
                 variant={product.id === 'premium_bundle' ? 'default' : 'outline'}
               >
-                <div className="text-left">
-                  <p className="font-bold">{product.name}</p>
-                  <p className="text-sm opacity-80">{product.description}</p>
+                <div className="text-left w-full">
+                  <div className="flex items-center justify-between w-full gap-2">
+                    <p className="font-bold text-base">{product.name}</p>
+                    <span className="font-display text-lg font-bold shrink-0">
+                      {product.price}
+                    </span>
+                  </div>
+                  <p className="text-xs opacity-80 mt-1">{product.description}</p>
                 </div>
-                <span className="font-display text-xl font-bold">
-                  {product.price}
-                </span>
               </Button>
               {product.id === 'premium_bundle' && (
                 <p className="text-center text-xs text-muted-foreground mt-1">
