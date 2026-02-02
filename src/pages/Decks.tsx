@@ -14,7 +14,7 @@ export default function Decks() {
   const hasPremiumDecks = useHasPremiumDecks();
   
   const handleSelectDeck = (deck: typeof sampleDecks[0]) => {
-    audioService.play('tap');
+    audioService.play('select');
     navigate(`/game/${deck.id}`);
   };
   

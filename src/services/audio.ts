@@ -11,7 +11,8 @@ export type SoundType =
   | 'timeWarning'
   | 'pause'
   | 'resume'
-  | 'unlock';
+  | 'unlock'
+  | 'select';
 
 // Web Audio Context for generating sounds
 let audioContext: AudioContext | null = null;
@@ -35,6 +36,7 @@ const soundConfigs: Record<SoundType, { frequency: number; duration: number; typ
   pause: { frequency: 400, duration: 0.1, type: 'sine', volume: 0.3 },
   resume: { frequency: 500, duration: 0.1, type: 'sine', volume: 0.3 },
   unlock: { frequency: 880, duration: 0.4, type: 'sine', volume: 0.4, attack: 0.05, decay: 0.3 },
+  select: { frequency: 520, duration: 0.12, type: 'sine', volume: 0.35, attack: 0.01, decay: 0.08 },
 };
 
 class AudioService {
