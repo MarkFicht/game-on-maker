@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Crown, Sparkles, Zap, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { usePremium } from '@/hooks/usePremium';
+import { audioService } from '@/services/audio';
 import { toast } from 'sonner';
 import { track } from '@/services/analytics';
 import { useEffect } from 'react';
@@ -23,9 +24,11 @@ export default function Paywall() {
   }, []);
   
   const handlePurchase = async (productId: 'remove_ads' | 'premium_decks' | 'premium_bundle') => {
+    audioService.play('tap');
     track('purchase_initiated', { productId });
     const success = await purchase(productId);
     if (success) {
+      audioService.play('unlock');
       track('purchase_completed', { productId });
       toast.success('Purchase successful! 🎉');
       navigate('/');
@@ -35,8 +38,10 @@ export default function Paywall() {
   };
   
   const handleRestore = async () => {
+    audioService.play('tap');
     await restore();
     if (status.isActive) {
+      audioService.play('unlock');
       toast.success('Purchases restored!');
       navigate('/');
     } else {
@@ -44,12 +49,16 @@ export default function Paywall() {
     }
   };
   
+  const handleBack = () => {
+    audioService.play('tap');
+  };
+  
   // If already premium, show success state
   if (status.hasRemoveAds && status.hasPremiumDecks) {
     return (
       <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
         <header className="flex items-center gap-4 p-4">
-          <Link to="/">
+          <Link to="/" onClick={handleBack}>
             <Button variant="ghost" size="icon">
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -82,7 +91,7 @@ export default function Paywall() {
     <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
       {/* Header */}
       <header className="flex items-center gap-4 p-4">
-        <Link to="/">
+        <Link to="/" onClick={handleBack}>
           <Button variant="ghost" size="icon">
             <ArrowLeft className="w-5 h-5" />
           </Button>

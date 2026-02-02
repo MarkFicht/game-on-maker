@@ -15,6 +15,7 @@ export interface Deck {
   isPremium: boolean;
   icon: string;
   color: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 export interface RoundResult {

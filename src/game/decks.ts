@@ -10,6 +10,7 @@ export const sampleDecks: Deck[] = [
     icon: '🎬',
     color: 'primary',
     isPremium: false,
+    difficulty: 'easy',
     words: [
       { id: generateId(), text: 'Titanic' },
       { id: generateId(), text: 'Star Wars' },
@@ -35,6 +36,7 @@ export const sampleDecks: Deck[] = [
     icon: '🦁',
     color: 'success',
     isPremium: false,
+    difficulty: 'easy',
     words: [
       { id: generateId(), text: 'Elephant' },
       { id: generateId(), text: 'Penguin' },
@@ -60,6 +62,7 @@ export const sampleDecks: Deck[] = [
     icon: '⚽',
     color: 'accent',
     isPremium: false,
+    difficulty: 'medium',
     words: [
       { id: generateId(), text: 'Basketball' },
       { id: generateId(), text: 'Tennis' },
@@ -85,6 +88,7 @@ export const sampleDecks: Deck[] = [
     icon: '🍕',
     color: 'warning',
     isPremium: false,
+    difficulty: 'easy',
     words: [
       { id: generateId(), text: 'Spaghetti' },
       { id: generateId(), text: 'Sushi' },
@@ -110,6 +114,7 @@ export const sampleDecks: Deck[] = [
     icon: '⭐',
     color: 'secondary',
     isPremium: true,
+    difficulty: 'medium',
     words: [
       { id: generateId(), text: 'Albert Einstein' },
       { id: generateId(), text: 'Taylor Swift' },
@@ -135,6 +140,7 @@ export const sampleDecks: Deck[] = [
     icon: '🏃',
     color: 'destructive',
     isPremium: true,
+    difficulty: 'hard',
     words: [
       { id: generateId(), text: 'Dancing' },
       { id: generateId(), text: 'Sleeping' },
