@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { SoundToggle } from '@/components/SoundToggle';
 import { TimerRing, WordCard, GameActions, ResultsView } from '@/components/game';
 import { useGame } from '@/hooks/useGame';
+import { useSettings } from '@/hooks/useSettings';
 import { getDeckById } from '@/game/decks';
 import { updateLifetimeStats } from '@/services/storage';
 import { audioService } from '@/services/audio';
@@ -18,6 +19,7 @@ export default function Game() {
   const [gamePhase, setGamePhase] = useState<'ready' | 'countdown' | 'playing'>('ready');
   const [countdown, setCountdown] = useState(3);
   const lastWarningTimeRef = useRef<number>(-1);
+  const { settings } = useSettings();
   
   const {
     state,
@@ -30,9 +32,15 @@ export default function Game() {
     markSkipped,
     endGame,
     reset,
-  } = useGame();
+    updateConfig,
+  } = useGame({ roundDuration: settings.roundDuration });
   
   const deck = deckId ? getDeckById(deckId) : null;
+  
+  // Update game config when settings change
+  useEffect(() => {
+    updateConfig({ roundDuration: settings.roundDuration });
+  }, [settings.roundDuration, updateConfig]);
   
   // Countdown before game starts
   useEffect(() => {
