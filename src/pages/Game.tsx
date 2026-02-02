@@ -130,12 +130,14 @@ export default function Game() {
   
   const handlePlayAgain = () => {
     audioService.play('tap');
+    reset();
     setGamePhase('ready');
     setCountdown(3);
   };
   
   const handleHome = () => {
     audioService.play('tap');
+    reset();
     navigate('/');
   };
   
@@ -161,8 +163,7 @@ export default function Game() {
   
   const handleEndGame = () => {
     audioService.play('tap');
-    reset();
-    navigate('/decks');
+    endGame();
   };
   
   return (
