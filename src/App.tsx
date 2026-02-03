@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { getAnalytics } from "@/services/analytics";
 import { getBillingService } from "@/services/billing";
 
@@ -19,14 +19,36 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Initialize services on app load
+  const [isReady, setIsReady] = useState(false);
+
+  // Initialize services and wait for fonts
   useEffect(() => {
     const init = async () => {
+      // Wait for fonts to load
+      await document.fonts.ready;
+      
+      // Small delay to ensure CSS is applied
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Initialize services
       await getAnalytics().initialize();
       await getBillingService().initialize();
+      
+      setIsReady(true);
     };
     init();
   }, []);
+
+  if (!isReady) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground font-display">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

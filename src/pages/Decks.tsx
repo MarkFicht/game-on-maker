@@ -1,6 +1,6 @@
 // Deck Selection Page
 import { motion } from 'framer-motion';
-import { ArrowLeft, Crown, Lock, Shuffle } from 'lucide-react';
+import { ArrowLeft, Crown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SoundToggle } from '@/components/SoundToggle';
@@ -47,6 +47,29 @@ export default function Decks() {
   const freeDecks = sampleDecks.filter(d => !d.isPremium);
   const premiumDecks = sampleDecks.filter(d => d.isPremium);
   
+  // Fake deck objects for random selection
+  const randomFreeDeck = {
+    id: 'random-free',
+    name: 'Random Free',
+    description: `Pick a random deck from ${freeDecks.length} free options`,
+    icon: '🎲',
+    color: 'accent' as const,
+    isPremium: false,
+    difficulty: 'easy' as const,
+    words: [],
+  };
+  
+  const randomPremiumDeck = {
+    id: 'random-premium',
+    name: 'Random Premium',
+    description: `Pick a random deck from ${premiumDecks.length} premium options`,
+    icon: '💎',
+    color: 'secondary' as const,
+    isPremium: true,
+    difficulty: 'easy' as const,
+    words: [],
+  };
+  
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
       {/* Header */}
@@ -74,55 +97,28 @@ export default function Decks() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Random Decks
           </h2>
-          <div className="grid grid-cols-2 gap-3">
-            <motion.button
-              onClick={handleRandomFree}
-              initial={{ opacity: 0, x: -5 }}
+          <div className="space-y-3">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15 }}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
-              className="game-card p-4 text-center transition-all relative overflow-hidden"
+              transition={{ delay: 0.1 }}
             >
-              <div className="absolute inset-0 bg-accent opacity-10" />
-              <div className="relative">
-                <span className="text-4xl mb-2 block">🎲</span>
-                <p className="font-display text-sm font-bold text-foreground">Random Free</p>
-                <p className="text-xs text-muted-foreground mt-1">{freeDecks.length} decks</p>
-              </div>
-            </motion.button>
+              <DeckCard
+                deck={randomFreeDeck}
+                onSelect={handleRandomFree}                showWordCount={false}              />
+            </motion.div>
             
-            <motion.button
-              onClick={handleRandomPremium}
-              initial={{ opacity: 0, x: -5 }}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15 }}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
-              className="game-card p-4 text-center transition-all relative overflow-hidden"
+              transition={{ delay: 0.2 }}
             >
-              <div className="absolute inset-0 bg-secondary opacity-10" />
-              <div className="relative">
-                <span className="text-4xl mb-2 block">💎</span>
-                <div className="flex items-center justify-center gap-1.5">
-                  <p className="font-display text-sm font-bold text-foreground leading-none">Random Premium</p>
-                  {!hasPremiumDecks && !loading && (
-                    <Lock className="w-3.5 h-3.5 text-secondary shrink-0 -mt-[2.5px]" />
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{premiumDecks.length} decks</p>
-              </div>
-              {!loading && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="absolute top-2 right-2 text-xs font-semibold px-2 py-0.5 rounded-full premium-gradient text-white z-10"
-                >
-                  PRO
-                </motion.div>
-              )}
-            </motion.button>
+              <DeckCard
+                deck={randomPremiumDeck}
+                onSelect={handleRandomPremium}
+                isLocked={!hasPremiumDecks}
+                onUnlock={handleUnlockPremium}                showWordCount={false}              />
+            </motion.div>
           </div>
         </motion.section>
         
@@ -141,7 +137,7 @@ export default function Decks() {
                 key={deck.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
               >
                 <DeckCard
                   deck={deck}
@@ -170,7 +166,7 @@ export default function Decks() {
                 key={deck.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
+                transition={{ delay: 0.3 + freeDecks.length * 0.1 + index * 0.1 }}
               >
                 <DeckCard
                   deck={deck}

@@ -9,9 +9,10 @@ interface DeckCardProps {
   onSelect: (deck: Deck) => void;
   isLocked?: boolean;
   onUnlock?: () => void;
+  showWordCount?: boolean;
 }
 
-export function DeckCard({ deck, onSelect, isLocked, onUnlock }: DeckCardProps) {
+export function DeckCard({ deck, onSelect, isLocked, onUnlock, showWordCount = true }: DeckCardProps) {
   const handleClick = () => {
     if (isLocked && onUnlock) {
       onUnlock();
@@ -26,7 +27,7 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock }: DeckCardProps) 
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "game-card w-full p-5 text-left transition-all relative overflow-hidden",
+        "game-card w-full p-4 pl-2 text-left transition-all relative overflow-hidden sm:pl-3 md:pl-4",
         isLocked && "opacity-80"
       )}
     >
@@ -48,7 +49,7 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock }: DeckCardProps) 
         <span className="text-4xl">{deck.icon}</span>
         
         {/* Content */}
-        <div className="flex-1 min-w-0 pr-14">
+        <div className="flex-1 min-w-0 pr-3 sm:pr-7 md:pr-12">
           <div className="flex items-center gap-2">
             <h3 className="font-display text-lg font-bold text-foreground truncate">
               {deck.name}
@@ -61,9 +62,11 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock }: DeckCardProps) 
             {deck.description}
           </p>
           <div className="flex items-center gap-2 mt-2">
-            <p className="text-xs text-muted-foreground">
-              {deck.words.length} words
-            </p>
+            {showWordCount && deck.words.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {deck.words.length} words
+              </p>
+            )}
             {/* Premium badge inline */}
             {deck.isPremium && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full premium-gradient text-white whitespace-nowrap">
