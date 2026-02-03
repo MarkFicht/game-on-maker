@@ -24,20 +24,53 @@ const App = () => {
 
   // Initialize services and wait for fonts
   useEffect(() => {
+    let objectUrl: string | null = null;
+    let alive = true;
+
     const init = async () => {
-      // Wait for fonts to load
+      try {
+        // Fetch background image as blob - only 1 download
+        const res = await fetch('/src/game/bg.jpg');
+        if (!res.ok) {
+          throw new Error(`Failed to fetch: ${res.status}`);
+        }
+        const blob = await res.blob();
+        objectUrl = URL.createObjectURL(blob);
+
+        const img = new Image();
+        img.src = objectUrl;
+        try {
+          await img.decode?.();
+        } catch {}
+
+        if (alive) {
+          // Set background with local blob URL
+          document.body.style.backgroundImage = `url('${objectUrl}')`;
+        }
+      } catch (err) {
+        console.error('Failed to load background:', err);
+      }
+
+      // Wait for fonts
       await document.fonts.ready;
-      
-      // Small delay to ensure CSS is applied
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // Initialize services
-      await getAnalytics().initialize();
-      await getBillingService().initialize();
-      
-      setIsReady(true);
+      if (alive) {
+        await getAnalytics().initialize();
+        await getBillingService().initialize();
+        setIsReady(true);
+      }
     };
+
     init();
+
+    // Cleanup: revoke ObjectURL
+    return () => {
+      alive = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
   }, []);
 
   if (!isReady) {
