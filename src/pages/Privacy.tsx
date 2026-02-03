@@ -1,4 +1,5 @@
 // Privacy Policy Page - Placeholder
+import { motion } from 'framer-motion';
 import { PageLayout } from '@/components/PageLayout';
 import { BackButton } from '@/components/BackButton';
 import { DelayedFadeIn } from '@/components/animated';
@@ -8,11 +9,15 @@ export default function Privacy() {
   return (
     <PageLayout>
       {/* Header */}
-      <header className="flex items-center gap-4 p-4 border-b border-border/50">
+      <header className="flex items-center gap-4 p-4 border-b border-border/50 overlay-dark">
         <BackButton to="/settings" />
-        <h1 className="font-display text-xl font-bold text-foreground">
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="font-display text-xl font-bold text-gradient-primary"
+        >
           Privacy Policy
-        </h1>
+        </motion.h1>
       </header>
       
       {/* Content */}

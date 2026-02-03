@@ -84,7 +84,7 @@ export default function Decks() {
         </DeckSection>
         
         {/* Premium decks */}
-        <DeckSection title="Premium Decks" icon={<Crown className="w-4 h-4 text-secondary" />} delay={0.2}>
+        <DeckSection title="Premium Decks" icon={<span className="-mt-1">👑</span>} delay={0.2}>
           {premiumDecks.map((deck, index) => (
             <AnimatedListItem key={deck.id} index={index} baseDelay={0.3 + freeDecks.length * 0.1}>
               <DeckCard

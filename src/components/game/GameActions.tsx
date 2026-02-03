@@ -71,10 +71,10 @@ export function GameActions({
       
       {/* Pause button */}
       <Button
-        variant="ghost"
+        variant="outline"
         size="sm"
         onClick={onPause}
-        className="mx-auto text-muted-foreground hover:text-foreground"
+        className="mx-auto text-white border-white/30 bg-card/80 hover:bg-accent/80 hover:text-white"
       >
         <Pause className="w-4 h-4 mr-2" />
         Pause

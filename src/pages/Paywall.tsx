@@ -53,7 +53,7 @@ export default function Paywall() {
 
   return (
     <PageLayout>
-      <header className="flex items-center gap-4 p-4">
+      <header className="flex items-center gap-4 p-4 overlay-dark">
         <BackButton to="/" />
       </header>
       
@@ -69,9 +69,9 @@ export default function Paywall() {
             initial={{ rotate: -10 }}
             animate={{ rotate: 10 }}
             transition={{ repeat: Infinity, repeatType: 'reverse', duration: 2 }}
-            className="inline-block"
+            className="inline-flex items-center justify-center"
           >
-            <Crown className="w-16 h-16 text-secondary mx-auto mb-4" />
+            <div className="text-6xl">👑</div>
           </motion.div>
           <h1 className="font-display text-3xl font-bold text-gradient-premium mb-2">
             Go Premium

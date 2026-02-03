@@ -14,7 +14,7 @@ export default function PremiumSummary() {
 
   return (
     <PageLayout>
-      <header className="flex items-center gap-4 p-4">
+      <header className="flex items-center gap-4 p-4 overlay-dark">
         <BackButton to="/" />
       </header>
       
@@ -24,9 +24,9 @@ export default function PremiumSummary() {
             initial={{ rotate: -10 }}
             animate={{ rotate: 10 }}
             transition={{ repeat: Infinity, repeatType: 'reverse', duration: 2 }}
-            className="inline-block"
+            className="inline-flex items-center justify-center"
           >
-            <Crown className="w-20 h-20 text-secondary" />
+            <div className="text-6xl -mt-1">👑</div>
           </motion.div>
         </DelayedFadeIn>
         

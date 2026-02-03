@@ -12,7 +12,7 @@ export function PageLayout({ children, className, overflow = false }: PageLayout
   return (
     <div 
       className={cn(
-        "min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x",
+        "min-h-[100dvh] flex flex-col safe-top safe-bottom safe-x",
         overflow && "overflow-hidden",
         className
       )}

@@ -13,9 +13,11 @@ interface DeckSectionProps {
 export function DeckSection({ title, icon, delay = 0, children }: DeckSectionProps) {
   return (
     <FadeInUp delay={delay}>
-      <SectionHeader icon={icon} className="mb-3">
-        {title}
-      </SectionHeader>
+      <div className="bg-card rounded-xl px-4 py-2 mb-3">
+        <SectionHeader icon={icon} className="m-0 justify-center text-white">
+          {title}
+        </SectionHeader>
+      </div>
       <div className="space-y-3">
         {children}
       </div>
