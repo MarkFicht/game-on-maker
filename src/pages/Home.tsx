@@ -7,12 +7,13 @@ import { SoundToggle } from '@/components/SoundToggle';
 import { PageLayout } from '@/components/PageLayout';
 import { FadeIn, scaleIn, Tappable } from '@/components/animated';
 import { withAudio } from '@/lib/audio-helpers';
-import { useHasRemoveAds } from '@/hooks/usePremium';
+import { usePremium } from '@/hooks/usePremium';
 import { audioService } from '@/services/audio';
 
 export default function Home() {
   const navigate = useNavigate();
-  const hasRemoveAds = useHasRemoveAds();
+  const { status } = usePremium();
+  const isFullPremium = status.hasRemoveAds && status.hasPremiumDecks;
   
   return (
     <PageLayout>
@@ -71,18 +72,18 @@ export default function Home() {
         
         {/* Quick stats or premium upsell */}
         <FadeIn delay={0.3}>
-          <Link to={hasRemoveAds ? "/premium-summary" : "/paywall"}>
+          <Link to={isFullPremium ? "/premium-summary" : "/paywall"}>
             <Button
               onClick={withAudio('tap', () => {})}
               variant="outline"
               className={`rounded-xl ${
-                hasRemoveAds 
+                isFullPremium 
                   ? 'border-success/50 text-success hover:border-success hover:bg-success/20 hover:text-white' 
                   : 'border-secondary/50 hover:border-secondary text-secondary hover:bg-secondary/20 hover:text-secondary-foreground'
               }`}
             >
               <span className="mr-0 -mt-1">👑</span>
-              {hasRemoveAds ? 'Premium User' : 'Go Premium'}
+              {isFullPremium ? 'Premium User' : 'Go Premium'}
             </Button>
           </Link>
         </FadeIn>
