@@ -55,7 +55,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner position="top-center" />
-        <BrowserRouter>
+        <BrowserRouter basename={import.meta.env.PROD ? '/game-on-maker' : '/'}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/decks" element={<Decks />} />
