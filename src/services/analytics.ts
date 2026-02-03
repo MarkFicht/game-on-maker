@@ -12,7 +12,8 @@ export type EventName =
   | 'ad_clicked'
   | 'settings_changed'
   | 'paywall_shown'
-  | 'paywall_dismissed';
+  | 'paywall_dismissed'
+  | 'review_clicked';
 
 export interface AnalyticsEvent {
   name: EventName;

@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import Decks from "./pages/Decks";
 import Game from "./pages/Game";
 import Paywall from "./pages/Paywall";
+import PremiumSummary from "./pages/PremiumSummary";
 import Settings from "./pages/Settings";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -61,6 +62,7 @@ const App = () => {
             <Route path="/decks" element={<Decks />} />
             <Route path="/game/:deckId" element={<Game />} />
             <Route path="/paywall" element={<Paywall />} />
+            <Route path="/premium-summary" element={<PremiumSummary />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/privacy" element={<Privacy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

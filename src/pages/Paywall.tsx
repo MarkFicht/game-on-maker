@@ -1,13 +1,17 @@
 // Paywall Page - Premium purchase screen
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, Crown, Sparkles, Zap, Shield } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Check, Crown, Sparkles, Zap, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { BackButton } from '@/components/BackButton';
 import { usePremium } from '@/hooks/usePremium';
 import { audioService } from '@/services/audio';
 import { toast } from 'sonner';
 import { track } from '@/services/analytics';
 import { useEffect } from 'react';
+import { PageLayout } from '@/components/PageLayout';
+import { Tappable, DelayedFadeIn } from '@/components/animated';
+import { withAudio } from '@/lib/audio-helpers';
 
 const features = [
   { icon: Zap, text: 'Remove all ads' },
@@ -24,7 +28,6 @@ export default function Paywall() {
   }, []);
   
   const handlePurchase = async (productId: 'remove_ads' | 'premium_decks' | 'premium_bundle') => {
-    audioService.play('tap');
     track('purchase_initiated', { productId });
     const success = await purchase(productId);
     if (success) {
@@ -37,8 +40,7 @@ export default function Paywall() {
     }
   };
   
-  const handleRestore = async () => {
-    audioService.play('tap');
+  const handleRestore = withAudio('tap', async () => {
     await restore();
     if (status.isActive) {
       audioService.play('unlock');
@@ -47,55 +49,12 @@ export default function Paywall() {
     } else {
       toast.info('No purchases found to restore.');
     }
-  };
-  
-  const handleBack = () => {
-    audioService.play('tap');
-  };
-  
-  // If already premium, show success state
-  if (status.hasRemoveAds && status.hasPremiumDecks) {
-    return (
-      <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
-        <header className="flex items-center gap-4 p-4">
-          <Link to="/" onClick={handleBack}>
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-        </header>
-        
-        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring' }}
-          >
-            <Crown className="w-20 h-20 text-secondary mx-auto mb-4" />
-          </motion.div>
-          <h2 className="font-display text-2xl font-bold text-foreground mb-2">
-            You're Premium!
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            Thanks for supporting WordRush
-          </p>
-          <Button onClick={() => navigate('/')} className="btn-game text-primary-foreground">
-            Continue Playing
-          </Button>
-        </main>
-      </div>
-    );
-  }
-  
+  });
+
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
-      {/* Header */}
+    <PageLayout>
       <header className="flex items-center gap-4 p-4">
-        <Link to="/" onClick={handleBack}>
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-        </Link>
+        <BackButton to="/" />
       </header>
       
       {/* Content */}
@@ -123,12 +82,7 @@ export default function Paywall() {
         </motion.div>
         
         {/* Features */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-3 mb-8"
-        >
+        <DelayedFadeIn delay={0.1} className="space-y-3 mb-8">
           {features.map((feature, index) => (
             <motion.div
               key={index}
@@ -144,44 +98,56 @@ export default function Paywall() {
               <Check className="w-5 h-5 text-success ml-auto" />
             </motion.div>
           ))}
-        </motion.div>
+        </DelayedFadeIn>
         
         {/* Products */}
         <div className="space-y-3 mb-6">
-          {products.map((product, index) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 + index * 0.1 }}
-            >
-              <Button
-                onClick={() => handlePurchase(product.id)}
-                disabled={purchasing}
-                className={`w-full h-auto py-3 px-3 rounded-xl flex-col items-start gap-2 ${
-                  product.id === 'premium_bundle' 
-                    ? 'premium-gradient text-white border-0' 
-                    : 'bg-card border border-border'
-                }`}
-                variant={product.id === 'premium_bundle' ? 'default' : 'outline'}
-              >
-                <div className="text-left w-full">
-                  <div className="flex items-center justify-between w-full gap-2">
-                    <p className="font-bold text-base">{product.name}</p>
-                    <span className="font-display text-lg font-bold shrink-0">
-                      {product.price}
-                    </span>
-                  </div>
-                  <p className="text-xs opacity-80 mt-1">{product.description}</p>
-                </div>
-              </Button>
-              {product.id === 'premium_bundle' && (
-                <p className="text-center text-xs text-muted-foreground mt-1">
-                  Best value - Save 25%
-                </p>
-              )}
-            </motion.div>
-          ))}
+          {products.map((product, index) => {
+            // Check if this product is already purchased
+            const isPurchased = 
+              (product.id === 'remove_ads' && status.hasRemoveAds) ||
+              (product.id === 'premium_decks' && status.hasPremiumDecks) ||
+              (product.id === 'premium_bundle' && status.hasRemoveAds && status.hasPremiumDecks);
+            
+            return (
+              <DelayedFadeIn key={product.id} delay={0.4 + index * 0.1}>
+                <Tappable>
+                  <Button
+                    onClick={withAudio('tap', () => handlePurchase(product.id))}
+                    disabled={purchasing || isPurchased}
+                    className={`w-full h-auto py-3 px-3 rounded-xl flex-col items-start gap-2 ${
+                      product.id === 'premium_bundle' 
+                        ? 'premium-gradient text-white border-0' 
+                        : 'bg-card border border-border'
+                    }`}
+                    variant={product.id === 'premium_bundle' ? 'default' : 'outline'}
+                  >
+                    <div className="text-left w-full">
+                      <div className="flex items-center justify-between w-full gap-2">
+                        <p className="font-bold text-base">{product.name}</p>
+                        <div className="flex items-center gap-2">
+                          {isPurchased && (
+                            <Check className="w-5 h-5 text-success" />
+                          )}
+                          <span className={`font-display text-lg font-bold shrink-0 ${
+                            isPurchased ? 'text-success line-through' : product.id === 'premium_bundle' ? 'text-white' : 'text-foreground'
+                          }`}>
+                            {product.price}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs opacity-80 mt-1">{product.description}</p>
+                    </div>
+                  </Button>
+                </Tappable>
+                {product.id === 'premium_bundle' && (
+                  <p className="text-center text-xs text-muted-foreground mt-1">
+                    Best value - Save 25%
+                  </p>
+                )}
+              </DelayedFadeIn>
+            );
+          })}
         </div>
         
         {/* Restore */}
@@ -199,6 +165,6 @@ export default function Paywall() {
       <footer className="p-4 text-center text-xs text-muted-foreground">
         <p>One-time purchase. No subscription.</p>
       </footer>
-    </div>
+    </PageLayout>
   );
 }

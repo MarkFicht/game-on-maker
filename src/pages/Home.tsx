@@ -1,22 +1,30 @@
 // Home Page - Main entry point
-import { motion } from 'framer-motion';
 import { Play, Settings, Crown, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { SoundToggle } from '@/components/SoundToggle';
+import { PageLayout } from '@/components/PageLayout';
+import { FadeIn, scaleIn, Tappable } from '@/components/animated';
+import { withAudio } from '@/lib/audio-helpers';
 import { useHasRemoveAds } from '@/hooks/usePremium';
 import { audioService } from '@/services/audio';
+import { motion } from 'framer-motion';
 
 export default function Home() {
   const navigate = useNavigate();
   const hasRemoveAds = useHasRemoveAds();
   
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
+    <PageLayout>
       {/* Header */}
       <header className="flex items-center justify-between p-4">
         <Link to="/settings">
-          <Button variant="ghost" size="icon" className="text-muted-foreground">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-muted-foreground"
+            onClick={() => audioService.play('tap')}
+          >
             <Settings className="w-5 h-5" />
           </Button>
         </Link>
@@ -34,8 +42,7 @@ export default function Home() {
       <main className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
         {/* Logo area */}
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          {...scaleIn}
           transition={{ type: 'spring', delay: 0.1 }}
           className="text-center"
         >
@@ -49,59 +56,45 @@ export default function Home() {
         </motion.div>
         
         {/* Play button */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full max-w-xs"
-        >
-          <Button
-            size="lg"
-            onClick={() => {
-              audioService.play('tap');
-              navigate('/decks');
-            }}
-            className="w-full h-16 text-xl font-bold btn-game rounded-2xl glow text-primary-foreground"
-          >
-            <Play className="w-6 h-6 mr-3" fill="currentColor" />
-            Play Now
-          </Button>
-        </motion.div>
+        <FadeIn delay={0.2} className="w-full max-w-xs">
+          <Tappable>
+            <Button
+              size="lg"
+              onClick={withAudio('tap', () => navigate('/decks'))}
+              className="w-full h-16 text-xl font-bold btn-game rounded-2xl glow text-primary-foreground"
+            >
+              <Play className="w-6 h-6 mr-3" fill="currentColor" />
+              Play Now
+            </Button>
+          </Tappable>
+        </FadeIn>
         
         {/* Quick stats or premium upsell */}
-        {!hasRemoveAds && (
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Link to="/paywall">
-              <Button
-                onClick={() => audioService.play('tap')}
-                variant="outline"
-                className="rounded-xl border-secondary/50 hover:border-secondary text-secondary hover:bg-secondary/20 hover:text-secondary-foreground"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                Go Premium
-              </Button>
-            </Link>
-          </motion.div>
-        )}
+        <FadeIn delay={0.3}>
+          <Link to={hasRemoveAds ? "/premium-summary" : "/paywall"}>
+            <Button
+              onClick={withAudio('tap', () => {})}
+              variant="outline"
+              className={`rounded-xl ${
+                hasRemoveAds 
+                  ? 'border-success/50 text-success hover:border-success hover:bg-success/20 hover:text-white' 
+                  : 'border-secondary/50 hover:border-secondary text-secondary hover:bg-secondary/20 hover:text-secondary-foreground'
+              }`}
+            >
+              <Crown className="w-4 h-4 mr-2" />
+              {hasRemoveAds ? 'Premium User' : 'Go Premium'}
+            </Button>
+          </Link>
+        </FadeIn>
       </main>
       
       {/* Footer */}
       <footer className="p-4 text-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="flex items-center justify-center gap-2 text-muted-foreground text-sm"
-        >
+        <FadeIn delay={0.4} className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
           <Zap className="w-4 h-4" />
           <span>Party game for friends</span>
-        </motion.div>
+        </FadeIn>
       </footer>
-    </div>
+    </PageLayout>
   );
 }

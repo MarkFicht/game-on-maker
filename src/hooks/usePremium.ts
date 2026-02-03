@@ -86,18 +86,13 @@ export function usePremium(): UsePremiumReturn {
   };
 }
 
-// Simple check hook
-export function useHasPremium(): boolean {
+// Helper function to create simple status check hooks
+const createStatusHook = (key: keyof PremiumStatus) => () => {
   const { status } = usePremium();
-  return status.isActive;
-}
+  return status[key] as boolean;
+};
 
-export function useHasRemoveAds(): boolean {
-  const { status } = usePremium();
-  return status.hasRemoveAds;
-}
-
-export function useHasPremiumDecks(): boolean {
-  const { status } = usePremium();
-  return status.hasPremiumDecks;
-}
+// Simple check hooks
+export const useHasPremium = createStatusHook('isActive');
+export const useHasRemoveAds = createStatusHook('hasRemoveAds');
+export const useHasPremiumDecks = createStatusHook('hasPremiumDecks');

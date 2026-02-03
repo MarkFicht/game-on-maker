@@ -2,10 +2,15 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, XCircle, Home } from 'lucide-react';
+import { Play, XCircle, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/PageHeader';
+import { PageLayout } from '@/components/PageLayout';
 import { SoundToggle } from '@/components/SoundToggle';
+import { CenteredState } from '@/components/CenteredState';
 import { TimerRing, WordCard, GameActions, ResultsView } from '@/components/game';
+import { scaleIn, Tappable, FadeTransition } from '@/components/animated';
+import { withAudio } from '@/lib/audio-helpers';
 import { useGame } from '@/hooks/useGame';
 import { useSettings } from '@/hooks/useSettings';
 import { getDeckById } from '@/game/decks';
@@ -101,103 +106,52 @@ export default function Game() {
   
   // Handle missing deck
   if (!deck) {
-    return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">Deck not found</p>
-          <button 
-            onClick={() => navigate('/decks')}
-            className="text-primary underline"
-          >
-            Back to decks
-          </button>
-        </div>
-      </div>
-    );
+    return <CenteredState message="Deck not found" action={{ label: "Back to decks", onClick: () => navigate('/decks') }} />;
   }
   
-  const handleStartCountdown = () => {
-    audioService.play('tap');
+  const handleStartCountdown = withAudio('tap', () => {
     setGamePhase('countdown');
     setCountdown(3);
-  };
+  });
   
-  const handleCancelGame = () => {
-    audioService.play('tap');
+  const handleCancelGame = withAudio('tap', () => {
     reset();
     navigate('/decks');
-  };
+  });
   
-  const handlePlayAgain = () => {
-    audioService.play('tap');
+  const handlePlayAgain = withAudio('tap', () => {
     reset();
     setGamePhase('ready');
     setCountdown(3);
-  };
+  });
   
-  const handleHome = () => {
-    audioService.play('tap');
+  const handleHome = withAudio('tap', () => {
     reset();
     navigate('/');
-  };
+  });
   
-  const handleCorrect = () => {
-    audioService.play('correct');
-    markCorrect();
-  };
-  
-  const handleSkip = () => {
-    audioService.play('skip');
-    markSkipped();
-  };
-  
-  const handlePause = () => {
-    audioService.play('pause');
-    pauseGame();
-  };
-  
-  const handleResume = () => {
-    audioService.play('resume');
-    resumeGame();
-  };
-  
-  const handleEndGame = () => {
-    audioService.play('tap');
-    endGame();
-  };
+  const handleCorrect = withAudio('correct', markCorrect);
+  const handleSkip = withAudio('skip', markSkipped);
+  const handlePause = withAudio('pause', pauseGame);
+  const handleResume = withAudio('resume', resumeGame);
+  const handleEndGame = withAudio('tap', endGame);
   
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x overflow-hidden">
+    <PageLayout overflow>
       <AnimatePresence mode="wait">
         {/* Ready state - before countdown */}
         {gamePhase === 'ready' && (
-          <motion.div
-            key="ready"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col"
-          >
-            {/* Header */}
-            <header className="flex items-center justify-between p-4 border-b border-border/50">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handleCancelGame}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <h1 className="font-display text-lg font-bold text-foreground">
-                {deck.name}
-              </h1>
-              <SoundToggle />
-            </header>
+          <FadeTransition itemKey="ready" className="flex-1 flex flex-col">
+            <PageHeader 
+              title={deck.name} 
+              onBack={handleCancelGame}
+              showSound
+            />
             
             {/* Content */}
             <div className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                {...scaleIn}
                 transition={{ type: 'spring' }}
                 className="text-center"
               >
@@ -211,12 +165,7 @@ export default function Game() {
               </motion.div>
               
               <div className="flex flex-col gap-3 w-full max-w-xs">
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                  whileTap={{ scale: 0.98 }}
-                >
+                <Tappable>
                   <Button
                     size="lg"
                     onClick={handleStartCountdown}
@@ -225,14 +174,9 @@ export default function Game() {
                     <Play className="w-6 h-6 mr-3" fill="currentColor" />
                     Start Game
                   </Button>
-                </motion.div>
+                </Tappable>
                 
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
+                <Tappable>
                   <Button
                     variant="outline"
                     size="lg"
@@ -242,21 +186,15 @@ export default function Game() {
                     <XCircle className="w-5 h-5 mr-2" />
                     Choose Different Deck
                   </Button>
-                </motion.div>
+                </Tappable>
               </div>
             </div>
-          </motion.div>
+          </FadeTransition>
         )}
         
         {/* Countdown */}
         {gamePhase === 'countdown' && (
-          <motion.div
-            key="countdown"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center"
-          >
+          <FadeTransition itemKey="countdown" className="flex-1 flex flex-col items-center justify-center">
             <span className="text-6xl mb-4">{deck.icon}</span>
             <h2 className="font-display text-2xl font-bold text-foreground mb-8">
               {deck.name}
@@ -271,18 +209,12 @@ export default function Game() {
               {countdown}
             </motion.div>
             <p className="text-muted-foreground mt-8">Get ready!</p>
-          </motion.div>
+          </FadeTransition>
         )}
         
         {/* Playing */}
         {gamePhase === 'playing' && state.status === 'playing' && (
-          <motion.div
-            key="playing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col overflow-hidden"
-          >
+          <FadeTransition itemKey="playing" className="flex-1 flex flex-col overflow-hidden">
             {/* Header - consistent across all views */}
             <header className="flex items-center justify-end p-4 shrink-0">
               <SoundToggle size="sm" />
@@ -333,18 +265,12 @@ export default function Game() {
                 />
               </div>
             </div>
-          </motion.div>
+          </FadeTransition>
         )}
         
         {/* Paused */}
         {gamePhase === 'playing' && state.status === 'paused' && (
-          <motion.div
-            key="paused"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-4"
-          >
+          <FadeTransition itemKey="paused" className="flex-1 flex flex-col items-center justify-center p-4">
             <div className="game-card p-8 text-center max-w-sm w-full">
               <span className="text-5xl mb-4 block">⏸️</span>
               <h2 className="font-display text-2xl font-bold text-foreground mb-4">
@@ -355,7 +281,7 @@ export default function Game() {
               </p>
               
               <div className="flex flex-col gap-3">
-                <motion.div whileTap={{ scale: 0.98 }}>
+                <Tappable>
                   <Button
                     size="lg"
                     onClick={handleResume}
@@ -364,21 +290,21 @@ export default function Game() {
                     <Play className="w-5 h-5 mr-2" />
                     Resume
                   </Button>
-                </motion.div>
+                </Tappable>
                 
-                <motion.div whileTap={{ scale: 0.98 }}>
+                <Tappable>
                   <Button
                     variant="outline"
                     size="lg"
                     onClick={handleEndGame}
-                    className="w-full h-14 text-lg rounded-2xl text-destructive border-destructive/50 hover:bg-destructive/10"
+                    className="w-full h-14 text-lg rounded-2xl text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive"
                   >
                     <XCircle className="w-5 h-5 mr-2" />
                     End Game
                   </Button>
-                </motion.div>
+                </Tappable>
                 
-                <motion.div whileTap={{ scale: 0.98 }}>
+                <Tappable>
                   <Button
                     variant="ghost"
                     size="lg"
@@ -388,21 +314,15 @@ export default function Game() {
                     <Home className="w-5 h-5 mr-2" />
                     Back to Home
                   </Button>
-                </motion.div>
+                </Tappable>
               </div>
             </div>
-          </motion.div>
+          </FadeTransition>
         )}
         
         {/* Results */}
         {gamePhase === 'playing' && state.status === 'finished' && (
-          <motion.div
-            key="results"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col items-center justify-center p-4"
-          >
+          <FadeTransition itemKey="results" className="flex-1 flex flex-col items-center justify-center p-4">
             <ResultsView
               stats={stats}
               results={state.results}
@@ -410,9 +330,9 @@ export default function Game() {
               onHome={handleHome}
               deckName={deck.name}
             />
-          </motion.div>
+          </FadeTransition>
         )}
       </AnimatePresence>
-    </div>
+    </PageLayout>
   );
 }

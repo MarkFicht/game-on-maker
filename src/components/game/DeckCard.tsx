@@ -14,11 +14,11 @@ interface DeckCardProps {
 
 export function DeckCard({ deck, onSelect, isLocked, onUnlock, showWordCount = true }: DeckCardProps) {
   const handleClick = () => {
-    if (isLocked && onUnlock) {
-      onUnlock();
-    } else if (!isLocked) {
-      onSelect(deck);
+    if (isLocked) {
+      onUnlock?.();
+      return;
     }
+    onSelect(deck);
   };
   
   return (
@@ -32,17 +32,7 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock, showWordCount = t
       )}
     >
       {/* Background gradient overlay */}
-      <div 
-        className={cn(
-          "absolute inset-0 opacity-10",
-          deck.color === 'primary' && "bg-primary",
-          deck.color === 'secondary' && "bg-secondary",
-          deck.color === 'success' && "bg-success",
-          deck.color === 'warning' && "bg-warning",
-          deck.color === 'accent' && "bg-accent",
-          deck.color === 'destructive' && "bg-destructive",
-        )}
-      />
+      <div className={cn("absolute inset-0 opacity-10", `bg-${deck.color}`)} />
       
       <div className="relative flex items-start gap-4">
         {/* Icon */}

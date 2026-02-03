@@ -1,9 +1,9 @@
 // Sound Toggle Component
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { audioService } from '@/services/audio';
+import { useAudioMuted } from '@/hooks/useAudioMuted';
 
 interface SoundToggleProps {
   className?: string;
@@ -11,12 +11,7 @@ interface SoundToggleProps {
 }
 
 export function SoundToggle({ className = '', size = 'md' }: SoundToggleProps) {
-  const [muted, setMuted] = useState(audioService.isMuted());
-
-  useEffect(() => {
-    const unsubscribe = audioService.subscribe(setMuted);
-    return unsubscribe;
-  }, []);
+  const muted = useAudioMuted();
 
   const handleToggle = () => {
     const newMuted = audioService.toggleMute();

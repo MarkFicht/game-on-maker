@@ -1,7 +1,7 @@
 // Game Action Buttons
-import { motion } from 'framer-motion';
-import { Check, X, Pause, Play, SkipForward } from 'lucide-react';
+import { Check, Pause, Play, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tappable } from '@/components/animated';
 
 interface GameActionsProps {
   onCorrect: () => void;
@@ -24,10 +24,7 @@ export function GameActions({
     return (
       <div className="flex flex-col items-center gap-4">
         <p className="text-muted-foreground mb-2">Game Paused</p>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
+        <Tappable>
           <Button
             size="lg"
             onClick={onResume}
@@ -36,7 +33,7 @@ export function GameActions({
             <Play className="w-6 h-6 mr-2" />
             Resume
           </Button>
-        </motion.div>
+        </Tappable>
       </div>
     );
   }
@@ -47,11 +44,7 @@ export function GameActions({
       <div className="flex gap-2">
         {/* Skip button */}
         {allowSkip && (
-          <motion.div 
-            className="flex-1"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-          >
+          <Tappable className="flex-1">
             <Button
               size="lg"
               onClick={onSkip}
@@ -60,15 +53,11 @@ export function GameActions({
               <SkipForward className="w-5 h-5" />
               <span className="ml-1">Pass</span>
             </Button>
-          </motion.div>
+          </Tappable>
         )}
         
         {/* Correct button */}
-        <motion.div 
-          className="flex-1"
-          whileHover={{ scale: 1.01 }}    
-          whileTap={{ scale: 0.98 }}
-        >
+        <Tappable className="flex-1">
           <Button
             size="lg"
             onClick={onCorrect}
@@ -77,7 +66,7 @@ export function GameActions({
             <Check className="w-5 h-5" />
             <span className="ml-1">Got it!</span>
           </Button>
-        </motion.div>
+        </Tappable>
       </div>
       
       {/* Pause button */}
