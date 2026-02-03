@@ -15,7 +15,11 @@ export default function Home() {
     <div className="min-h-[100dvh] flex flex-col bg-background safe-top safe-bottom safe-x">
       {/* Header */}
       <header className="flex items-center justify-between p-4">
-        <SoundToggle />
+        <Link to="/settings">
+          <Button variant="ghost" size="icon" className="text-muted-foreground">
+            <Settings className="w-5 h-5" />
+          </Button>
+        </Link>
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -23,11 +27,7 @@ export default function Home() {
         >
           WordRush
         </motion.h1>
-        <Link to="/settings">
-          <Button variant="ghost" size="icon" className="text-muted-foreground">
-            <Settings className="w-5 h-5" />
-          </Button>
-        </Link>
+        <SoundToggle />
       </header>
       
       {/* Main content */}
