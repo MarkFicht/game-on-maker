@@ -61,7 +61,7 @@ export default function PremiumSummary() {
               variant="outline"
               className="w-full rounded-xl"
             >
-              ⭐ Rate Us
+              <span className="mr-1">⭐</span> Rate Us
             </Button>
           </Tappable>
         </DelayedFadeIn>
