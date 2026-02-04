@@ -250,6 +250,45 @@
     padding-right: env(safe-area-inset-right, 0);
   }
   
+  /* Emoji with white outline - small */
+  .emoji-outlined-sm {
+    text-shadow: 
+      -0.5px -0.5px 0 white,
+      0.5px -0.5px 0 white,
+      -0.5px 0.5px 0 white,
+      0.5px 0.5px 0 white,
+      -1px 0 0 white,
+      1px 0 0 white,
+      0 -1px 0 white,
+      0 1px 0 white;
+  }
+  
+  /* Emoji with white outline - medium */
+  .emoji-outlined-md {
+    text-shadow: 
+      -1.5px -1.5px 0 white,
+      1.5px -1.5px 0 white,
+      -1.5px 1.5px 0 white,
+      1.5px 1.5px 0 white,
+      -3px 0 0 white,
+      3px 0 0 white,
+      0 -3px 0 white,
+      0 3px 0 white;
+  }
+  
+  /* Emoji with white outline - large */
+  .emoji-outlined-lg {
+    text-shadow: 
+      -3px -3px 0 white,
+      3px -3px 0 white,
+      -3px 3px 0 white,
+      3px 3px 0 white,
+      -4px 0 0 white,
+      4px 0 0 white,
+      0 -4px 0 white,
+      0 4px 0 white;
+  }
+  
   /* Elements that need visibility on bright backgrounds */
   .overlay-dark {
     background: hsl(var(--background) / 0.8);

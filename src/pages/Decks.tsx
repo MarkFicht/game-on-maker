@@ -52,7 +52,7 @@ export default function Decks() {
   
   return (
     <PageLayout>
-      <PageHeader title="Choose a Deck" backTo="/" showSound playSound />
+      <PageHeader title="Choose a Deck" backTo="/" />
       
       {/* Deck list */}
       <main className="flex-1 overflow-y-auto p-4 space-y-6">

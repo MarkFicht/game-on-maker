@@ -143,7 +143,6 @@ export default function Game() {
         <PageHeader 
           title={deck.name} 
           onBack={handleCancelGame}
-          showSound
         />
       )}
       

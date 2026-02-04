@@ -45,7 +45,7 @@ export default function Settings() {
   
   return (
     <PageLayout>
-      <PageHeader title="Settings" backTo="/" showSound />
+      <PageHeader title="Settings" backTo="/" />
       
       {/* Settings list */}
       <main className="flex-1 overflow-y-auto p-4 space-y-4">
