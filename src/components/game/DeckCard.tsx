@@ -27,7 +27,7 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock, showWordCount = t
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "game-card w-full p-4 pl-2 text-left transition-all relative overflow-hidden sm:pl-3 md:pl-4",
+        "game-card w-full p-4 text-left transition-all relative overflow-hidden md:pl-5",
         isLocked && "opacity-80"
       )}
     >
