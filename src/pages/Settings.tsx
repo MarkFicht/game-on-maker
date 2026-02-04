@@ -6,9 +6,9 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { PageHeader } from '@/components/PageHeader';
 import { PageLayout } from '@/components/PageLayout';
-import { SettingsSection } from '@/components/SettingsSection';
 import { SettingRow } from '@/components/SettingRow';
 import { CenteredState } from '@/components/CenteredState';
+import { FadeInUp } from '@/components/animated';
 import { withAudioAsync } from '@/lib/audio-helpers';
 import { useSettings } from '@/hooks/useSettings';
 import { usePremium } from '@/hooks/usePremium';
@@ -45,19 +45,20 @@ export default function Settings() {
   
   return (
     <PageLayout>
-      <PageHeader title="Settings" backTo="/" playSound />
+      <PageHeader title="Settings" backTo="/" showSound />
       
       {/* Settings list */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Game settings */}
-        <SettingsSection title="Game">
+        <FadeInUp delay={0} className="rounded-xl bg-muted/85 p-6 space-y-4">
+          <h2 className="text-lg font-bold text-foreground">Game</h2>
           {/* Round duration */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <Clock className="w-5 h-5 text-muted-foreground" />
+              <Clock className="w-5 h-5 text-white" />
               <div className="flex-1">
                 <p className="font-medium text-foreground">Round Duration</p>
-                <p className="text-sm text-muted-foreground">{settings.roundDuration} seconds</p>
+                <p className="text-sm text-white">{settings.roundDuration} seconds</p>
               </div>
             </div>
             <Slider
@@ -69,10 +70,11 @@ export default function Settings() {
               className="w-full"
             />
           </div>
-        </SettingsSection>
+        </FadeInUp>
         
         {/* Sound & Haptics */}
-        <SettingsSection title="Sound & Haptics" delay={0.1}>
+        <FadeInUp delay={0.1} className="rounded-xl bg-muted/85 p-6 space-y-4">
+          <h2 className="text-lg font-bold text-foreground">Sound & Haptics</h2>
           <SettingRow icon={Volume2} label="Sound Effects">
             <Switch checked={!soundMuted} onCheckedChange={handleSoundToggle} />
           </SettingRow>
@@ -83,47 +85,49 @@ export default function Settings() {
               onCheckedChange={(checked) => updateWithSound({ vibrationEnabled: checked })}
             />
           </SettingRow>
-        </SettingsSection>
+        </FadeInUp>
         
         {/* Purchases */}
-        <SettingsSection title="Purchases" delay={0.2}>
+        <FadeInUp delay={0.2} className="rounded-xl bg-muted/85 p-6 space-y-4">
+          <h2 className="text-lg font-bold text-foreground">Purchases</h2>
           <Button
             variant="outline"
             onClick={handleRestorePurchases}
             disabled={premiumLoading}
             className="w-full justify-start"
           >
-            <RefreshCw className="w-5 h-5 mr-4 text-muted-foreground" />
+            <RefreshCw className="w-5 h-5 mr-1 text-white" />
             Restore Purchases
           </Button>
           
           {status.isActive && (
             <div className="p-3 rounded-lg bg-success/10 border border-success/20">
-              <p className="text-sm text-success font-medium">
-                ✓ Premium active
+              <p className="text-sm text-success font-medium flex items-center gap-4 pl-2">
+                <span>✓</span> Premium active
               </p>
             </div>
           )}
-        </SettingsSection>
+        </FadeInUp>
         
         {/* Legal */}
-        <SettingsSection title="Legal" delay={0.3} showSeparator={false}>
+        <FadeInUp delay={0.3} className="rounded-xl bg-muted/85 p-6 space-y-4">
+          <h2 className="text-lg font-bold text-foreground mb-2">Legal</h2>
           <Link to="/privacy">
-            <Button variant="ghost" className="w-full justify-between">
-              <div className="flex items-center gap-4">
-                <Shield className="w-5 h-5 text-muted-foreground" />
-                <span>Privacy Policy</span>
+            <Button variant="ghost" className="w-full justify-between text-base">
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-white" />
+                <span className="font-medium">Privacy Policy</span>
               </div>
-              <ExternalLink className="w-4 h-4 text-muted-foreground" />
+              <ExternalLink className="w-4 h-4 text-white" />
             </Button>
           </Link>
-        </SettingsSection>
+        </FadeInUp>
         
         {/* Version */}
-        <div className="p-4 text-center text-sm text-muted-foreground">
+        <FadeInUp delay={0.4} className="p-4 text-center text-sm text-white">
           <p>WordRush v1.0.0</p>
           <p className="text-xs mt-1">Made with ❤️</p>
-        </div>
+        </FadeInUp>
       </main>
     </PageLayout>
   );
