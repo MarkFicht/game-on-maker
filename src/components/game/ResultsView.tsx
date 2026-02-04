@@ -31,7 +31,7 @@ export function ResultsView({
         className="mb-4"
       >
         <div className="relative">
-          <Trophy className="w-16 h-16 text-warning" />
+          <span className="text-6xl">🏆</span>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -43,12 +43,12 @@ export function ResultsView({
         </div>
       </motion.div>
       
-      <DelayedFadeIn delay={0.2} className="font-display text-2xl font-bold text-foreground mb-1">
+      <DelayedFadeIn delay={0.2} className="font-display text-2xl font-bold text-foreground mb-1 overlay-dark rounded-xl px-6 py-2">
         {stats.correctCount >= 10 ? 'Amazing!' : stats.correctCount >= 5 ? 'Great Job!' : 'Good Try!'}
       </DelayedFadeIn>
       
       {deckName && (
-        <p className="text-muted-foreground mb-4 text-sm">{deckName}</p>
+        <p className="text-white mb-4 text-sm">{deckName}</p>
       )}
       
       {/* Stats */}
@@ -62,10 +62,9 @@ export function ResultsView({
       <DelayedFadeIn 
         delay={0.4} 
         y={0}
-        className="w-full mb-4 overflow-y-auto no-scrollbar"
-        style={{ minHeight: '150px', maxHeight: 'calc(100vh - 500px)' }}
+        className="w-full mb-4 overflow-y-auto"
       >
-        <div className="space-y-2">
+        <div className="space-y-2 pl-2 pr-2" style={{ minHeight: '120px', maxHeight: 'calc(100vh - 400px)' }}>
           {results.map((result, index) => (
             <motion.div
               key={result.word.id}
@@ -90,9 +89,9 @@ export function ResultsView({
         <Tappable className="flex-1">
           <Button
             variant="outline"
-            size="lg"
+            size="sm"
             onClick={onHome}
-            className="w-full h-12 rounded-xl"
+            className="w-full rounded-xl"
           >
             <Home className="w-4 h-4 mr-2" />
             Home
@@ -100,9 +99,9 @@ export function ResultsView({
         </Tappable>
         <Tappable className="flex-1">
           <Button
-            size="lg"
+            size="sm"
             onClick={onPlayAgain}
-            className="w-full h-12 btn-game rounded-xl text-primary-foreground"
+            className="w-full btn-game rounded-xl text-primary-foreground"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Play Again

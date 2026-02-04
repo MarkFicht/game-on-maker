@@ -138,16 +138,19 @@ export default function Game() {
   
   return (
     <PageLayout overflow>
+      {/* Header - only on ready phase */}
+      {gamePhase === 'ready' && (
+        <PageHeader 
+          title={deck.name} 
+          onBack={handleCancelGame}
+          showSound
+        />
+      )}
+      
       <AnimatePresence mode="wait">
         {/* Ready state - before countdown */}
         {gamePhase === 'ready' && (
           <FadeTransition itemKey="ready" className="flex-1 flex flex-col">
-            <PageHeader 
-              title={deck.name} 
-              onBack={handleCancelGame}
-              showSound
-            />
-            
             {/* Content */}
             <div className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
               <motion.div
@@ -208,18 +211,13 @@ export default function Game() {
             >
               {countdown}
             </motion.div>
-            <p className="text-muted-foreground mt-8">Get ready!</p>
+            <p className="text-white  mt-8 text-xl font-semibold bg-card overlay-darker rounded-xl px-6 py-3">Get ready!</p>
           </FadeTransition>
         )}
         
         {/* Playing */}
         {gamePhase === 'playing' && state.status === 'playing' && (
           <FadeTransition itemKey="playing" className="flex-1 flex flex-col overflow-hidden">
-            {/* Header - consistent across all views */}
-            <header className="flex items-center justify-end p-4 shrink-0">
-              <SoundToggle size="sm" />
-            </header>
-            
             <div className="flex-1 flex flex-col px-3 pb-3 md:px-4 md:pb-4 overflow-y-auto">
               {/* Timer - always centered, size changes based on screen */}
               <div className="flex justify-center pb-2 pt-2">
@@ -242,14 +240,16 @@ export default function Game() {
               </div>
               
               {/* Score indicator */}
-              <div className="flex justify-center gap-6 md:gap-8 mb-3 md:mb-4">
-                <div className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-success">{stats.correctCount}</p>
-                  <p className="text-xs text-muted-foreground">Correct</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-warning">{stats.skippedCount}</p>
-                  <p className="text-xs text-muted-foreground">Skipped</p>
+              <div className="flex justify-center mb-3 md:mb-4">
+                <div className="inline-flex gap-6 md:gap-8 overlay-dark rounded-2xl py-3 px-6">
+                  <div className="text-center">
+                    <p className="text-2xl md:text-3xl font-bold text-success">{stats.correctCount}</p>
+                    <p className="text-xs text-muted-foreground">Correct</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl md:text-3xl font-bold text-warning">{stats.skippedCount}</p>
+                    <p className="text-xs text-muted-foreground">Skipped</p>
+                  </div>
                 </div>
               </div>
               

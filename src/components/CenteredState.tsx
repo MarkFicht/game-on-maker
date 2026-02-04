@@ -13,7 +13,7 @@ interface CenteredStateProps {
 
 export function CenteredState({ message, action, children }: CenteredStateProps) {
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+    <div className="min-h-[100dvh] flex items-center justify-center">
       <div className="text-center">
         <p className="text-muted-foreground mb-4">{message}</p>
         {action && (

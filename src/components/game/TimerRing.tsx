@@ -31,7 +31,7 @@ export function TimerRing({
   
   return (
     <motion.div 
-      className="relative inline-flex items-center justify-center"
+      className="relative inline-flex items-center justify-center overlay-darker rounded-full p-3"
       animate={isLowTime ? { scale: [1, 1.05, 1] } : {}}
       transition={{ duration: 0.5, repeat: isLowTime ? Infinity : 0 }}
     >

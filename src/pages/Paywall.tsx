@@ -53,33 +53,35 @@ export default function Paywall() {
 
   return (
     <PageLayout>
-      <header className="flex items-center gap-4 p-4">
+      <header className="flex items-center gap-4 p-4 overlay-dark">
         <BackButton to="/" />
       </header>
       
       {/* Content */}
       <main className="flex-1 flex flex-col p-6">
         {/* Hero */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
+        <div className="rounded-xl bg-muted/85 p-6 mb-3 max-w-5xl mx-auto">
           <motion.div
-            initial={{ rotate: -10 }}
-            animate={{ rotate: 10 }}
-            transition={{ repeat: Infinity, repeatType: 'reverse', duration: 2 }}
-            className="inline-block"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
           >
-            <Crown className="w-16 h-16 text-secondary mx-auto mb-4" />
+            <motion.div
+              initial={{ rotate: -10 }}
+              animate={{ rotate: 10 }}
+              transition={{ repeat: Infinity, repeatType: 'reverse', duration: 2 }}
+              className="inline-flex items-center justify-center"
+            >
+              <div className="text-6xl">👑</div>
+            </motion.div>
+            <h1 className="font-display text-3xl font-bold text-gradient-premium mb-2">
+              Go Premium
+            </h1>
+            <p className="text-white">
+              Unlock the full WordRush experience
+            </p>
           </motion.div>
-          <h1 className="font-display text-3xl font-bold text-gradient-premium mb-2">
-            Go Premium
-          </h1>
-          <p className="text-muted-foreground">
-            Unlock the full WordRush experience
-          </p>
-        </motion.div>
+        </div>
         
         {/* Features */}
         <DelayedFadeIn delay={0.1} className="space-y-3 mb-8">
@@ -89,7 +91,7 @@ export default function Paywall() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
-              className="flex items-center gap-4 p-4 rounded-xl bg-muted/50"
+              className="flex items-center gap-4 p-4 rounded-xl bg-muted/85"
             >
               <div className="w-10 h-10 rounded-full premium-gradient flex items-center justify-center">
                 <feature.icon className="w-5 h-5 text-white" />
@@ -141,7 +143,7 @@ export default function Paywall() {
                   </Button>
                 </Tappable>
                 {product.id === 'premium_bundle' && (
-                  <p className="text-center text-xs text-muted-foreground mt-1">
+                  <p className="text-center text-xs text-white mt-1">
                     Best value - Save 25%
                   </p>
                 )}
@@ -155,14 +157,14 @@ export default function Paywall() {
           variant="ghost"
           onClick={handleRestore}
           disabled={purchasing}
-          className="text-muted-foreground"
+          className="text-white"
         >
           Restore Purchases
         </Button>
       </main>
       
       {/* Footer */}
-      <footer className="p-4 text-center text-xs text-muted-foreground">
+      <footer className="p-4 text-center text-xs text-white">
         <p>One-time purchase. No subscription.</p>
       </footer>
     </PageLayout>

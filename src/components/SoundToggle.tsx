@@ -29,7 +29,7 @@ export function SoundToggle({ className = '', size = 'md' }: SoundToggleProps) {
         variant="ghost"
         size="icon"
         onClick={handleToggle}
-        className={`text-muted-foreground hover:text-foreground ${className}`}
+        className={`text-white hover:text-foreground ${className}`}
         aria-label={muted ? 'Turn sound on' : 'Turn sound off'}
       >
         {muted ? (

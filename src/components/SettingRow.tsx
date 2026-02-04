@@ -12,7 +12,7 @@ export function SettingRow({ icon: Icon, label, children }: SettingRowProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-4">
-        <Icon className="w-5 h-5 text-muted-foreground" />
+        <Icon className="w-5 h-5 text-white" />
         <p className="font-medium text-foreground">{label}</p>
       </div>
       {children}
