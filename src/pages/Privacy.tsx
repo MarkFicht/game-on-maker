@@ -21,7 +21,7 @@ export default function Privacy() {
       </header>
       
       {/* Content */}
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto m-4 p-4 rounded-xl bg-muted/85">
         <DelayedFadeIn className="prose prose-invert max-w-none">
           <p className="text-muted-foreground text-sm mb-4">
             Last updated: {new Date().toLocaleDateString()}
