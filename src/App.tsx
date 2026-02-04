@@ -29,24 +29,24 @@ const App = () => {
 
     const init = async () => {
       try {
-        // Fetch background image as blob - only 1 download
-        const res = await fetch('/src/game/bg.jpg');
+        // Fetch background image as blob
+        const url = new URL('@/game/bg.jpg', import.meta.url).href;
+        const res = await fetch(url);
         if (!res.ok) {
           throw new Error(`Failed to fetch: ${res.status}`);
         }
         const blob = await res.blob();
         objectUrl = URL.createObjectURL(blob);
 
-        const img = new Image();
-        img.src = objectUrl;
-        try {
-          await img.decode?.();
-        } catch {}
-
-        if (alive) {
-          // Set background with local blob URL
-          document.body.style.backgroundImage = `url('${objectUrl}')`;
+        // Create background div if it doesn't exist
+        let bgDiv = document.getElementById('app-background');
+        if (!bgDiv) {
+          bgDiv = document.createElement('div');
+          bgDiv.id = 'app-background';
+          bgDiv.className = 'fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat';
+          document.body.insertBefore(bgDiv, document.body.firstChild);
         }
+        bgDiv.style.backgroundImage = `url('${objectUrl}')`;
       } catch (err) {
         console.error('Failed to load background:', err);
       }
