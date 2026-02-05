@@ -22,7 +22,7 @@ export default function Home() {
       <PageHeader title="WordRush" backTo="/settings" />
       
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
+      <main className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-6 gap-6">
         {/* Logo area */}
         <motion.div
           {...scaleIn}
@@ -44,9 +44,9 @@ export default function Home() {
             <Button
               size="lg"
               onClick={withAudio('tap', () => navigate('/decks'))}
-              className="w-full h-16 text-xl font-bold btn-game rounded-2xl border-4 border-white glow text-primary-foreground"
+              className="w-full h-16 text-xl font-bold btn-game rounded-2xl border-4 border-white glow text-primary-foreground hover:border-primary"
             >
-              <Play className="w-6 h-6 mr-2" fill="currentColor" />
+              <Play className="w-6 h-6 mr-1" fill="currentColor" />
               Play Now
             </Button>
           </Tappable>
@@ -72,9 +72,9 @@ export default function Home() {
       </main>
       
       {/* Footer */}
-      <footer className="p-4 text-center">
+      <footer className="p-3 text-center">
         <FadeIn delay={0.4} className="flex items-center justify-center gap-2 text-white text-sm">
-          <Zap className="w-4 h-4" />
+          <Zap className="w-3 h-3" />
           <span>Party game for friends</span>
         </FadeIn>
       </footer>

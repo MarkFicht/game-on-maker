@@ -48,7 +48,7 @@ export default function Settings() {
       <PageHeader title="Settings" backTo="/" />
       
       {/* Settings list */}
-      <main className="flex-1 overflow-y-auto p-4 space-y-4">
+      <main className="flex-1 p-4 space-y-4">
         {/* Game settings */}
         <FadeInUp delay={0} className="rounded-xl bg-muted/85 p-6 space-y-4">
           <h2 className="text-lg font-bold text-foreground">Game</h2>
@@ -94,15 +94,16 @@ export default function Settings() {
             variant="outline"
             onClick={handleRestorePurchases}
             disabled={premiumLoading}
-            className="w-full justify-start"
+            className="w-full h-12 text-base px-6 rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
+
           >
             <RefreshCw className="w-5 h-5 mr-1 text-white" />
             Restore Purchases
           </Button>
           
           {status.isActive && (
-            <div className="p-3 rounded-lg bg-success/10 border border-success/20">
-              <p className="text-sm text-success font-medium flex items-center gap-4 pl-2">
+            <div className="w-full h-12 rounded-lg bg-success/10 border-4 border-success/20 flex items-center justify-center">
+              <p className="text-base text-success font-medium text-center">
                 <span>✓</span> Premium active
               </p>
             </div>

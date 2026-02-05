@@ -7,8 +7,6 @@ interface GameActionsProps {
   onCorrect: () => void;
   onSkip: () => void;
   onPause: () => void;
-  isPaused: boolean;
-  onResume: () => void;
   allowSkip?: boolean;
 }
 
@@ -16,30 +14,10 @@ export function GameActions({
   onCorrect, 
   onSkip, 
   onPause, 
-  isPaused, 
-  onResume,
   allowSkip = true 
 }: GameActionsProps) {
-  if (isPaused) {
-    return (
-      <div className="flex flex-col items-center gap-4">
-        <p className="text-muted-foreground mb-2">Game Paused</p>
-        <Tappable>
-          <Button
-            size="lg"
-            onClick={onResume}
-            className="btn-game h-16 px-12 text-xl font-semibold text-primary-foreground rounded-2xl"
-          >
-            <Play className="w-6 h-6 mr-2" />
-            Resume
-          </Button>
-        </Tappable>
-      </div>
-    );
-  }
-  
   return (
-    <div className="flex flex-col gap-3 w-full max-w-md mx-auto px-1">
+    <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
       {/* Main action buttons */}
       <div className="flex gap-2">
         {/* Skip button */}
@@ -48,10 +26,10 @@ export function GameActions({
             <Button
               size="lg"
               onClick={onSkip}
-              className="btn-skip w-full h-14 text-base font-bold text-warning-foreground rounded-xl px-2"
+              className="w-full px-2 h-16 text-lg font-bold btn-game rounded-xl border-4 border-white glow text-primary-foreground hover:border-primary"
             >
               <SkipForward className="w-5 h-5" />
-              <span className="ml-1">Pass</span>
+              Pass
             </Button>
           </Tappable>
         )}
@@ -61,10 +39,10 @@ export function GameActions({
           <Button
             size="lg"
             onClick={onCorrect}
-            className="btn-success w-full h-14 text-base font-bold text-success-foreground rounded-xl px-2"
+            className="w-full px-2 h-16 text-lg font-bold btn-success text-success-foreground rounded-xl border-4 border-white glow hover:border-success"
           >
             <Check className="w-5 h-5" />
-            <span className="ml-1">Got it!</span>
+            Got it!
           </Button>
         </Tappable>
       </div>
@@ -74,9 +52,9 @@ export function GameActions({
         variant="outline"
         size="sm"
         onClick={onPause}
-        className="mx-auto text-white border-white/30 bg-card/80 hover:bg-accent/80 hover:text-white"
+        className="mx-auto px-8 rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
       >
-        <Pause className="w-4 h-4 mr-2" />
+        <Pause className="w-4 h-4" />
         Pause
       </Button>
     </div>

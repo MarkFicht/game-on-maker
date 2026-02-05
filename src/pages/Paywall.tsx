@@ -10,8 +10,9 @@ import { toast } from 'sonner';
 import { track } from '@/services/analytics';
 import { useEffect } from 'react';
 import { PageLayout } from '@/components/PageLayout';
-import { Tappable, DelayedFadeIn } from '@/components/animated';
+import { Tappable, DelayedFadeIn, FadeIn } from '@/components/animated';
 import { withAudio } from '@/lib/audio-helpers';
+import { PageHeader } from '@/components/PageHeader';
 
 const features = [
   { icon: Zap, text: 'Remove all ads' },
@@ -53,12 +54,10 @@ export default function Paywall() {
 
   return (
     <PageLayout>
-      <header className="flex items-center gap-4 p-4 overlay-dark">
-        <BackButton to="/" />
-      </header>
+      <PageHeader title="Go Premium" backTo="/" />
       
       {/* Content */}
-      <main className="flex-1 flex flex-col p-6">
+      <main className="flex-1 overflow-y-auto flex flex-col p-6">
         {/* Hero */}
         <div className="rounded-xl bg-muted/85 p-6 mb-3 max-w-5xl mx-auto">
           <motion.div
@@ -74,7 +73,7 @@ export default function Paywall() {
             >
               <div className="text-6xl">👑</div>
             </motion.div>
-            <h1 className="font-display text-3xl font-bold text-gradient-premium mb-2">
+            <h1 className="font-display text-3xl font-bold text-gradient-premium mb-2 mt-1">
               Go Premium
             </h1>
             <p className="text-white">
@@ -113,7 +112,7 @@ export default function Paywall() {
             
             return (
               <DelayedFadeIn key={product.id} delay={0.4 + index * 0.1}>
-                <Tappable>
+                <Tappable whileHover={{ scale: 1.01 }} className="transition-all">
                   <Button
                     onClick={withAudio('tap', () => handlePurchase(product.id))}
                     disabled={purchasing || isPurchased}
@@ -134,19 +133,18 @@ export default function Paywall() {
                           <span className={`font-display text-lg font-bold shrink-0 ${
                             isPurchased ? 'text-success line-through' : product.id === 'premium_bundle' ? 'text-white' : 'text-foreground'
                           }`}>
-                            {product.price}
+                            {product.id === 'premium_bundle' && <span className="mr-2 text-sm line-through opacity-80 text-red-200">$7.98</span>}
+                            {`${product.price}`}
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs opacity-80 mt-1">{product.description}</p>
+                      <p className="text-xs opacity-80 mt-1">
+                        {`${product.description}`}
+                        {product.id === 'premium_bundle' && <span className="ml-1"> (-25%🔥)</span>}
+                      </p>
                     </div>
                   </Button>
                 </Tappable>
-                {product.id === 'premium_bundle' && (
-                  <p className="text-center text-xs text-white mt-1">
-                    Best value - Save 25%
-                  </p>
-                )}
               </DelayedFadeIn>
             );
           })}
@@ -154,18 +152,21 @@ export default function Paywall() {
         
         {/* Restore */}
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={handleRestore}
           disabled={purchasing}
-          className="text-white"
+          className="w-full h-12 text-md rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
         >
           Restore Purchases
         </Button>
       </main>
       
       {/* Footer */}
-      <footer className="p-4 text-center text-xs text-white">
-        <p>One-time purchase. No subscription.</p>
+      <footer className="p-3 text-center">
+        <FadeIn delay={0.4} className="flex items-center justify-center gap-2 text-white text-sm">
+          <Zap className="w-3 h-3" />
+          <span>One-time purchase. No subscription.</span>
+        </FadeIn>
       </footer>
     </PageLayout>
   );

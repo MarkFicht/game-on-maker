@@ -21,13 +21,13 @@ export function WordCard({ word, deckIcon }: WordCardProps) {
               type: 'spring', 
               stiffness: 300, 
               damping: 25,
-              duration: 0.3 
+              duration: 0.25
             }}
-            className="word-card absolute inset-0 flex flex-col items-center justify-center p-6 md:p-8 no-select"
+            className="word-card absolute inset-0 flex flex-col items-center justify-center p-2 md:p-4 no-select"
           >
             {/* Deck icon */}
             {deckIcon && (
-              <span className="absolute top-3 left-3 md:top-4 md:left-4 text-2xl md:text-3xl opacity-50">
+              <span className="absolute top-3 left-3 md:top-4 md:left-4 text-2xl md:text-3xl emoji-outlined-md opacity-90">
                 {deckIcon}
               </span>
             )}
