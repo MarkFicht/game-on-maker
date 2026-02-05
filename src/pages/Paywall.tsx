@@ -151,14 +151,18 @@ export default function Paywall() {
         </div>
         
         {/* Restore */}
-        <Button
-          variant="outline"
-          onClick={handleRestore}
-          disabled={purchasing}
-          className="w-full h-12 text-md rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
-        >
-          Restore Purchases
-        </Button>
+        <DelayedFadeIn delay={0.5 + (products.length || 0) * 0.1}>
+          <Tappable whileHover={{ scale: 1.01 }}>
+            <Button
+              variant="outline"
+              onClick={handleRestore}
+              disabled={purchasing}
+              className="w-full h-12 text-md rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
+            >
+              Restore Purchases
+            </Button>
+          </Tappable>
+        </DelayedFadeIn>
       </main>
       
       {/* Footer */}
