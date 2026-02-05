@@ -1,9 +1,10 @@
 // Hook for premium status and billing
 import { useState, useEffect, useCallback } from 'react';
-import { getBillingService, type PremiumStatus, type Product, type ProductId } from '@/services/billing';
+import { getBillingService, type Product, type ProductId } from '@/services/billing';
+import { usePremiumContext } from '@/App';
 
 export interface UsePremiumReturn {
-  status: PremiumStatus;
+  status: ReturnType<typeof usePremiumContext>['premiumStatus'];
   products: Product[];
   loading: boolean;
   purchasing: boolean;
@@ -12,48 +13,24 @@ export interface UsePremiumReturn {
   refresh: () => Promise<void>;
 }
 
+const billing = getBillingService();
+
 export function usePremium(): UsePremiumReturn {
-  const [status, setStatus] = useState<PremiumStatus>({
-    isActive: false,
-    hasRemoveAds: false,
-    hasPremiumDecks: false,
-    source: 'mock',
-  });
+  const { premiumStatus, premiumLoading, refreshStatus } = usePremiumContext();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   
-  const billing = getBillingService();
-  
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      await billing.initialize();
-      const [premiumStatus, productList] = await Promise.all([
-        billing.getPremiumStatus(),
-        billing.getProducts(),
-      ]);
-      setStatus(premiumStatus);
-      setProducts(productList);
-    } catch (error) {
-      console.error('[usePremium] Failed to load:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [billing]);
-  
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    billing.getProducts().then(setProducts).catch(
+      (e) => console.error('[usePremium] Failed to load products:', e)
+    );
+  }, []);
   
   const purchase = useCallback(async (productId: ProductId): Promise<boolean> => {
     setPurchasing(true);
     try {
       const result = await billing.purchase(productId);
-      if (result.success) {
-        const newStatus = await billing.getPremiumStatus();
-        setStatus(newStatus);
-      }
+      if (result.success) await refreshStatus();
       return result.success;
     } catch (error) {
       console.error('[usePremium] Purchase failed:', error);
@@ -61,38 +38,24 @@ export function usePremium(): UsePremiumReturn {
     } finally {
       setPurchasing(false);
     }
-  }, [billing]);
+  }, [refreshStatus]);
   
   const restore = useCallback(async () => {
-    setLoading(true);
     try {
-      const restoredStatus = await billing.restorePurchases();
-      setStatus(restoredStatus);
+      await billing.restorePurchases();
+      await refreshStatus();
     } catch (error) {
       console.error('[usePremium] Restore failed:', error);
-    } finally {
-      setLoading(false);
     }
-  }, [billing]);
+  }, [refreshStatus]);
   
   return {
-    status,
+    status: premiumStatus,
     products,
-    loading,
+    loading: premiumLoading,
     purchasing,
     purchase,
     restore,
-    refresh: loadData,
+    refresh: refreshStatus,
   };
 }
-
-// Helper function to create simple status check hooks
-const createStatusHook = (key: keyof PremiumStatus) => () => {
-  const { status } = usePremium();
-  return status[key] as boolean;
-};
-
-// Simple check hooks
-export const useHasPremium = createStatusHook('isActive');
-export const useHasRemoveAds = createStatusHook('hasRemoveAds');
-export const useHasPremiumDecks = createStatusHook('hasPremiumDecks');

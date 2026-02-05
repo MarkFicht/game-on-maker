@@ -3,9 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, createContext, useContext, ReactNode, useCallback } from "react";
 import { getAnalytics } from "@/services/analytics";
-import { getBillingService } from "@/services/billing";
+import { getBillingService, type PremiumStatus } from "@/services/billing";
 
 // Pages
 import Home from "./pages/Home";
@@ -18,6 +18,57 @@ import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Premium context
+interface PremiumContextType {
+  premiumStatus: PremiumStatus;
+  premiumLoading: boolean;
+  refreshStatus: () => Promise<void>;
+}
+
+const PremiumContext = createContext<PremiumContextType | null>(null);
+
+export function usePremiumContext() {
+  const context = useContext(PremiumContext);
+  if (!context) {
+    throw new Error('usePremiumContext must be used within PremiumProvider');
+  }
+  return context;
+}
+
+function PremiumProvider({ children }: { children: ReactNode }) {
+  const [premiumStatus, setPremiumStatus] = useState<PremiumStatus>({
+    isActive: false,
+    hasRemoveAds: false,
+    hasPremiumDecks: false,
+    source: 'mock',
+  });
+  const [premiumLoading, setPremiumLoading] = useState(true);
+
+  const refreshStatus = useCallback(async () => {
+    try {
+      const status = await getBillingService().getPremiumStatus();
+      setPremiumStatus(status);
+    } catch (error) {
+      console.error('Failed to refresh premium status:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    const loadPremiumStatus = async () => {
+      await refreshStatus();
+      setPremiumLoading(false);
+    };
+
+    loadPremiumStatus();
+  }, [refreshStatus]);
+
+  return (
+    <PremiumContext.Provider value={{ premiumStatus, premiumLoading, refreshStatus }}>
+      {children}
+    </PremiumContext.Provider>
+  );
+}
 
 const App = () => {
   const [isReady, setIsReady] = useState(false);
@@ -86,23 +137,25 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner position="top-center" />
-        <BrowserRouter basename={import.meta.env.PROD ? '/game-on-maker' : '/'}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/decks" element={<Decks />} />
-            <Route path="/game/:deckId" element={<Game />} />
-            <Route path="/paywall" element={<Paywall />} />
-            <Route path="/premium-summary" element={<PremiumSummary />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/privacy" element={<Privacy />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <PremiumProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner position="top-center" />
+          <BrowserRouter basename={import.meta.env.PROD ? '/game-on-maker' : '/'}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/decks" element={<Decks />} />
+              <Route path="/game/:deckId" element={<Game />} />
+              <Route path="/paywall" element={<Paywall />} />
+              <Route path="/premium-summary" element={<PremiumSummary />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/privacy" element={<Privacy />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </PremiumProvider>
     </QueryClientProvider>
   );
 };
