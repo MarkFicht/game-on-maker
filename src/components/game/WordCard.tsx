@@ -19,6 +19,41 @@ const lsm = '[@media(orientation:landscape)_and_(max-height:500px)]';
 const pulseAnim = { opacity: [0.95, 1, 0.95], scale: [1, 1.15, 1] };
 const fadeInScale = { opacity: 1, scale: 1 };
 const fadeOutScale = { opacity: 0, scale: 0.8 };
+const buttonBase = `flex-1 basis-1/2 ${lsm}:h-[100px] ${lsm}:min-h-[100px] flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 ${lsm}:p-1 no-select cursor-pointer transition-all relative`;
+
+interface ZoneProps {
+  isActive: boolean;
+  icon: React.ReactNode;
+  label: string;
+  bgColor: string;
+  position: 'top' | 'bottom';
+  textColor: string;
+  onHover: (active: boolean) => void;
+  onClick: () => void;
+  hasBorder?: boolean;
+}
+
+function Zone({ isActive, icon, label, bgColor, position, textColor, onHover, onClick, hasBorder }: ZoneProps) {
+  const isTop = position === 'top';
+  return (
+    <motion.button
+      onHoverStart={() => onHover(true)}
+      onHoverEnd={() => onHover(false)}
+      onClick={onClick}
+      className={buttonBase}
+    >
+      {hasBorder && <div className={`absolute top-0 left-0 right-0 h-0 border-t-4 ${lsm}:border-t-2 border-dashed border-border/85`}></div>}
+      <motion.div animate={{ backgroundColor: isActive ? bgColor : 'rgba(0, 0, 0, 0)' }} transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }} className="absolute inset-0 pointer-events-none" />
+      <motion.div className={`absolute pointer-events-none ${isTop ? 'top-3 right-3 md:top-4 md:right-4' : 'bottom-3 right-3 md:bottom-4 md:right-4'}`} animate={isActive ? { opacity: 0, scale: 0.5 } : pulseAnim} transition={{ duration: isActive ? 0.3 : 2, repeat: isActive ? 0 : Infinity, ease: "easeInOut" }}>
+        {icon}
+      </motion.div>
+      <motion.div className="relative z-10 flex flex-col items-center justify-center" animate={isActive ? fadeInScale : fadeOutScale} transition={{ duration: 0.3 }}>
+        {icon}
+        <span className={`${textColor} font-bold text-xl md:text-2xl mt-2`}>{label}</span>
+      </motion.div>
+    </motion.button>
+  );
+}
 
 export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }: WordCardProps) {
   const [hoverZone, setHoverZone] = useState<'top' | 'bottom' | null>(null);
@@ -28,11 +63,6 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
     setTimeout(() => callback?.(), 500);
     setTimeout(() => setHoverZone(null), 600);
   };
-
-  const buttonBase = `flex-1 basis-1/2 ${lsm}:h-[100px] ${lsm}:min-h-[100px] flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 ${lsm}:p-1 no-select cursor-pointer transition-all relative`;
-  
-  const cornerIconBase = "absolute pointer-events-none";
-  const centerIconBase = "relative z-10 flex flex-col items-center justify-center";
 
   return (
     <motion.div 
@@ -55,37 +85,16 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
             style={{ transformStyle: 'preserve-3d' }}
           >
             {/* Correct Zone - Top Half */}
-            <motion.button
-              onHoverStart={() => setHoverZone('top')}
-              onHoverEnd={() => setHoverZone(null)}
+            <Zone
+              isActive={hoverZone === 'top'}
+              icon={<Check className="w-10 h-10 md:w-12 md:h-12 text-success" />}
+              label="Got it!"
+              bgColor="rgba(34, 197, 94, 0.6)"
+              position="top"
+              textColor="text-success"
+              onHover={(active) => setHoverZone(active ? 'top' : null)}
               onClick={() => handleZoneClick('top', onCorrect)}
-              className={buttonBase}
-            >
-              <motion.div
-                animate={{ backgroundColor: hoverZone === 'top' ? 'rgba(34, 197, 94, 0.6)' : 'rgba(0, 0, 0, 0)' }}
-                transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }}
-                className="absolute inset-0 pointer-events-none"
-              />
-              
-              {/* Corner icon with pulse */}
-              <motion.div
-                className={`${cornerIconBase} top-3 right-3 md:top-4 md:right-4`}
-                animate={hoverZone === 'top' ? { opacity: 0, scale: 0.5 } : pulseAnim}
-                transition={{ duration: hoverZone === 'top' ? 0.3 : 2, repeat: hoverZone === 'top' ? 0 : Infinity, ease: "easeInOut" }}
-              >
-                <Check className="w-10 h-10 md:w-12 md:h-12 text-success" />
-              </motion.div>
-
-              {/* Center icon on hover */}
-              <motion.div 
-                className={centerIconBase}
-                animate={hoverZone === 'top' ? fadeInScale : fadeOutScale}
-                transition={{ duration: 0.3 }}
-              >
-                <Check className="w-16 h-16 md:w-20 md:h-20 text-success" />
-                <span className="text-success font-bold text-xl md:text-2xl mt-2">Got it!</span>
-              </motion.div>
-            </motion.button>
+            />
 
             {/* Word text - Center overlay */}
             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 pointer-events-none z-20">
@@ -108,40 +117,17 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
 
             {/* Skip Zone - Bottom Half */}
             {allowSkip && (
-              <motion.button
-                onHoverStart={() => setHoverZone('bottom')}
-                onHoverEnd={() => setHoverZone(null)}
+              <Zone
+                isActive={hoverZone === 'bottom'}
+                icon={<X className="w-10 h-10 md:w-12 md:h-12 text-warning" />}
+                label="Pass"
+                bgColor="rgba(180, 83, 9, 0.6)"
+                position="bottom"
+                textColor="text-warning"
+                onHover={(active) => setHoverZone(active ? 'bottom' : null)}
                 onClick={() => handleZoneClick('bottom', onSkip)}
-                className={buttonBase}
-              >
-                {/* Border line */}
-                <div className={`absolute top-0 left-0 right-0 h-0 border-t-4 ${lsm}:border-t-2 border-dashed border-border/85`}></div>
-                
-                <motion.div
-                  animate={{ backgroundColor: hoverZone === 'bottom' ? 'rgba(180, 83, 9, 0.6)' : 'rgba(0, 0, 0, 0)' }}
-                  transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }}
-                  className="absolute inset-0 pointer-events-none"
-                />
-                
-                {/* Corner icon with pulse */}
-                <motion.div
-                  className={`${cornerIconBase} bottom-3 right-3 md:bottom-4 md:right-4`}
-                  animate={hoverZone === 'bottom' ? { opacity: 0, scale: 0.5 } : pulseAnim}
-                  transition={{ duration: hoverZone === 'bottom' ? 0.3 : 2, repeat: hoverZone === 'bottom' ? 0 : Infinity, ease: "easeInOut" }}
-                >
-                  <X className="w-10 h-10 md:w-12 md:h-12 text-warning" />
-                </motion.div>
-
-                {/* Center icon on hover */}
-                <motion.div 
-                  className={centerIconBase}
-                  animate={hoverZone === 'bottom' ? fadeInScale : fadeOutScale}
-                  transition={{ duration: 0.3 }}
-                >
-                  <X className="w-16 h-16 md:w-20 md:h-20 text-warning" />
-                  <span className="text-warning font-bold text-xl md:text-2xl mt-2">Pass</span>
-                </motion.div>
-              </motion.button>
+                hasBorder
+              />
             )}
           </motion.div>
         )}
