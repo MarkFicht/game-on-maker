@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { PageLayout } from '@/components/PageLayout';
 import { SoundToggle } from '@/components/SoundToggle';
 import { CenteredState } from '@/components/CenteredState';
-import { TimerRing, WordCard, GameActions, ResultsView } from '@/components/game';
+import { GameSession, ResultsView } from '@/components/game';
 import { scaleIn, Tappable, FadeTransition } from '@/components/animated';
 import { withAudio } from '@/lib/audio-helpers';
 import { useGame } from '@/hooks/useGame';
@@ -146,7 +146,7 @@ export default function Game() {
         />
       )}
       
-      <main className="flex-1 p-4 flex items-center justify-center">
+      <main className="flex-1 flex p-4 items-stretch justify-center overflow-hidden">
         <AnimatePresence mode="wait">
           {/* Ready state - before countdown */}
           {gamePhase === 'ready' && (
@@ -219,59 +219,22 @@ export default function Game() {
           
           {/* Playing */}
           {gamePhase === 'playing' && state.status === 'playing' && (
-            <FadeTransition itemKey="playing" className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 flex flex-col md:p-4 overflow-y-auto">
-                
-                {/* Timer - always centered, size changes based on screen */}
-                <div className="flex justify-center pb-2">
-                  <div className="md:hidden">
-                    <TimerRing
-                      timeRemaining={state.timeRemaining}
-                      totalTime={state.totalTime}
-                      size={70}
-                      strokeWidth={6}
-                    />
-                  </div>
-                  <div className="hidden md:block">
-                    <TimerRing
-                      timeRemaining={state.timeRemaining}
-                      totalTime={state.totalTime}
-                      size={110}
-                      strokeWidth={8}
-                    />
-                  </div>
-                </div>
-                
-                {/* Score indicator */}
-                <div className="flex justify-center mb-3 md:mb-4">
-                  <div className="inline-flex gap-6 md:gap-8 overlay-dark rounded-2xl py-3 px-6">
-                    <div className="text-center">
-                      <p className="text-2xl md:text-3xl font-bold text-success">{stats.correctCount}</p>
-                      <p className="text-xs text-muted-foreground">Correct</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl md:text-3xl font-bold text-warning">{stats.skippedCount}</p>
-                      <p className="text-xs text-muted-foreground">Skipped</p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Word card and actions centered together */}
-                <div className="flex-1 flex flex-col items-center justify-center gap-4 md:gap-5 md:px-2 min-h-0">
-                  <WordCard word={currentWord} deckIcon={deck.icon} />
-                  <GameActions
-                    onCorrect={handleCorrect}
-                    onSkip={handleSkip}
-                    onPause={handlePause}
-                  />
-                </div>
-              </div>
+            <FadeTransition itemKey="playing" className="flex-1 w-full flex flex-col">
+              <GameSession
+                word={currentWord}
+                deckIcon={deck.icon}
+                state={state}
+                stats={stats}
+                onCorrect={handleCorrect}
+                onSkip={handleSkip}
+                onPause={handlePause}
+              />
             </FadeTransition>
           )}
           
           {/* Paused */}
           {gamePhase === 'playing' && state.status === 'paused' && (
-            <FadeTransition itemKey="paused" className="flex-1 flex items-center justify-center p-4">
+            <FadeTransition itemKey="paused" className="flex-1 flex items-center justify-center p-2">
               <div className="game-card p-8 text-center max-w-sm w-full">
                 <span className="text-5xl mb-4 block emoji-outlined-md">⏸️</span>
                 <h2 className="font-display text-2xl font-bold text-foreground">
@@ -323,7 +286,7 @@ export default function Game() {
           
           {/* Results */}
           {gamePhase === 'playing' && state.status === 'finished' && (
-            <FadeTransition itemKey="results" className="flex-1 flex flex-col items-center justify-center">
+            <FadeTransition itemKey="results" className="flex-1 flex flex-col items-center justify-center self-center">
               <ResultsView
                 stats={stats}
                 results={state.results}
