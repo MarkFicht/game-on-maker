@@ -1,5 +1,5 @@
 // Word Card Component - The main game display with integrated action zones
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import type { Word } from '@/game/types';
@@ -34,7 +34,7 @@ interface ZoneProps {
 }
 
 function Zone({ isActive, icon, label, bgColor, position, textColor, onHover, onClick, hasBorder }: ZoneProps) {
-  const isTop = position === 'top';
+  const posClass = position === 'top' ? 'top-3 right-3 md:top-4 md:right-4' : 'bottom-3 right-3 md:bottom-4 md:right-4';
   return (
     <motion.button
       onHoverStart={() => onHover(true)}
@@ -43,11 +43,11 @@ function Zone({ isActive, icon, label, bgColor, position, textColor, onHover, on
       className={buttonBase}
     >
       {hasBorder && <div className={`absolute top-0 left-0 right-0 h-0 border-t-4 ${lsm}:border-t-2 border-dashed border-border/85`}></div>}
-      <motion.div animate={{ backgroundColor: isActive ? bgColor : 'rgba(0, 0, 0, 0)' }} transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }} className="absolute inset-0 pointer-events-none" />
-      <motion.div className={`absolute pointer-events-none ${isTop ? 'top-3 right-3 md:top-4 md:right-4' : 'bottom-3 right-3 md:bottom-4 md:right-4'}`} animate={isActive ? { opacity: 0, scale: 0.5 } : pulseAnim} transition={{ duration: isActive ? 0.3 : 2, repeat: isActive ? 0 : Infinity, ease: "easeInOut" }}>
+      <motion.div animate={{ backgroundColor: isActive ? bgColor : 'rgba(0, 0, 0, 0)' }} transition={{ type: 'tween', duration: 0.4 }} className="absolute inset-0" />
+      <motion.div className={`absolute pointer-events-none ${posClass}`} animate={isActive ? { opacity: 0, scale: 0.5 } : pulseAnim} transition={{ duration: isActive ? 0.3 : 2, repeat: isActive ? 0 : Infinity }}>
         {icon}
       </motion.div>
-      <motion.div className="relative z-10 flex flex-col items-center justify-center" animate={isActive ? fadeInScale : fadeOutScale} transition={{ duration: 0.3 }}>
+      <motion.div className="relative z-10 flex flex-col items-center justify-center" initial={fadeOutScale} animate={isActive ? fadeInScale : fadeOutScale} transition={{ duration: 0.3 }}>
         {icon}
         <span className={`${textColor} font-bold text-xl md:text-2xl mt-2`}>{label}</span>
       </motion.div>
@@ -57,11 +57,17 @@ function Zone({ isActive, icon, label, bgColor, position, textColor, onHover, on
 
 export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }: WordCardProps) {
   const [hoverZone, setHoverZone] = useState<'top' | 'bottom' | null>(null);
+  const [tiltZone, setTiltZone] = useState<'top' | 'bottom' | null>(null);
+
+  useEffect(() => {
+    setTiltZone(null);
+    setHoverZone(null);
+  }, [word?.id]);
 
   const handleZoneClick = (zone: 'top' | 'bottom', callback?: () => void) => {
+    setTiltZone(zone);
     setHoverZone(zone);
     setTimeout(() => callback?.(), 500);
-    setTimeout(() => setHoverZone(null), 600);
   };
 
   return (
@@ -77,7 +83,7 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
             animate={{ 
               rotateY: 0, 
               opacity: 1,
-              rotateX: hoverZone === 'top' ? -15 : hoverZone === 'bottom' ? 15 : 0 
+              rotateX: tiltZone === 'top' ? -15 : tiltZone === 'bottom' ? 15 : (hoverZone === 'top' ? -15 : hoverZone === 'bottom' ? 15 : 0)
             }}
             exit={{ rotateY: -90, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25, duration: 0.25 }}
