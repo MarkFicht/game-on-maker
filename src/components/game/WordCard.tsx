@@ -17,7 +17,7 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
 
   return (
     <motion.div 
-      className="w-full h-full max-w-4xl flex items-center justify-center"
+      className="w-full h-full max-w-4xl [@media(orientation:landscape)_and_(max-height:500px)]:h-[200px]"
       style={{ perspective: 1000, transformStyle: 'preserve-3d' }}
     >
       <AnimatePresence mode="wait">
@@ -37,7 +37,7 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
               damping: 25,
               duration: 0.25
             }}
-            className="relative w-full h-full word-card rounded-2xl overflow-hidden flex flex-col"
+            className="relative w-full h-full [@media(orientation:landscape)_and_(max-height:500px)]:h-[200px] word-card rounded-2xl overflow-hidden flex flex-col"
             style={{ transformStyle: 'preserve-3d' }}
           >
             {/* Correct Zone - Top Half */}
@@ -49,7 +49,7 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
                 setTimeout(() => onCorrect?.(), 500);
                 setTimeout(() => setHoverZone(null), 600);
               }}
-              className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 no-select cursor-pointer transition-all relative"
+              className="flex-1 basis-1/2 [@media(orientation:landscape)_and_(max-height:500px)]:h-[100px] [@media(orientation:landscape)_and_(max-height:500px)]:min-h-[100px] flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 [@media(orientation:landscape)_and_(max-height:500px)]:p-1 no-select cursor-pointer transition-all relative"
             >
               <motion.div
                 animate={{ backgroundColor: hoverZone === 'top' ? 'rgba(34, 197, 94, 0.6)' : 'rgba(0, 0, 0, 0)' }}
@@ -97,7 +97,7 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
               )}
               
               {/* Word text */}
-              <h2 className="font-display text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-center text-foreground leading-tight">
+              <h2 className="font-display text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl [@media(orientation:landscape)_and_(max-height:500px)]:text-2xl font-bold text-center text-foreground leading-tight">
                 {word.text}
               </h2>
               
@@ -119,8 +119,10 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
                   setTimeout(() => onSkip?.(), 500);
                   setTimeout(() => setHoverZone(null), 600);
                 }}
-                className="flex-1 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 no-select cursor-pointer transition-all relative border-t-4 border-dashed border-border/85"
+                className="flex-1 basis-1/2 [@media(orientation:landscape)_and_(max-height:500px)]:h-[100px] [@media(orientation:landscape)_and_(max-height:500px)]:min-h-[100px] flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 [@media(orientation:landscape)_and_(max-height:500px)]:p-1 no-select cursor-pointer transition-all relative"
               >
+                {/* Border line - positioned absolutely */}
+                <div className="absolute top-0 left-0 right-0 h-0 border-t-4 [@media(orientation:landscape)_and_(max-height:500px)]:border-t-2 border-dashed border-border/85"></div>
                 <motion.div
                   animate={{ backgroundColor: hoverZone === 'bottom' ? 'rgba(180, 83, 9, 0.6)' : 'rgba(0, 0, 0, 0)' }}
                   transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }}
