@@ -27,7 +27,7 @@ export function DeckCard({ deck, onSelect, isLocked, onUnlock, showWordCount = t
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        "game-card w-full p-3 text-left transition-all relative overflow-hidden md:pl-4 border-4 border-white"
+        "game-card w-full p-3 text-left transition-all relative overflow-hidden md:pl-4 btn-3d"
       )}
     >
       {/* Background gradient overlay */}

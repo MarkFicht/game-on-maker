@@ -172,7 +172,7 @@ export default function Game() {
                     <Button
                       size="lg"
                       onClick={handleStartCountdown}
-                      className="w-full h-16 text-xl font-bold btn-game rounded-2xl border-4 border-white glow text-primary-foreground hover:border-primary"
+                      className="w-full h-16 text-xl font-bold btn-game rounded-2xl btn-3d glow text-primary-foreground"
                     >
                       <Play className="w-6 h-6 mr-1" fill="currentColor" />
                       Start Game
@@ -184,7 +184,7 @@ export default function Game() {
                       variant="outline"
                       size="lg"
                       onClick={handleCancelGame}
-                      className="w-full h-14 text-lg rounded-2xl border-4 border-white hover:border-accent hover:bg-accent/75"
+                      className="w-full h-14 text-lg rounded-2xl btn-3d hover:bg-accent/75"
                     >
                       <XCircle className="w-5 h-5 mr-1" />
                       Choose Deck
@@ -213,7 +213,7 @@ export default function Game() {
                 {countdown}
               </motion.div>
 
-              <p className="text-white  mt-8 text-2xl font-semibold bg-card overlay-darker rounded-xl px-6 py-3">Get ready!</p>
+              <p className="label-3d text-white mt-8 text-2xl font-semibold bg-card overlay-darker rounded-xl px-6 py-3">Get ready!</p>
             </FadeTransition>
           )}
           
@@ -249,7 +249,7 @@ export default function Game() {
                     <Button
                       size="lg"
                       onClick={handleResume}
-                      className="w-full h-14 text-xl font-bold btn-game rounded-xl border-4 border-white glow text-primary-foreground hover:border-primary"
+                      className="w-full h-14 text-xl font-bold btn-game rounded-xl btn-3d glow text-primary-foreground"
                     >
                       <Play className="w-5 h-5 mr-1" fill='currentColor' />
                       Resume
@@ -261,7 +261,7 @@ export default function Game() {
                       variant="outline"
                       size="lg"
                       onClick={handleEndGame}
-                      className="w-full h-14 text-lg rounded-xl text-destructive border-4 border-destructive/50 hover:bg-destructive/20 hover:text-destructive"
+                      className="w-full h-14 text-lg rounded-xl btn-3d-destructive text-destructive hover:bg-destructive/20 hover:text-destructive"
                     >
                       <XCircle className="w-5 h-5 mr-1" />
                       End Game
@@ -273,7 +273,7 @@ export default function Game() {
                       variant="ghost"
                       size="lg"
                       onClick={handleHome}
-                      className="w-full h-12 text-lg text-muted-foreground rounded-xl"
+                      className="w-full h-14 text-lg btn-3d text-muted-foreground rounded-xl"
                     >
                       <Home className="w-5 h-5 mr-1" />
                       Back to Home

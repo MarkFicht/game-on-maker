@@ -43,7 +43,7 @@ export function ResultsView({
         </div>
       </motion.div>
       
-      <DelayedFadeIn delay={0.2} className="font-display text-2xl font-bold text-foreground mb-4 overlay-dark rounded-xl px-6 py-2">
+      <DelayedFadeIn delay={0.2} className="label-3d font-display text-2xl font-bold text-foreground mb-4 overlay-dark rounded-xl px-6 py-2">
         {stats.correctCount >= 15 ? 'Amazing!' : stats.correctCount >= 7 ? 'Great Job!' : 'Good Try!'}
       </DelayedFadeIn>
       
@@ -71,7 +71,7 @@ export function ResultsView({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 + index * 0.05 }}
-              className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
+              className="flex items-center gap-2 p-2 rounded-lg bg-muted/80"
             >
               {result.wasCorrect ? (
                 <Check className="w-4 h-4 text-success shrink-0" />
@@ -91,7 +91,7 @@ export function ResultsView({
             variant="outline"
             size="sm"
             onClick={onHome}
-            className="w-full h-10 text-sm rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
+            className="w-full h-10 text-sm rounded-lg btn-3d hover:bg-accent/75"
           >
             <Home className="w-4 h-4" />
             Home
@@ -101,7 +101,7 @@ export function ResultsView({
           <Button
             size="sm"
             onClick={onPlayAgain}
-            className="w-full h-10 text-sm btn-game rounded-lg border-4 border-white glow text-primary-foreground hover:border-primary"
+            className="w-full h-10 text-sm btn-game rounded-lg btn-3d glow text-primary-foreground"
           >
             <RotateCcw className="w-4 h-4" />
             Play Again

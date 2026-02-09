@@ -43,7 +43,7 @@ export default function PremiumSummary() {
           <Tappable>
             <Button 
               onClick={withAudio('tap', () => navigate('/'))} 
-              className="w-full h-16 text-xl font-bold btn-game rounded-2xl border-4 border-white glow text-primary-foreground hover:border-primary"
+              className="w-full h-16 text-xl font-bold btn-game rounded-2xl btn-3d glow text-primary-foreground"
               size="lg"
             >
               Continue Playing
@@ -60,7 +60,7 @@ export default function PremiumSummary() {
               })}
               variant="outline"
               size='lg'
-              className="mx-auto h-12 text-base px-6 rounded-2xl border-4 border-white hover:border-accent hover:bg-accent/75"
+              className="mx-auto h-12 text-base px-6 rounded-2xl btn-3d hover:bg-accent/75"
             >
               <span className="">⭐</span> Rate Us
             </Button>

@@ -59,7 +59,7 @@ export default function Paywall() {
       {/* Content */}
       <main className="flex-1 overflow-y-auto flex flex-col p-6">
         {/* Hero */}
-        <div className="rounded-xl bg-muted/85 p-6 mb-3 max-w-5xl mx-auto">
+        <div className="rounded-xl bg-muted/90 p-6 mb-3 max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -90,7 +90,7 @@ export default function Paywall() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
-              className="flex items-center gap-4 p-4 rounded-xl bg-muted/85"
+              className="flex items-center gap-4 p-4 rounded-xl bg-muted/90"
             >
               <div className="w-10 h-10 rounded-full premium-gradient flex items-center justify-center">
                 <feature.icon className="w-5 h-5 text-white" />
@@ -116,10 +116,10 @@ export default function Paywall() {
                   <Button
                     onClick={withAudio('tap', () => handlePurchase(product.id))}
                     disabled={purchasing || isPurchased}
-                    className={`w-full h-auto py-3 px-3 rounded-xl flex-col items-start gap-2 ${
+                    className={`w-full h-auto py-3 px-3 rounded-xl flex-col items-start gap-2 btn-3d ${
                       product.id === 'premium_bundle' 
-                        ? 'premium-gradient text-white border-0' 
-                        : 'bg-card border border-border'
+                        ? 'premium-gradient text-white' 
+                        : 'bg-card'
                     }`}
                     variant={product.id === 'premium_bundle' ? 'default' : 'outline'}
                   >
@@ -151,13 +151,13 @@ export default function Paywall() {
         </div>
         
         {/* Restore */}
-        <DelayedFadeIn delay={0.5 + (products.length || 0) * 0.1}>
+        <DelayedFadeIn className='mx-auto' delay={0.5 + (products.length || 0) * 0.1}>
           <Tappable whileHover={{ scale: 1.01 }}>
             <Button
               variant="outline"
               onClick={handleRestore}
               disabled={purchasing}
-              className="w-full h-12 text-md rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
+              className="h-12 text-md rounded-lg btn-3d hover:bg-accent/75"
             >
               Restore Purchases
             </Button>

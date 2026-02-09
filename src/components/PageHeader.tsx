@@ -23,24 +23,24 @@ export function PageHeader({
   };
 
   return (
-    <header className="flex items-center justify-between p-4 overlay-dark">
+    <header className="flex items-center justify-between p-4">
       {/* Left */}
       { backTo && backTo !== '/settings' && (
         <Link to={backTo} onClick={() => audioService.play('tap')}>
-          <Button variant="ghost" size="icon" className="text-white">
+          <Button variant="ghost" size="icon" className="text-white btn-3d">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
       )}
       { backTo === '/settings' && (
         <Link to={backTo} onClick={() => audioService.play('tap')}>
-          <Button variant="ghost" size="icon" className="text-white">
+          <Button variant="ghost" size="icon" className="text-white btn-3d">
             <Settings className="w-5 h-5" />
           </Button>
         </Link>
       )}
       { onBack && (
-        <Button variant="ghost" size="icon" onClick={handleBackClick} className="text-white">
+        <Button variant="ghost" size="icon" onClick={handleBackClick} className="text-white btn-3d">
           <ArrowLeft className="w-5 h-5" />
         </Button>
       )}
@@ -49,7 +49,7 @@ export function PageHeader({
       <motion.h1 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="font-display text-xl font-bold text-gradient-primary"
+        className="label-3d font-display text-xl md:text-2xl font-bold text-white bg-card overlay-darker rounded-lg px-4 py-1"
       >
         {title}
       </motion.h1>

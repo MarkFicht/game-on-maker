@@ -44,7 +44,7 @@ export default function Home() {
             <Button
               size="lg"
               onClick={withAudio('tap', () => navigate('/decks'))}
-              className="w-full h-16 text-xl font-bold btn-game rounded-2xl border-4 border-white glow text-primary-foreground hover:border-primary"
+              className="w-full h-16 text-xl font-bold btn-game rounded-2xl btn-3d glow text-primary-foreground"
             >
               <Play className="w-6 h-6 mr-1" fill="currentColor" />
               Play Now
@@ -60,8 +60,8 @@ export default function Home() {
               variant="outline"
               className={`rounded-xl ${
                 isFullPremium 
-                  ? 'border-4 bg-success/100 border-white/100 text-white hover:border-success hover:text-white hover:bg-success/80' 
-                  : 'border-4 bg-secondary/100 border-white/100 text-white hover:border-secondary hover:text-white hover:bg-secondary/70'
+                  ? 'btn-3d bg-success/100 text-white hover:text-white hover:bg-success/80' 
+                  : 'btn-3d bg-secondary/100 text-white hover:text-white hover:bg-secondary/70'
               }`}
             >
               <span className="mr-0 -mt-1 emoji-outlined-sm">👑</span>

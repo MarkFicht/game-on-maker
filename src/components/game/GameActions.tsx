@@ -12,7 +12,7 @@ export function GameActions({ onPause }: GameActionsProps) {
       variant="outline"
       size="sm"
       onClick={onPause}
-      className="mx-auto px-8 rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
+      className="mx-auto px-8 rounded-lg btn-3d hover:bg-accent/75"
     >
       <Pause className="w-4 h-4" />
       Pause

@@ -50,7 +50,7 @@ export default function Settings() {
       {/* Settings list */}
       <main className="flex-1 p-4 space-y-4">
         {/* Game settings */}
-        <FadeInUp delay={0} className="rounded-xl bg-muted/85 p-6 space-y-4">
+        <FadeInUp delay={0} className="rounded-xl bg-muted/90 p-6 space-y-4">
           <h2 className="text-lg font-bold text-foreground">Game</h2>
           {/* Round duration */}
           <div className="space-y-4">
@@ -73,7 +73,7 @@ export default function Settings() {
         </FadeInUp>
         
         {/* Sound & Haptics */}
-        <FadeInUp delay={0.1} className="rounded-xl bg-muted/85 p-6 space-y-4">
+        <FadeInUp delay={0.1} className="rounded-xl bg-muted/90 p-6 space-y-4">
           <h2 className="text-lg font-bold text-foreground">Sound & Haptics</h2>
           <SettingRow icon={Volume2} label="Sound Effects">
             <Switch checked={!soundMuted} onCheckedChange={handleSoundToggle} />
@@ -88,13 +88,13 @@ export default function Settings() {
         </FadeInUp>
         
         {/* Purchases */}
-        <FadeInUp delay={0.2} className="rounded-xl bg-muted/85 p-6 space-y-4">
+        <FadeInUp delay={0.2} className="rounded-xl bg-muted/90 p-6 space-y-4">
           <h2 className="text-lg font-bold text-foreground">Purchases</h2>
           <Button
             variant="outline"
             onClick={handleRestorePurchases}
             disabled={premiumLoading}
-            className="w-full h-12 text-base px-6 rounded-lg border-4 border-white hover:border-accent hover:bg-accent/75"
+            className="w-full h-12 text-base px-6 rounded-lg btn-3d hover:bg-accent/75"
 
           >
             <RefreshCw className="w-5 h-5 mr-1 text-white" />
@@ -102,19 +102,19 @@ export default function Settings() {
           </Button>
           
           {status.isActive && (
-            <div className="w-full h-12 rounded-lg bg-success/10 border-4 border-success/20 flex items-center justify-center">
+            <div className="w-full h-12 rounded-lg bg-success/10 label-3d flex items-center justify-center">
               <p className="text-base text-success font-medium text-center">
-                <span>✓</span> Premium active
+                <span className='mr-2'>✓</span> Premium active
               </p>
             </div>
           )}
         </FadeInUp>
         
         {/* Legal */}
-        <FadeInUp delay={0.3} className="rounded-xl bg-muted/85 p-6 space-y-4">
-          <h2 className="text-lg font-bold text-foreground mb-2">Legal</h2>
+        <FadeInUp delay={0.3} className="rounded-xl bg-muted/90 p-6 space-y-4">
+          <h2 className="text-lg font-bold text-foreground mb-4">Legal</h2>
           <Link to="/privacy">
-            <Button variant="ghost" className="w-full justify-between text-base">
+            <Button variant="ghost" className="w-full justify-between text-base btn-3d">
               <div className="flex items-center gap-3">
                 <Shield className="w-5 h-5 text-white" />
                 <span className="font-medium">Privacy Policy</span>

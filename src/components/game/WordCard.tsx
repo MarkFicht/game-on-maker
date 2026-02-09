@@ -12,14 +12,11 @@ interface WordCardProps {
   allowSkip?: boolean;
 }
 
-// Landscape mobile media query
-const lsm = '[@media(orientation:landscape)_and_(max-height:500px)]';
-
 // Animation variants
 const pulseAnim = { opacity: [0.95, 1, 0.95], scale: [1, 1.15, 1] };
 const fadeInScale = { opacity: 1, scale: 1 };
 const fadeOutScale = { opacity: 0, scale: 0.8 };
-const buttonBase = `flex-1 basis-1/2 ${lsm}:h-[100px] ${lsm}:min-h-[100px] flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 ${lsm}:p-1 no-select cursor-pointer transition-all relative`;
+const buttonBase = `flex-1 basis-1/2 landscape-sm:h-[100px] landscape-sm:min-h-[100px] flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 landscape-sm:p-1 no-select cursor-pointer transition-all relative`;
 
 interface ZoneProps {
   isActive: boolean;
@@ -42,7 +39,7 @@ function Zone({ isActive, icon, label, bgColor, position, textColor, onHover, on
       onClick={onClick}
       className={buttonBase}
     >
-      {hasBorder && <div className={`absolute top-0 left-0 right-0 h-0 border-t-4 ${lsm}:border-t-2 border-dashed border-border/85`}></div>}
+      {hasBorder && <div className={`absolute top-0 left-0 right-0 h-0 border-t-4 landscape-sm:border-t-2 border-dashed border-border/85`}></div>}
       <motion.div animate={{ backgroundColor: isActive ? bgColor : 'rgba(0, 0, 0, 0)' }} transition={{ type: 'tween', duration: 0.4 }} className="absolute inset-0" />
       <motion.div className={`absolute pointer-events-none ${posClass}`} animate={isActive ? { opacity: 0, scale: 0.5 } : pulseAnim} transition={{ duration: isActive ? 0.3 : 2, repeat: isActive ? 0 : Infinity }}>
         {icon}
@@ -72,7 +69,7 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
 
   return (
     <motion.div 
-      className={`w-full h-full max-w-4xl ${lsm}:h-[200px]`}
+      className={`w-full h-full max-w-4xl landscape-sm:h-[200px]`}
       style={{ perspective: 1000, transformStyle: 'preserve-3d' }}
     >
       <AnimatePresence mode="wait">
@@ -87,8 +84,11 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
             }}
             exit={{ rotateY: -90, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25, duration: 0.25 }}
-            className={`relative w-full h-full ${lsm}:h-[200px] word-card rounded-2xl overflow-hidden flex flex-col`}
-            style={{ transformStyle: 'preserve-3d' }}
+            className={`relative w-full h-full landscape-sm:h-[200px] word-card rounded-2xl overflow-hidden flex flex-col`}
+            style={{ 
+              transformStyle: 'preserve-3d',
+              boxShadow: '0 1px 0 rgba(255, 255, 255, 0.3), 0 8px 32px -8px rgba(0, 0, 0, 0.5), inset 0 6px 10px rgba(255, 255, 255, 0.2), inset 0 -8px 12px rgba(0, 0, 0, 0.3)'
+            }}
           >
             {/* Correct Zone - Top Half */}
             <Zone
@@ -110,7 +110,7 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip, allowSkip = true }
                 </span>
               )}
               
-              <h2 className={`font-display text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl ${lsm}:text-2xl font-bold text-center text-foreground leading-tight`}>
+              <h2 className={`font-display text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl landscape-sm:text-2xl font-bold text-center text-foreground leading-tight`}>
                 {word.text}
               </h2>
               
