@@ -52,10 +52,10 @@ export default function Decks() {
   
   return (
     <PageLayout>
-      <PageHeader title="Choose a Deck" backTo="/" showSound playSound />
+      <PageHeader title="Choose a Deck" backTo="/" />
       
       {/* Deck list */}
-      <main className="flex-1 overflow-y-auto p-4 space-y-6">
+      <main className="flex-1 p-4 space-y-6">
 
         {/* Random selection */}
         <DeckSection title="Random Decks" delay={0.1}>

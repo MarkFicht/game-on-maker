@@ -32,6 +32,9 @@ export function TimerRing({
   return (
     <motion.div 
       className="relative inline-flex items-center justify-center overlay-darker rounded-full p-3"
+      style={{
+        boxShadow: '0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 6px 10px rgba(255, 255, 255, 0.2), inset 0 -8px 12px rgba(0, 0, 0, 0.3)'
+      }}
       animate={isLowTime ? { scale: [1, 1.05, 1] } : {}}
       transition={{ duration: 0.5, repeat: isLowTime ? Infinity : 0 }}
     >

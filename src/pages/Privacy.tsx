@@ -4,24 +4,16 @@ import { PageLayout } from '@/components/PageLayout';
 import { BackButton } from '@/components/BackButton';
 import { DelayedFadeIn } from '@/components/animated';
 import { SectionHeading } from '@/components/ui/section-heading';
+import { PageHeader } from '@/components/PageHeader';
 
 export default function Privacy() {
   return (
     <PageLayout>
       {/* Header */}
-      <header className="flex items-center gap-4 p-4 border-b border-border/50 overlay-dark">
-        <BackButton to="/settings" />
-        <motion.h1 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="font-display text-xl font-bold text-gradient-primary"
-        >
-          Privacy Policy
-        </motion.h1>
-      </header>
+      <PageHeader title="Privacy Policy" backTo="/settings" />  
       
       {/* Content */}
-      <main className="flex-1 overflow-y-auto m-4 p-4 rounded-xl bg-muted/85">
+      <main className="flex-1 overflow-y-auto m-4 p-4 rounded-xl bg-muted/90">
         <DelayedFadeIn className="prose prose-invert max-w-none">
           <p className="text-muted-foreground text-sm mb-4">
             Last updated: {new Date().toLocaleDateString()}

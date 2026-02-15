@@ -62,9 +62,10 @@ export function FadeIn({ children, delay = 0, className, ...props }: AnimatedSec
   );
 }
 
-export function Tappable({ children, className, ...props }: AnimatedSectionProps) {
+export function Tappable({ children, className, whileHover, ...props }: AnimatedSectionProps & { whileHover?: any }) {
   return (
     <motion.div
+      whileHover={whileHover}
       whileTap={{ scale: 0.98 }}
       className={className}
       {...props}

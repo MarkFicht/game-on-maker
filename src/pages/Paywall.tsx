@@ -10,8 +10,9 @@ import { toast } from 'sonner';
 import { track } from '@/services/analytics';
 import { useEffect } from 'react';
 import { PageLayout } from '@/components/PageLayout';
-import { Tappable, DelayedFadeIn } from '@/components/animated';
+import { Tappable, DelayedFadeIn, FadeIn } from '@/components/animated';
 import { withAudio } from '@/lib/audio-helpers';
+import { PageHeader } from '@/components/PageHeader';
 
 const features = [
   { icon: Zap, text: 'Remove all ads' },
@@ -53,14 +54,12 @@ export default function Paywall() {
 
   return (
     <PageLayout>
-      <header className="flex items-center gap-4 p-4 overlay-dark">
-        <BackButton to="/" />
-      </header>
+      <PageHeader title="Go Premium" backTo="/" />
       
       {/* Content */}
-      <main className="flex-1 flex flex-col p-6">
+      <main className="flex-1 overflow-y-auto flex flex-col p-6">
         {/* Hero */}
-        <div className="rounded-xl bg-muted/85 p-6 mb-3 max-w-5xl mx-auto">
+        <div className="rounded-xl bg-muted/90 p-6 mb-3 max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -74,7 +73,7 @@ export default function Paywall() {
             >
               <div className="text-6xl">👑</div>
             </motion.div>
-            <h1 className="font-display text-3xl font-bold text-gradient-premium mb-2">
+            <h1 className="font-display text-3xl font-bold text-gradient-premium mb-2 mt-1">
               Go Premium
             </h1>
             <p className="text-white">
@@ -91,7 +90,7 @@ export default function Paywall() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + index * 0.1 }}
-              className="flex items-center gap-4 p-4 rounded-xl bg-muted/85"
+              className="flex items-center gap-4 p-4 rounded-xl bg-muted/90"
             >
               <div className="w-10 h-10 rounded-full premium-gradient flex items-center justify-center">
                 <feature.icon className="w-5 h-5 text-white" />
@@ -113,14 +112,14 @@ export default function Paywall() {
             
             return (
               <DelayedFadeIn key={product.id} delay={0.4 + index * 0.1}>
-                <Tappable>
+                <Tappable whileHover={{ scale: 1.01 }} className="transition-all">
                   <Button
                     onClick={withAudio('tap', () => handlePurchase(product.id))}
                     disabled={purchasing || isPurchased}
-                    className={`w-full h-auto py-3 px-3 rounded-xl flex-col items-start gap-2 ${
+                    className={`w-full h-auto py-3 px-3 rounded-xl flex-col items-start gap-2 btn-3d ${
                       product.id === 'premium_bundle' 
-                        ? 'premium-gradient text-white border-0' 
-                        : 'bg-card border border-border'
+                        ? 'premium-gradient text-white' 
+                        : 'bg-card'
                     }`}
                     variant={product.id === 'premium_bundle' ? 'default' : 'outline'}
                   >
@@ -134,38 +133,44 @@ export default function Paywall() {
                           <span className={`font-display text-lg font-bold shrink-0 ${
                             isPurchased ? 'text-success line-through' : product.id === 'premium_bundle' ? 'text-white' : 'text-foreground'
                           }`}>
-                            {product.price}
+                            {product.id === 'premium_bundle' && <span className="mr-2 text-sm line-through opacity-80 text-red-200">$7.98</span>}
+                            {`${product.price}`}
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs opacity-80 mt-1">{product.description}</p>
+                      <p className="text-xs opacity-80 mt-1">
+                        {`${product.description}`}
+                        {product.id === 'premium_bundle' && <span className="ml-1"> (-25%🔥)</span>}
+                      </p>
                     </div>
                   </Button>
                 </Tappable>
-                {product.id === 'premium_bundle' && (
-                  <p className="text-center text-xs text-white mt-1">
-                    Best value - Save 25%
-                  </p>
-                )}
               </DelayedFadeIn>
             );
           })}
         </div>
         
         {/* Restore */}
-        <Button
-          variant="ghost"
-          onClick={handleRestore}
-          disabled={purchasing}
-          className="text-white"
-        >
-          Restore Purchases
-        </Button>
+        <DelayedFadeIn className='mx-auto' delay={0.5 + (products.length || 0) * 0.1}>
+          <Tappable whileHover={{ scale: 1.01 }}>
+            <Button
+              variant="outline"
+              onClick={handleRestore}
+              disabled={purchasing}
+              className="h-12 text-md rounded-lg btn-3d hover:bg-accent/75"
+            >
+              Restore Purchases
+            </Button>
+          </Tappable>
+        </DelayedFadeIn>
       </main>
       
       {/* Footer */}
-      <footer className="p-4 text-center text-xs text-white">
-        <p>One-time purchase. No subscription.</p>
+      <footer className="p-3 text-center">
+        <FadeIn delay={0.4} className="flex items-center justify-center gap-2 text-white text-sm">
+          <Zap className="w-3 h-3" />
+          <span>One-time purchase. No subscription.</span>
+        </FadeIn>
       </footer>
     </PageLayout>
   );

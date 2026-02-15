@@ -5,20 +5,20 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/BackButton';
 import { PageLayout } from '@/components/PageLayout';
-import { Tappable, DelayedFadeIn } from '@/components/animated';
+import { Tappable, DelayedFadeIn, FadeIn } from '@/components/animated';
 import { withAudio } from '@/lib/audio-helpers';
 import { track } from '@/services/analytics';
+import { PageHeader } from '@/components/PageHeader';
 
 export default function PremiumSummary() {
   const navigate = useNavigate();
 
   return (
     <PageLayout>
-      <header className="flex items-center gap-4 p-4 overlay-dark">
-        <BackButton to="/" />
-      </header>
+      <PageHeader title="Premium User" backTo="/" />
       
-      <main className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-6">
+      {/* Content */}
+      <main className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-6 text-center gap-6">
         <DelayedFadeIn delay={0}>
           <motion.div
             initial={{ rotate: -10 }}
@@ -43,7 +43,7 @@ export default function PremiumSummary() {
           <Tappable>
             <Button 
               onClick={withAudio('tap', () => navigate('/'))} 
-              className="w-full h-16 text-xl font-bold btn-game rounded-2xl glow text-primary-foreground"
+              className="w-full h-16 text-xl font-bold btn-game rounded-2xl btn-3d glow text-primary-foreground"
               size="lg"
             >
               Continue Playing
@@ -59,13 +59,21 @@ export default function PremiumSummary() {
                 window.open('https://play.google.com/store/apps/details?id=your.app.id', '_blank');
               })}
               variant="outline"
-              className="w-full rounded-xl"
+              size='lg'
+              className="mx-auto h-12 text-base px-6 rounded-2xl btn-3d hover:bg-accent/75"
             >
-              <span className="mr-1">⭐</span> Rate Us
+              <span className="">⭐</span> Rate Us
             </Button>
           </Tappable>
         </DelayedFadeIn>
       </main>
+
+        {/* Footer */}
+      <footer className="p-3 text-center">
+        <FadeIn delay={0.4} className="flex items-center justify-center gap-2 text-white text-sm">
+          <span>Thank You</span>
+        </FadeIn>
+      </footer>
     </PageLayout>
   );
 }

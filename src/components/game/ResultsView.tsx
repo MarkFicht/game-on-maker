@@ -31,7 +31,7 @@ export function ResultsView({
         className="mb-4"
       >
         <div className="relative">
-          <span className="text-6xl">🏆</span>
+          <span className="text-6xl emoji-outlined-md">🏆</span>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -43,12 +43,12 @@ export function ResultsView({
         </div>
       </motion.div>
       
-      <DelayedFadeIn delay={0.2} className="font-display text-2xl font-bold text-foreground mb-1 overlay-dark rounded-xl px-6 py-2">
-        {stats.correctCount >= 10 ? 'Amazing!' : stats.correctCount >= 5 ? 'Great Job!' : 'Good Try!'}
+      <DelayedFadeIn delay={0.2} className="label-3d font-display text-2xl font-bold text-foreground mb-4 overlay-dark rounded-xl px-6 py-2">
+        {stats.correctCount >= 15 ? 'Amazing!' : stats.correctCount >= 7 ? 'Great Job!' : 'Good Try!'}
       </DelayedFadeIn>
       
       {deckName && (
-        <p className="text-white mb-4 text-sm">{deckName}</p>
+        <p className="text-white mb-4 -mt-3 text-sm">{deckName}</p>
       )}
       
       {/* Stats */}
@@ -71,7 +71,7 @@ export function ResultsView({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 + index * 0.05 }}
-              className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
+              className="flex items-center gap-2 p-2 rounded-lg bg-muted/80"
             >
               {result.wasCorrect ? (
                 <Check className="w-4 h-4 text-success shrink-0" />
@@ -91,9 +91,9 @@ export function ResultsView({
             variant="outline"
             size="sm"
             onClick={onHome}
-            className="w-full rounded-xl"
+            className="w-full h-10 text-sm rounded-lg btn-3d hover:bg-accent/75"
           >
-            <Home className="w-4 h-4 mr-2" />
+            <Home className="w-4 h-4" />
             Home
           </Button>
         </Tappable>
@@ -101,9 +101,9 @@ export function ResultsView({
           <Button
             size="sm"
             onClick={onPlayAgain}
-            className="w-full btn-game rounded-xl text-primary-foreground"
+            className="w-full h-10 text-sm btn-game rounded-lg btn-3d glow text-primary-foreground"
           >
-            <RotateCcw className="w-4 h-4 mr-2" />
+            <RotateCcw className="w-4 h-4" />
             Play Again
           </Button>
         </Tappable>

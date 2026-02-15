@@ -5,15 +5,13 @@ import { cn } from '@/lib/utils';
 interface PageLayoutProps {
   children: ReactNode;
   className?: string;
-  overflow?: boolean;
 }
 
-export function PageLayout({ children, className, overflow = false }: PageLayoutProps) {
+export function PageLayout({ children, className}: PageLayoutProps) {
   return (
     <div 
       className={cn(
         "min-h-[100dvh] flex flex-col safe-top safe-bottom safe-x",
-        overflow && "overflow-hidden",
         className
       )}
     >
