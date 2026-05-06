@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState, createContext, useContext, ReactNode, useCallback } from "react";
 import { getAnalytics } from "@/services/analytics";
 import { getBillingService, type PremiumStatus } from "@/services/billing";
+import bgImage from "@/game/bg.jpg";
 
 // Pages
 import Home from "./pages/Home";
@@ -75,21 +76,10 @@ const App = () => {
 
   // Initialize services and wait for fonts
   useEffect(() => {
-    let objectUrl: string | null = null;
     let alive = true;
 
     const init = async () => {
       try {
-        // Fetch background image as blob
-        const url = new URL('@/game/bg.jpg', import.meta.url).href;
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`Failed to fetch: ${res.status}`);
-        }
-        const blob = await res.blob();
-        objectUrl = URL.createObjectURL(blob);
-
-        // Create background div if it doesn't exist
         let bgDiv = document.getElementById('app-background');
         if (!bgDiv) {
           bgDiv = document.createElement('div');
@@ -97,15 +87,13 @@ const App = () => {
           bgDiv.className = 'fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat';
           document.body.insertBefore(bgDiv, document.body.firstChild);
         }
-        bgDiv.style.backgroundImage = `url('${objectUrl}')`;
+        bgDiv.style.backgroundImage = `url('${bgImage}')`;
       } catch (err) {
         console.error('Failed to load background:', err);
       }
 
-      // Wait for fonts
       await document.fonts.ready;
 
-      // Initialize services
       if (alive) {
         await getAnalytics().initialize();
         await getBillingService().initialize();
@@ -115,12 +103,8 @@ const App = () => {
 
     init();
 
-    // Cleanup: revoke ObjectURL
     return () => {
       alive = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
     };
   }, []);
 
