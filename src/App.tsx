@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, useState, createContext, useContext, ReactNode, useCallback } from "react";
 import { getAnalytics } from "@/services/analytics";
 import { getBillingService, type PremiumStatus } from "@/services/billing";
+import bgImage from "@/game/bg.jpg";
 
 // Pages
 import Home from "./pages/Home";
