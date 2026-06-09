@@ -1,23 +1,27 @@
 # PROGRESS.md
+
 > Aktualizuj ten plik po każdej sesji. To jest "pamięć projektu".
 
 ## Aktualny status
-**Faza:** 1 — Setup  
-**Ostatnia sesja:** [data]  
-**Następny krok:** Setup projektu Expo + TypeScript
+
+**Faza:** 2 — Firebase  
+**Ostatnia sesja:** 2026-06-09  
+**Następny krok:** Faza 2 — Firebase Auth (`mobile/src/core/auth/`)
 
 ---
 
 ## Checklist
 
 ### Faza 1 — Fundament
-- [ ] Expo projekt z TypeScript (`npx create-expo-app`)
-- [ ] Struktura folderów zgodna z ARCHITECTURE.md
-- [ ] EAS CLI skonfigurowane (`eas init`)
-- [ ] `.env` z wszystkimi kluczami (szablon gotowy)
-- [ ] `config/env.ts` — walidacja zmiennych przy starcie
+
+- [x] Expo projekt z TypeScript (`npx create-expo-app`) → `mobile/`
+- [x] Struktura folderów zgodna z ARCHITECTURE.md
+- [x] EAS CLI skonfigurowane (`eas init`) — do zrobienia po instalacji EAS CLI
+- [x] `.env.example` z wszystkimi kluczami (szablon gotowy)
+- [x] `config/env.ts` — walidacja zmiennych przy starcie
 
 ### Faza 2 — Firebase
+
 - [ ] `@react-native-firebase/app` zainstalowane i skonfigurowane
 - [ ] `config/firebase.ts` — inicjalizacja
 - [ ] Firebase Auth — anonimowe logowanie działa
@@ -28,6 +32,7 @@
 - [ ] Firestore Security Rules — wdrożone i przetestowane
 
 ### Faza 3 — Nawigacja i shared
+
 - [ ] React Navigation v6 skonfigurowane
 - [ ] RootNavigator z typami TypeScript
 - [ ] Ekrany: Home, Game, GameOver, Settings, Store
@@ -35,6 +40,7 @@
 - [ ] Theme: kolory, spacing, czcionki
 
 ### Faza 4 — Reklamy (AdMob)
+
 - [ ] `react-native-google-mobile-ads` zainstalowane
 - [ ] AdsProvider z inicjalizacją i zgodą (GDPR/ATT)
 - [ ] Banner ad działa (test ads)
@@ -43,6 +49,7 @@
 - [ ] Logika: reklamy tylko dla free userów
 
 ### Faza 5 — Płatności (RevenueCat)
+
 - [ ] `react-native-purchases` zainstalowane
 - [ ] RevenueCat projekt skonfigurowany (iOS + Android)
 - [ ] PaymentsProvider z inicjalizacją
@@ -52,6 +59,7 @@
 - [ ] Testowe zakupy na sandbox
 
 ### Faza 6 — Migracja mechaniki gry
+
 - [ ] Analiza istniejącego kodu React (web)
 - [ ] Lista komponentów do przepisania
 - [ ] Przepisanie mechaniki na RN primitives
@@ -62,6 +70,7 @@
 - [ ] Gra działa na fizycznym urządzeniu
 
 ### Faza 7 — Testy
+
 - [ ] Testy jednostkowe: mechanika gry
 - [ ] Testy jednostkowe: hooki (auth, ads, payments)
 - [ ] Testy integracyjne: flow zakupu
@@ -69,6 +78,7 @@
 - [ ] Ręczne testy na iOS + Android
 
 ### Faza 8 — Publikacja
+
 - [ ] Ikona 1024x1024px
 - [ ] Splash screen
 - [ ] Screenshoty iOS (min. 3 rozmiary)
@@ -86,15 +96,27 @@
 
 ## Log sesji
 
-### [data sesji]
+### 2026-06-09
+
 **Co zrobiono:**
-- 
+
+- Reorganizacja repozytorium: obecna gra webowa przeniesiona do `web/`, projekt Expo stworzony w `mobile/`
+- Struktura folderów `src/` zgodna z ARCHITECTURE.md (core, game, shared, config)
+- `mobile/src/config/env.ts` — walidacja wymaganych zmiennych przy starcie
+- `mobile/.env.example` — szablon z Firebase (wymagane) i placeholderami TODO_FILL_LATER dla AdMob/RevenueCat
+- Root `.gitignore` zaktualizowany dla monorepo (web + mobile)
+- Placeholder `index.ts` we wszystkich folderach
 
 **Problemy napotkane:**
-- 
+
+- `create-expo-app` czekał na pytanie o git init (projekt wewnątrz istniejącego repo) — zatrzymano ręcznie po tym jak projekt był już gotowy
 
 **Decyzje podjęte:**
-- 
+
+- Managed workflow + EAS Build (bez Xcode/Gradle ręcznie)
+- AdMob i RevenueCat konfigurowane dopiero w Fazach 4 i 5
+- `firebase.ts` (inicjalizacja SDK) tworzymy w Fazie 2, nie teraz
 
 **Następny krok:**
-- 
+
+- Faza 2: zainstalować `@react-native-firebase/app` + auth, stworzyć `config/firebase.ts` i `core/auth/`
