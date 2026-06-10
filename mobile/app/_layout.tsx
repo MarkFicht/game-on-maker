@@ -1,10 +1,13 @@
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../src/core/auth/AuthProvider';
+import { AdsProvider } from '../src/core/ads/AdsProvider';
 import { colors } from '../src/shared/theme';
 
 export default function RootLayout() {
+  // isPremium: false until Phase 5 (RevenueCat) wires up the real value
   return (
     <AuthProvider>
+      <AdsProvider isPremium={false}>
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.background },
@@ -20,6 +23,7 @@ export default function RootLayout() {
         <Stack.Screen name="settings" options={{ title: 'Ustawienia' }} />
         <Stack.Screen name="store" options={{ title: 'Sklep' }} />
       </Stack>
+      </AdsProvider>
     </AuthProvider>
   );
 }

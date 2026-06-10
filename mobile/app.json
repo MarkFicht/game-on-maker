@@ -33,6 +33,21 @@
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "delay_app_measurement_init": true,
+          "userTrackingUsageDescription": "Ta aplikacja korzysta z danych reklamowych, aby wyświetlać dopasowane reklamy."
+        }
+      ],
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "Ta aplikacja korzysta z danych reklamowych, aby wyświetlać dopasowane reklamy."
+        }
+      ],
+      [
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.com.googleusercontent.apps.1045622351349-mlupqtdoae4d3d9n3sul9ag9npdgvs93"

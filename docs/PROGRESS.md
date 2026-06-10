@@ -4,9 +4,9 @@
 
 ## Aktualny status
 
-**Faza:** 4 — Reklamy (AdMob)  
+**Faza:** 5 — Płatności (RevenueCat)  
 **Ostatnia sesja:** 2026-06-10  
-**Następny krok:** Faza 4 — AdMob: AdsProvider, BannerAd, useRewardedAd, useInterstitialAd
+**Następny krok:** Faza 5 — RevenueCat: PaymentsProvider, usePayments, ekran Store
 
 ---
 
@@ -41,12 +41,12 @@
 
 ### Faza 4 — Reklamy (AdMob)
 
-- [ ] `react-native-google-mobile-ads` zainstalowane
-- [ ] AdsProvider z inicjalizacją i zgodą (GDPR/ATT)
-- [ ] Banner ad działa (test ads)
-- [ ] Interstitial ad działa (test ads)
-- [ ] Rewarded ad działa (test ads)
-- [ ] Logika: reklamy tylko dla free userów
+- [x] `react-native-google-mobile-ads` zainstalowane
+- [x] AdsProvider z inicjalizacją i zgodą (GDPR/ATT)
+- [x] BannerAd komponent (test ads, graceful degradation)
+- [x] useInterstitialAd hook (test ads)
+- [x] useRewardedAd hook (test ads, callback onRewarded)
+- [x] Logika: reklamy tylko dla free userów (`isPremium` prop)
 
 ### Faza 5 — Płatności (RevenueCat)
 
@@ -256,4 +256,39 @@
 **Następny krok:**
 
 - Faza 4: AdMob — `react-native-google-mobile-ads`, AdsProvider, BannerAd, useRewardedAd, useInterstitialAd
+
+---
+
+### 2026-06-10 (continued) — Phase 4
+
+**Co zrobiono:**
+
+- `react-native-google-mobile-ads` + `expo-tracking-transparency` zainstalowane
+- `app.json` — plugin z Google test App IDs (safe to commit), ATT permission string (PL), `delay_app_measurement_init: true`
+- `src/core/ads/AdsProvider.tsx` — flow: ATT (iOS) → `AdsConsent.gatherConsent()` → `canRequestAds` check → `mobileAds().initialize()`. Graceful degradation na web/Expo Go (try/catch, dynamic imports). `isPremium` prop blokuje całą inicjalizację.
+- `src/core/ads/BannerAd.tsx` — render-nothing jeśli `!canShowAds` lub web. Lazy require natywnego modułu (bezpieczne dla web bundlera). `TestIds.ADAPTIVE_BANNER` w `__DEV__`.
+- `src/core/ads/useInterstitialAd.ts` — zarządza lifecycle (load → loaded → show → closed → reload). No-op gdy `canShowAds: false`.
+- `src/core/ads/useRewardedAd.ts` — jak wyżej + `onRewarded` callback przez ref (stabilna tożsamość).
+- `app/_layout.tsx` — `<AdsProvider isPremium={false}>` owinięty wokół Stack (isPremium zostanie podłączone w Fazie 5)
+- Testy: 13 nowych testów (AdsProvider ×5, useInterstitialAd ×4, useRewardedAd ×4) → łącznie **38/38** ✅
+
+**Decyzje podjęte:**
+
+- Dynamic `import()` w `AdsProvider.initializeAds()` zamiast top-level importu — web bundler nie próbuje rozwiązać natywnych modułów
+- `require()` w `BannerAdNative` i `createAd()` — ten sam powód
+- Google test App IDs w `app.json` (oficjalne testowe IDs Google, bezpieczne w repo). Produkcyjne App IDs idą przez EAS Secrets lub `app.config.js`.
+- `isPremium` jako prop (nie z kontekstu) — luźne sprzężenie, łatwa integracja z Fazą 5
+- `onRewarded` przez `useRef` w `useRewardedAd` — żeby `show()` miało stabilną tożsamość (nie re-tworzy się przy każdym renderze)
+
+**Problemy napotkane:**
+
+- TypeScript error: `children` required w `AdsProviderProps` vs `React.createElement` — naprawione przez `children?: React.ReactNode`
+
+**Status Phase 4:**
+
+✅ **DONE** — `npx tsc --noEmit` → 0 błędów, `npm test` → 38/38 testów zielonych
+
+**Następny krok:**
+
+- Faza 5: RevenueCat — `react-native-purchases`, PaymentsProvider, `usePayments` (isPremium, purchase, restore), ekran Store, podłączenie `isPremium` do `AdsProvider`
 
