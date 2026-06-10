@@ -282,3 +282,44 @@ describe('Firestore Security Rules', () => {
 
 Mechanika gry — 95% coverage (najważniejsza logika).  
 Reszta kodu — 80% minimum.
+
+---
+
+## 7. Pułapki i znane problemy — jest-expo + Expo SDK 56
+
+### jest-expo nie hoist'uje outer variables do jest.mock()
+
+**Problem:** Standardowy babel-jest hoist'uje zmienne `mock*` do fabryk `jest.mock()`. W `jest-expo` to NIE działa — zewnętrzne `const/var mockFn = jest.fn()` będzie `undefined` w momencie uruchomienia fabryki.
+
+❌ Nie rób tak:
+```typescript
+const mockMethod = jest.fn();
+
+jest.mock('some-native-module', () => ({
+  default: () => ({ method: mockMethod }), // mockMethod === undefined tutaj!
+}));
+```
+
+✅ Rób tak — `jest.fn()` wewnątrz fabryki, dostęp przez `jest.requireMock()`:
+```typescript
+jest.mock('some-native-module', () => {
+  const instance = { method: jest.fn() };
+  const fn: any = jest.fn(() => instance);
+  return { __esModule: true, default: fn };
+});
+
+// W teście:
+it('test', () => {
+  const instance = jest.requireMock('some-native-module').default();
+  instance.method.mockImplementation(() => 'wartość');
+  // ...
+});
+```
+
+### Wersje — wymagane dopasowanie
+
+| Pakiet | Wymagana wersja | Powód |
+|---|---|---|
+| `jest` | `^29.x` | `jest-expo@56` nie wspiera Jest 30 |
+| `@types/jest` | `^29.x` | musi pasować do Jest |
+| `@react-native/jest-preset` | dowolna | wymagana przez `jest-expo@56` jako peer dep |

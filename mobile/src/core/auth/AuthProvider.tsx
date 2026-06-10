@@ -17,22 +17,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        setIsLoading(false);
-      } else {
-        try {
-          // Auto sign-in anonymously on first launch (zero friction)
-          await doSignInAnonymously();
-          // onAuthStateChanged fires again with the anonymous user
-        } catch {
-          setError('Nie można zalogować się. Sprawdź połączenie z internetem.');
+    let unsubscribe: (() => void) | undefined;
+    try {
+      unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
+        if (firebaseUser) {
+          setUser(firebaseUser);
           setIsLoading(false);
+        } else {
+          try {
+            await doSignInAnonymously();
+          } catch {
+            setError('Nie można zalogować się. Sprawdź połączenie z internetem.');
+            setIsLoading(false);
+          }
         }
-      }
-    });
-    return unsubscribe;
+      });
+    } catch {
+      // Native Firebase module unavailable (web / Expo Go without dev build)
+      setIsLoading(false);
+    }
+    return () => unsubscribe?.();
   }, []);
 
   const signOut = async () => {

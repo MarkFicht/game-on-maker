@@ -14,7 +14,7 @@ Cała infrastruktura (auth, płatności, reklamy, storage) zostaje bez zmian i j
 |---|---|
 | Framework | Expo SDK 51+ (managed workflow) |
 | Język | TypeScript (strict mode) |
-| Nawigacja | React Navigation v6 |
+| Nawigacja | Expo Router v4 (file-based, SDK 56) |
 | State management | Zustand v4 |
 | Backend | Firebase — Auth + Firestore |
 | Reklamy | AdMob (react-native-google-mobile-ads) |
@@ -70,9 +70,7 @@ src/
 │   │   ├── LoadingScreen.tsx
 │   │   └── Typography.tsx
 │   ├── navigation/
-│   │   ├── RootNavigator.tsx      ← główny navigator
-│   │   ├── navigationTypes.ts     ← typy ekranów (TypeScript)
-│   │   └── navigationRef.ts       ← ref do nawigacji poza komponentami
+│   │   └── index.ts               ← AppRoute type (Expo Router zarządza nawigacją przez app/)
 │   └── theme/
 │       ├── colors.ts
 │       ├── spacing.ts
@@ -83,6 +81,14 @@ src/
     ├── firebase.ts                ← inicjalizacja Firebase
     ├── env.ts                     ← walidacja zmiennych środowiskowych
     └── constants.ts               ← stałe aplikacji
+
+app/                               ← Expo Router — ekrany (file-based routing)
+├── _layout.tsx                    ← root layout: AuthProvider + Stack
+├── index.tsx                      ← Home screen
+├── game.tsx                       ← Game screen
+├── game-over.tsx                  ← GameOver screen
+├── settings.tsx                   ← Settings screen
+└── store.tsx                      ← Store screen
 
 docs/
 ├── ARCHITECTURE.md

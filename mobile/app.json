@@ -6,6 +6,10 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "gameonmaker",
+    "experiments": {
+      "typedRoutes": true
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.marekficht.gameonmaker",
@@ -34,7 +38,8 @@
           "iosUrlScheme": "com.googleusercontent.apps.com.googleusercontent.apps.1045622351349-mlupqtdoae4d3d9n3sul9ag9npdgvs93"
         }
       ],
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-router"
     ],
     "extra": {
       "eas": {
