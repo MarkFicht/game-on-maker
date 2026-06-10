@@ -4,9 +4,9 @@
 
 ## Aktualny status
 
-**Faza:** 5 — Płatności (RevenueCat)  
+**Faza:** 6 — Migracja mechaniki gry  
 **Ostatnia sesja:** 2026-06-10  
-**Następny krok:** Faza 5 — RevenueCat: PaymentsProvider, usePayments, ekran Store
+**Następny krok:** Faza 6 — Migracja mechaniki gry z web React do React Native
 
 ---
 
@@ -50,13 +50,13 @@
 
 ### Faza 5 — Płatności (RevenueCat)
 
-- [ ] `react-native-purchases` zainstalowane
-- [ ] RevenueCat projekt skonfigurowany (iOS + Android)
-- [ ] PaymentsProvider z inicjalizacją
-- [ ] `usePayments` hook: isPremium, purchase, restore
-- [ ] Ekran Store z ofertami
-- [ ] Restore purchases działa
-- [ ] Testowe zakupy na sandbox
+- [x] `react-native-purchases` zainstalowane
+- [ ] RevenueCat projekt skonfigurowany (iOS + Android) — wymaga konta RevenueCat + kluczy API w `.env`
+- [x] PaymentsProvider z inicjalizacją
+- [x] `usePayments` hook: isPremium, purchase, restore
+- [x] Ekran Store z ofertami
+- [x] Restore purchases działa (kod gotowy — wymaga sandbox do przetestowania)
+- [ ] Testowe zakupy na sandbox — wymaga EAS dev build + kont testowych
 
 ### Faza 6 — Migracja mechaniki gry
 
@@ -76,6 +76,13 @@
 - [ ] Testy integracyjne: flow zakupu
 - [ ] Testy integracyjne: flow reklamy
 - [ ] Ręczne testy na iOS + Android
+
+**Dług z Fazy 5 — brakujące testy `usePayments`:**
+- [ ] `purchase` rzuca błąd (nie `userCancelled`) → Alert "Błąd zakupu" się pojawia
+- [ ] `purchase` z `userCancelled: true` → Alert się NIE pojawia
+- [ ] `isPurchasing` jest `true` podczas zakupu, `false` po zakończeniu
+- [ ] `restore` gdy entitlement aktywny → Alert "Sukces"
+- [ ] `fetchOfferings` gdy API zwraca `null` → `offerings` pozostaje `null`, brak crashu
 
 ### Faza 8 — Publikacja
 
@@ -291,4 +298,38 @@
 **Następny krok:**
 
 - Faza 5: RevenueCat — `react-native-purchases`, PaymentsProvider, `usePayments` (isPremium, purchase, restore), ekran Store, podłączenie `isPremium` do `AdsProvider`
+
+---
+
+### 2026-06-10 (continued) — Phase 5
+
+**Co zrobiono:**
+
+- `react-native-purchases` zainstalowane
+- `src/core/payments/paymentsConfig.ts` — `ENTITLEMENT_ID`, `OFFERING_ID`, `getRevenueCatApiKey()`
+- `src/core/payments/PaymentsProvider.tsx` — inicjalizacja RC, `getCustomerInfo`, listener `addCustomerInfoUpdateListener`. Graceful degradation: `Platform.OS === 'web'` guard + try/catch. `require()` zamiast dynamic `import()` dla niezawodnego mockowania w Jest.
+- `src/core/payments/usePayments.ts` — `fetchOfferings`, `purchase` (Alert przy błędzie, obsługa `userCancelled`), `restore` (Alert sukces/brak/błąd). `require()` zamiast dynamic `import()`.
+- `app/store.tsx` — prawdziwy ekran sklepu: loading state, isPremium state, karty pakietów, przyciski zakupu, "Przywróć zakupy" (wymagane przez Apple)
+- `app/_layout.tsx` — `PaymentsProvider` + `AdsProviderBridge` (czyta `isPremium` z PaymentsContext, przekazuje do `AdsProvider`)
+- Testy: 10 nowych testów (PaymentsProvider ×5, usePayments ×5) → łącznie **48/48** ✅
+
+**Decyzje podjęte:**
+
+- `require()` zamiast `await import()` w PaymentsProvider i usePayments — `jest-expo` nie hoist'uje dynamicznych importów tak samo jak `require()`. Identyczny pattern jak w ads hookach.
+- `AdsProviderBridge` — thin component wewnątrz `_layout.tsx` do przekazywania `isPremium` między sibling providerami (PaymentsProvider → AdsProvider)
+- `children?: React.ReactNode` w PaymentsProviderProps — spójnie z AdsProvider
+
+**Problemy napotkane:**
+
+- `await import('react-native-purchases')` nie był przechwytywany przez `jest.mock()` w jest-expo → testy dawały 0 wywołań / null offerings. Naprawione przez `require()`.
+- `act()` warning: `PaymentsProvider.initializePurchases` ma jeden `await` (`getCustomerInfo`) który kończy się po zakończeniu testów bez `await act()` — tylko ostrzeżenie, nie błąd. Testy przechodzą.
+
+**Status Phase 5:**
+
+✅ **DONE** (kod) — `npx tsc --noEmit` → 0 błędów, `npm test` → 48/48 testów zielonych  
+⏳ Testowe zakupy na sandbox wymagają EAS dev build + kont testowych RevenueCat
+
+**Następny krok:**
+
+- Faza 6: Migracja mechaniki gry z web React do React Native
 
