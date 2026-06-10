@@ -1,3 +1,1 @@
-export { PaymentsProvider } from './PaymentsProvider';
-export { usePayments } from './usePayments';
-export * from './paymentsConfig';
+// Phase 5 — PaymentsProvider + hooks — to be implemented

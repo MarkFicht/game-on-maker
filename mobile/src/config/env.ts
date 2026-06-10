@@ -8,6 +8,7 @@ const REQUIRED_VARS = [
 ] as const;
 
 const OPTIONAL_VARS = [
+  'EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID',
   'EXPO_PUBLIC_ADMOB_APP_ID_IOS',
   'EXPO_PUBLIC_ADMOB_APP_ID_ANDROID',
   'EXPO_PUBLIC_ADMOB_REWARDED_ID',
@@ -47,6 +48,7 @@ export const env = {
     storageBucket: getRequired('EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET'),
     messagingSenderId: getRequired('EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'),
     appId: getRequired('EXPO_PUBLIC_FIREBASE_APP_ID'),
+    webClientId: getOptional('EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID'),
   },
   admob: {
     appIdIos: getOptional('EXPO_PUBLIC_ADMOB_APP_ID_IOS'),

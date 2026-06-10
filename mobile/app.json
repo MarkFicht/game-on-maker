@@ -7,7 +7,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.marekficht.gameonmaker",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,11 +18,24 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.marekficht.gameonmaker",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.com.googleusercontent.apps.1045622351349-mlupqtdoae4d3d9n3sul9ag9npdgvs93"
+        }
+      ],
+      "expo-apple-authentication"
+    ],
     "extra": {
       "eas": {
         "projectId": "112dbd96-e572-498a-bce4-9d8fcc15909c"
