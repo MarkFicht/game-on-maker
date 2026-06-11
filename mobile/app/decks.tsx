@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, Animated } from 'react-native';
+import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { DeckCard } from '../src/game/components';
@@ -8,6 +9,30 @@ import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
 import { GradientBackground, PageHeader } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 import type { Deck } from '../src/game/types';
+
+function SlideCard({ delay, children }: { delay: number; children: React.ReactNode }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(-28)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(opacity, { toValue: 1, duration: 240, useNativeDriver: true }),
+      ]),
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.spring(translateX, { toValue: 0, tension: 80, friction: 7, useNativeDriver: true }),
+      ]),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity, transform: [{ translateX }] }}>
+      {children}
+    </Animated.View>
+  );
+}
 
 function SectionTitle({ children, icon }: { children: string; icon?: string }) {
   return (
@@ -23,6 +48,14 @@ export default function DecksScreen() {
 
   const freeDecks = getFreeDecks();
   const premiumDecks = getPremiumDecks();
+
+  const anims = useMemo(() => [
+    makeEntranceAnim(), // random section
+    makeEntranceAnim(), // free section
+    makeEntranceAnim(), // premium section
+  ], []);
+
+  useEffect(() => { startEntranceAll(anims, 90); }, []);
 
   const handleSelect = (deck: Deck) => {
     router.push({ pathname: '/game', params: { deckId: deck.id } });
@@ -57,7 +90,9 @@ export default function DecksScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Random */}
+          <Animated.View style={entranceStyle(anims[0])}>
           <SectionTitle icon="🎲">Losowe talie</SectionTitle>
+          <SlideCard delay={0}>
           <DeckCard
             deck={{
               id: 'random-free',
@@ -71,6 +106,8 @@ export default function DecksScreen() {
             onSelect={handleRandomFree}
             showWordCount={false}
           />
+          </SlideCard>
+          <SlideCard delay={100}>
           <DeckCard
             deck={{
               id: 'random-premium',
@@ -86,32 +123,42 @@ export default function DecksScreen() {
             onUnlock={handleUnlock}
             showWordCount={false}
           />
+          </SlideCard>
+
+          </Animated.View>
 
           <View style={styles.separator} />
 
           {/* Free */}
+          <Animated.View style={entranceStyle(anims[1])}>
           <SectionTitle icon="🆓">Darmowe talie</SectionTitle>
-          {freeDecks.map(deck => (
-            <DeckCard key={deck.id} deck={deck} onSelect={handleSelect} />
+          {freeDecks.map((deck, i) => (
+            <SlideCard key={deck.id} delay={90 + i * 100}>
+              <DeckCard deck={deck} onSelect={handleSelect} />
+            </SlideCard>
           ))}
+
+          </Animated.View>
 
           <View style={styles.separator} />
 
           {/* Premium */}
+          <Animated.View style={entranceStyle(anims[2])}>
           <View style={styles.premiumHeader}>
             <SectionTitle icon="👑">Talie premium</SectionTitle>
             {!isPremium && (
               <Text style={styles.unlockHint}>Odblokuj wszystkie</Text>
             )}
           </View>
-          {premiumDecks.map(deck => (
-            <DeckCard
-              key={deck.id}
-              deck={deck}
-              onSelect={handleSelect}
-              isLocked={!isPremium}
-              onUnlock={handleUnlock}
-            />
+          {premiumDecks.map((deck, i) => (
+            <SlideCard key={deck.id} delay={180 + i * 100}>
+              <DeckCard
+                deck={deck}
+                onSelect={handleSelect}
+                isLocked={!isPremium}
+                onUnlock={handleUnlock}
+              />
+            </SlideCard>
           ))}
 
           {!isPremium && (
@@ -126,6 +173,8 @@ export default function DecksScreen() {
               </View>
             </LinearGradient>
           )}
+
+          </Animated.View>
 
           <View style={styles.bottomSpacer} />
         </ScrollView>

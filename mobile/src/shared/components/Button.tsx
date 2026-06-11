@@ -30,10 +30,11 @@ const radiusMap: Record<Size, number> = {
   lg: borderRadius.lg,
 };
 
-// Layer 1: white-top → black-bottom bevel border ("chrome edge")
+// Layer 1: bevel border — tinted from button color, not white/black chrome.
+// Top = button_color + 40% white (light tint), Bottom = button_color × 60% (dark tint).
 const bevelColors: Record<Variant, readonly [string, string]> = {
-  primary:   ['rgba(255,255,255,0.50)', 'rgba(0,0,0,0.40)'],
-  secondary: ['rgba(255,255,255,0.44)', 'rgba(0,0,0,0.36)'],
+  primary:   ['#9590EF', '#2F2A89'],  // indigo #4F46E5: light ↑ darker ↓
+  secondary: ['#6FD5B3', '#0A6F4D'],  // green  #10B981: light ↑ darker ↓
   outline:   ['rgba(255,255,255,0.24)', 'rgba(0,0,0,0.22)'],
   ghost:     ['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.06)'],
 };
@@ -62,26 +63,27 @@ const textColors: Record<Variant, string> = {
 };
 
 // Shadow sits on the bevel LinearGradient which has a visible bg → iOS shadow works
+// Tight dark shadow → button appears raised/close to screen (not glowing)
 const bevelShadow: Record<Variant, ViewStyle> = {
   primary: {
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.50,
-    shadowRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
     elevation: 8,
   },
   secondary: {
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.50,
-    shadowRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
     elevation: 8,
   },
   outline: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.28,
-    shadowRadius: 6,
+    shadowOpacity: 0.30,
+    shadowRadius: 5,
     elevation: 4,
   },
   ghost: {},
@@ -127,7 +129,7 @@ export function Button({
           style={[
             styles.inner,
             sizeStyles[size],
-            { backgroundColor: innerBg[variant], borderRadius: Math.max(1, radius - 3) },
+            { backgroundColor: innerBg[variant], borderRadius: Math.max(1, radius - 4) },
           ]}
         >
           {/* Layer 3: convex depth overlay */}
@@ -144,6 +146,7 @@ export function Button({
           ) : (
             <Typography
               variant="label"
+              align="center"
               color={isDisabled ? colors.textDisabled : textColors[variant]}
             >
               {label}
@@ -160,7 +163,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   bevel: {
-    padding: 3,
+    padding: 4,
   },
   inner: {
     alignItems: 'center',

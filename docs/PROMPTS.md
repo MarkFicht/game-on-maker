@@ -1,27 +1,21 @@
 # PROMPTS.md
+
 > Gotowe prompty do wklejenia na początku każdej sesji Claude Code w VS Code.
-> Zawsze zaczynaj od "Prompt startowy", potem wybierz prompt dla aktualnego zadania.
+> Zawsze zaczynaj od "Prompt startowego", potem wybierz prompt dla aktualnego zadania.
 
 ---
 
 ## PROMPT STARTOWY — wklej na początku KAŻDEJ sesji
 
 ```
-Jesteś senior React Native developerem. Pracujemy razem nad projektem — 
+Jesteś senior React Native developerem. Pracujemy razem nad projektem —
 mobilną grą w React Native + Expo z Firebase, AdMob i RevenueCat.
 
-Zanim cokolwiek zrobisz, przeczytaj te pliki z repozytorium:
+Zanim cokolwiek zrobisz, przeczytaj:
 - @docs/ARCHITECTURE.md   ← struktura projektu i zasady
 - @docs/PROGRESS.md       ← co już zrobione i co robimy dziś
-- @docs/SECURITY.md       ← zasady bezpieczeństwa których przestrzegamy
-- @docs/TESTING.md        ← jak piszemy testy
 
-Po przeczytaniu potwierdź:
-1. Na jakim etapie jesteśmy (z PROGRESS.md)
-2. Jaki jest następny krok
-3. Czy masz pytania zanim zaczniemy
-
-Czekam na potwierdzenie zanim dam Ci zadanie.
+Po przeczytaniu potwierdź: na jakim etapie jesteśmy i jaki jest następny krok. Jeśli trzeba, zadaj pytania pomocnicze.
 ```
 
 ---
@@ -31,69 +25,48 @@ Czekam na potwierdzenie zanim dam Ci zadanie.
 ```
 Zaczynamy Fazę 1 z PROGRESS.md.
 
-Zadanie: Stwórz nowy projekt Expo z TypeScript i przygotuj 
-pełną strukturę folderów zgodną z @docs/ARCHITECTURE.md.
+Stwórz nowy projekt Expo + TypeScript zgodnie z @docs/ARCHITECTURE.md:
+1. Komendy: create-expo-app, eas init
+2. Struktura folderów src/{core,game,shared,config}
+3. config/env.ts z walidacją zmiennych środowiskowych
+4. .env.example z wszystkimi kluczami (bez wartości)
+5. .gitignore: .env, google-services.json, GoogleService-Info.plist
+6. Placeholder index.ts w każdym folderze
 
-Kroki do wykonania:
-1. Wygeneruj komendy do uruchomienia w terminalu (create-expo-app, eas init)
-2. Stwórz strukturę folderów src/core, src/game, src/shared, src/config
-3. Stwórz plik config/env.ts z walidacją zmiennych środowiskowych
-4. Stwórz .env.example z wszystkimi wymaganymi kluczami (bez wartości)
-5. Zaktualizuj .gitignore o .env, google-services.json, GoogleService-Info.plist
-6. Stwórz placeholder index.ts w każdym folderze żeby struktura była widoczna
-
-Po każdym pliku — zatrzymaj się i zapytaj czy kontynuować.
 Na końcu zaktualizuj @docs/PROGRESS.md.
 ```
 
 ---
 
-## FAZA 2 — Firebase Auth
+## FAZA 2 — Firebase Auth + Firestore
 
 ```
-Robimy Firebase Auth z @docs/PROGRESS.md.
+Robimy Fazę 2 z PROGRESS.md.
 
-Stack: react-native-firebase, TypeScript strict, Expo managed workflow.
+Zaimplementuj w src/core/auth/ i src/core/storage/:
+1. AuthProvider + useAuth + authHelpers (anonymous, Google, Apple, signOut)
+2. savePlayerProgress / loadPlayerProgress (offline-first, AsyncStorage → Firestore)
+3. firestore.rules z walidacją i anti-cheat (max +10k score/write)
+4. Testy jednostkowe zgodnie z @docs/TESTING.md
 
-Zadanie: Zaimplementuj pełny system autoryzacji w src/core/auth/:
-1. AuthProvider.tsx — Context z user, isLoading, error
-2. useAuth.ts — hook eksportujący stan i metody
-3. authHelpers.ts — funkcje: signInAnonymously, signInWithGoogle, 
-   signInWithApple, signOut, linkAnonymousWithGoogle
-
-Wymagania:
-- Anonimowe logowanie przy pierwszym uruchomieniu (zero friction)
-- Google Sign-In jako opcja "Zapisz postęp"
-- Apple Sign-In (wymagane przez Apple jeśli mamy Google)
-- Obsługa błędów z czytelnymi komunikatami
-- TypeScript — brak any, pełne typy
-- JSDoc dla każdej funkcji publicznej
-
-Napisz też testy jednostkowe dla useAuth zgodnie z @docs/TESTING.md.
 Sprawdź @docs/SECURITY.md przed implementacją.
 ```
 
 ---
 
-## FAZA 3 — Firestore (storage)
+## FAZA 3 — Nawigacja + Shared
 
 ```
-Robimy integrację Firestore z @docs/PROGRESS.md.
+Robimy Fazę 3 z PROGRESS.md.
 
-Zadanie: Zaimplementuj warstwę storage w src/core/storage/:
-1. storageTypes.ts — typy: PlayerData, GameSettings, LeaderboardEntry
-2. firestore.ts — funkcje: savePlayerProgress, loadPlayerProgress, 
-   updateLeaderboard, getTopLeaderboard(limit: number)
-3. localStorage.ts — AsyncStorage wrapper z typami dla offline cache
+Skonfiguruj Expo Router v4 i stwórz shared komponenty w src/shared/:
+1. app/_layout.tsx — root Stack z AuthProvider
+2. Placeholder ekrany: index, game, settings, store
+3. Theme: colors.ts, spacing.ts, typography.ts
+4. Komponenty: Button (warianty + loading), Typography, Modal, LoadingScreen
+5. Testy jednostkowe dla komponentów
 
-Wymagania:
-- Offline first: zawsze najpierw czytaj z AsyncStorage, sync z Firestore w tle
-- Obsługa błędów sieciowych bez crashowania gry
-- Firestore Security Rules w pliku firestore.rules (zgodne z @docs/SECURITY.md)
-- Testy dla Firestore Security Rules (assertFails / assertSucceeds)
-- Walidacja danych przed zapisem (score >= 0, level >= 1)
-
-Pokaż też jak uruchomić Firebase Emulator do testów lokalnych.
+Expo Router v4 — użyj file-based routing (nie React Navigation v6).
 ```
 
 ---
@@ -101,24 +74,16 @@ Pokaż też jak uruchomić Firebase Emulator do testów lokalnych.
 ## FAZA 4 — Reklamy AdMob
 
 ```
-Robimy integrację AdMob z @docs/PROGRESS.md i @docs/MONETIZATION.md.
+Robimy Fazę 4 z PROGRESS.md i @docs/MONETIZATION.md.
 
-Zadanie: Zaimplementuj system reklam w src/core/ads/:
-1. AdsProvider.tsx — inicjalizacja AdMob, GDPR consent (Europa), 
-   ATT permission (iOS), kontekst czy reklamy są gotowe
-2. useRewardedAd.ts — hook: load(), show(), isLoaded, isEarningReward
-3. useInterstitialAd.ts — hook: load(), show(), isLoaded
-4. BannerAd.tsx — komponent z fallback gdy reklama nie załadowana
+Zaimplementuj src/core/ads/:
+1. AdsProvider — ATT (iOS) → GDPR consent → init; graceful degradation (web/Expo Go)
+2. useRewardedAd, useInterstitialAd — load/show lifecycle, no-op gdy isPremium
+3. BannerAd — render-nothing gdy brak reklamy
 
-Wymagania:
-- Zawsze sprawdź isPremium zanim pokażesz reklamę
-- Consent flow PRZED inicjalizacją (GDPR + ATT)
-- Test ad IDs w development, produkcyjne z .env
-- Obsługa błędów (brak internetu, failed to load)
-- Częstotliwość interstitial: co 3 poziomy, nie częściej niż co 90s
-
-Napisz testy z zamockowanym AdMob SDK.
-Sprawdź @docs/SECURITY.md sekcję "Reklamy — compliance".
+Zawsze sprawdź isPremium zanim pokażesz reklamę.
+Test ad IDs w __DEV__, produkcyjne z .env.
+Napisz testy z zamockowanym SDK.
 ```
 
 ---
@@ -126,23 +91,19 @@ Sprawdź @docs/SECURITY.md sekcję "Reklamy — compliance".
 ## FAZA 5 — Płatności RevenueCat
 
 ```
-Robimy integrację RevenueCat z @docs/PROGRESS.md i @docs/MONETIZATION.md.
+Robimy Fazę 5 z PROGRESS.md i @docs/MONETIZATION.md.
 
-Zadanie: Zaimplementuj system płatności w src/core/payments/:
-1. paymentsConfig.ts — ENTITLEMENTS, PRODUCT_IDS (z MONETIZATION.md)
-2. PaymentsProvider.tsx — inicjalizacja RevenueCat z userId z Firebase Auth
-3. usePayments.ts — hook: isPremium, packages, purchase(packageId), 
-   restorePurchases, isLoading, error
+Zaimplementuj src/core/payments/:
+1. paymentsConfig.ts — ENTITLEMENT_ID, OFFERING_ID, getRevenueCatApiKey()
+2. PaymentsProvider — inicjalizacja RC, getCustomerInfo, listener
+3. usePayments — isPremium, fetchOfferings, purchase (+ Alert błędy), restore
 
 Wymagania:
-- Inicjalizuj RevenueCat dopiero PO zalogowaniu użytkownika Firebase
-- isPremium zawsze z CustomerInfo (nie z lokalnego stanu)
+- isPremium zawsze z CustomerInfo (nie lokalny stan)
 - Restore purchases — wymagany przycisk (Apple Policy)
-- Obsługa błędów: user cancelled, payment failed, network error
-- Sandbox testing instructions w komentarzu
+- require() zamiast await import() — konieczne dla poprawnego mockowania w Jest
 
 Napisz testy z zamockowanym react-native-purchases.
-Sprawdź @docs/SECURITY.md sekcję "Płatności — bezpieczeństwo".
 ```
 
 ---
@@ -150,22 +111,40 @@ Sprawdź @docs/SECURITY.md sekcję "Płatności — bezpieczeństwo".
 ## FAZA 6 — Migracja mechaniki gry
 
 ```
-Robimy migrację gry z @docs/PROGRESS.md.
+Robimy Fazę 6 z PROGRESS.md.
 
-Mam istniejącą grę w React (web). Wklejam poniżej kod do migracji:
-
+Mam grę w React (web). Kod do migracji:
 [TUTAJ WKLEJ SWÓJ KOD REACT]
 
 Zadanie:
-1. Przeanalizuj kod i wskaż co trzeba zmienić (div→View, CSS→StyleSheet itp.)
-2. Stwórz gameStore.ts z Zustand (stan gry zamiast lokalnego useState)
-3. Przepisz główny komponent gry na React Native
-4. Zachowaj całą logikę w gameEngine.ts (czyste funkcje, zero UI)
-5. Użyj react-native-reanimated dla animacji
+1. engine.ts + types.ts + utils.ts — skopiuj logikę 1:1 (czysty JS, zero UI)
+2. useGame hook — adapter engine → React state
+3. Komponenty gry w src/game/components/ (RN + StyleSheet zamiast HTML/CSS)
+4. Pełny flow w app/game.tsx: ready → countdown → playing → paused → results
+5. Użyj shared/animation/entrance.ts dla animacji wejścia sekcji (spring bounce)
+6. Testy dla engine.ts zgodnie z @docs/TESTING.md
 
-Zasada: logika gry (gameEngine.ts) musi być identyczna — 
-zmieniamy tylko warstwę prezentacji.
-Napisz testy dla gameEngine zgodnie z @docs/TESTING.md.
+Zasada: logika gry musi być identyczna z web — zmieniamy tylko warstwę prezentacji.
+```
+
+---
+
+## FAZA 7 — Testy
+
+```
+Robimy Fazę 7 z PROGRESS.md.
+
+Napisz testy jednostkowe zgodnie z @docs/TESTING.md:
+1. src/game/engine.ts — pełne pokrycie mechaniki gry
+2. src/hooks/useGame.ts — stany: idle/playing/paused/finished, markCorrect, markSkipped
+3. Spłata długu z Fazy 5 — brakujące przypadki usePayments:
+   - purchase rzuca błąd (nie userCancelled) → Alert "Błąd zakupu" się pojawia
+   - purchase z userCancelled: true → Alert się NIE pojawia
+   - isPurchasing: true podczas zakupu, false po zakończeniu
+   - restore gdy entitlement aktywny → Alert "Sukces"
+   - fetchOfferings gdy API zwraca null → offerings: null, brak crashu
+
+Frameworki: jest-expo + @testing-library/react-native.
 ```
 
 ---
@@ -173,67 +152,51 @@ Napisz testy dla gameEngine zgodnie z @docs/TESTING.md.
 ## FAZA 8 — Build produkcyjny
 
 ```
-Robimy build produkcyjny z @docs/PROGRESS.md.
+Robimy Fazę 8 z PROGRESS.md.
 
-Zadanie: Przygotuj projekt do publikacji na App Store i Google Play.
-
-1. Sprawdź @docs/SECURITY.md — "Checklist przed buildem produkcyjnym"
-2. Skonfiguruj eas.json dla profili: development, preview, production
-3. Skonfiguruj app.json: bundleIdentifier, versionCode, permissions
-4. Dodaj babel plugin transform-remove-console dla produkcji
-5. Wygeneruj komendy EAS Build dla iOS i Android
-6. Napisz instrukcję TestFlight i Google Play Internal Testing
-
-Przed buildem upewnij się że:
-- Wszystkie test ad IDs zastąpione prawdziwymi
-- .env.production skonfigurowane
-- Firestore Rules wdrożone na produkcję
+Przygotuj projekt do publikacji:
+1. Sprawdź @docs/SECURITY.md — "Checklist przed buildem"
+2. eas.json — profile: development, preview, production
+3. app.json — bundleIdentifier, versionCode, permissions
+4. Babel plugin transform-remove-console dla produkcji
+5. Komendy EAS Build dla iOS i Android
+6. Instrukcja TestFlight i Google Play Internal Testing
 ```
 
 ---
 
-## PROMPT DO BUGFIXINGU — użyj gdy napotkasz błąd
+## BUGFIXING
 
 ```
 Mam błąd w projekcie React Native + Expo.
 
-Kontekst projektu: @docs/ARCHITECTURE.md
+Kontekst: @docs/ARCHITECTURE.md
 
 Błąd:
 [WKLEJ PEŁNY BŁĄD Z TERMINALA / LOGCAT / XCODE]
 
-Plik w którym wystąpił:
-[WKLEJ ŚCIEŻKĘ]
-
-Kod:
-[WKLEJ FRAGMENT KODU]
+Plik: [ŚCIEŻKA]
+Kod: [FRAGMENT]
 
 Środowisko:
 - Expo SDK: [wersja]
 - Platform: iOS / Android / oba
 - Urządzenie: emulator / fizyczne
-
-Proszę o:
-1. Wyjaśnienie przyczyny błędu
-2. Konkretne rozwiązanie z kodem
-3. Czy jest to błąd który może pojawić się w innych miejscach?
 ```
 
 ---
 
-## PROMPT DO CODE REVIEW — przed każdym większym commitem
+## CODE REVIEW
 
 ```
-Zrób code review następującego kodu zgodnie z zasadami projektu.
+Zrób code review zgodnie z zasadami projektu.
 
 Sprawdź pod kątem:
-1. Zasady z @docs/ARCHITECTURE.md (szczególnie: brak importów Firebase/AdMob poza core/)
-2. Security z @docs/SECURITY.md (klucze API, Firestore rules, anti-cheat)
-3. TypeScript strict — brak any, pełne typy
-4. Czy są testy? Czy spełniają wymagania z @docs/TESTING.md?
-5. Performance — niepotrzebne re-rendery, wyciek pamięci
-6. Czy monetyzacja respektuje isPremium przed reklamami?
+1. @docs/ARCHITECTURE.md — brak importów Firebase/AdMob poza core/
+2. TypeScript strict — brak any, pełne typy
+3. Testy zgodnie z @docs/TESTING.md
+4. isPremium sprawdzane przed reklamami
+5. vibrationEnabled sprawdzane przed expo-haptics
 
-Kod do review:
-[WKLEJ KOD]
+Kod: [WKLEJ KOD]
 ```

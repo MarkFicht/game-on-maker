@@ -27,8 +27,9 @@ export function MuteButton({ size = 'md' }: MuteButtonProps) {
         style={[styles.clip, { width: s.outer, height: s.outer, borderRadius: s.outer / 2 }]}
         accessibilityLabel={isMuted ? 'Włącz dźwięk' : 'Wycisz'}
       >
+        {/* Convex bevel: bright top-edge, dark bottom-edge → raised glass look */}
         <LinearGradient
-          colors={['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.12)']}
+          colors={['rgba(255,255,255,0.55)', 'rgba(0,0,0,0.30)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={[styles.bevel, { padding: s.bevel }]}
@@ -42,7 +43,7 @@ export function MuteButton({ size = 'md' }: MuteButtonProps) {
               style={StyleSheet.absoluteFill}
               pointerEvents="none"
             />
-            <Text style={{ fontSize: s.icon }}>{isMuted ? '🔇' : '🔊'}</Text>
+            <Text style={{ fontSize: s.icon, marginBottom: 2 }}>{isMuted ? '🔇' : '🔊'}</Text>
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
   inner: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(22,36,58,0.82)',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
   },
 });

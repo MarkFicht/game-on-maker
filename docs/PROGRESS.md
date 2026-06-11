@@ -4,11 +4,11 @@
 
 ## Aktualny status
 
-**Faza:** 6 — Polish (Część 2 — komponent reuse system)  
+**Faza:** 6 Część 3 — Mechanika odpowiedzi  
 **Ostatnia sesja:** 2026-06-11  
-**Następny krok:** Faza 6 Część 2 — wyciągnięcie UI systemu do warstwy reużywalnej (patrz plan niżej)
+**Następny krok:** Faza 6 Część 3 — poprawa mechaniki wyboru poprawnej/błędnej odpowiedzi w tablicy + UI
 
-> Visual overhaul + polish ukończony (Część 1). Wszystkie ekrany mają glassmorphism dark style z 3D bevel buttons, PageHeader wszędzie, animacje, sync ustawień. Następna część: ekstrakcja systemu do `game-engine/ui` żeby był reużywalny dla kolejnych gier.
+> Faza 6 Części 1 i 2 ukończone. Visual overhaul (3D bevels, animacje wejścia, spring bounce wszędzie, HUD overlay) + reużywalny UI system (`game-engine/` factory, generyczny store, backward-compat). Część 3 zaplanowana: nowa mechanika odpowiedzi.
 
 ---
 
@@ -36,8 +36,8 @@
 ### Faza 3 — Nawigacja i shared
 
 - [x] Expo Router v4 skonfigurowany (SDK 56 — zastępuje React Navigation v6)
-- [x] app/_layout.tsx: AuthProvider + Stack z typowanymi ekranami
-- [x] Ekrany: Home, Game, GameOver, Settings, Store (app/*.tsx)
+- [x] app/\_layout.tsx: AuthProvider + Stack z typowanymi ekranami
+- [x] Ekrany: Home, Game, GameOver, Settings, Store (app/\*.tsx)
 - [x] Shared komponenty: Button, Modal, Typography, LoadingScreen (+ testy)
 - [x] Theme: colors, spacing, borderRadius, typography
 
@@ -63,61 +63,51 @@
 ### Faza 6 — Migracja mechaniki gry + Visual Polish
 
 **Część 0 — Mechanika i ekrany:**
-- [x] Analiza istniejącego kodu React (web)
-- [x] Game engine przepisany 1:1 (types, engine, utils, decks) — czysty JS, bez zależności UI
-- [x] Karty przetłumaczone na PL (talie: Filmy, Zwierzęta, Sport, Jedzenie, Znane osoby, Czynności)
-- [x] `useGame` hook — adapter engine → React state
-- [x] `useSettings` hook — AsyncStorage persistence (roundDuration, sound, vibration)
-- [x] `TimerRing`, `WordCard`, `DeckCard`, `ResultsView` — komponenty gry
+
+- [x] Game engine przepisany 1:1 z web (typy, engine, utils, decks) — czysty JS, bez zależności UI
+- [x] 6 talii przetłumaczonych na PL (Filmy, Zwierzęta, Sport, Jedzenie, Znane osoby, Czynności)
+- [x] `useGame` hook (adapter engine → React state), `useSettings` hook (AsyncStorage persistence)
+- [x] Komponenty gry: `TimerRing`, `WordCard`, `DeckCard`, `ResultsView`
 - [x] Wszystkie ekrany: Home, Decks, Game (ready/countdown/playing/paused/results), Settings, Store
 
-**Część 1 — Visual Overhaul + Polish:**
+**Część 1 — Polish kosmetyczny:**
+
 - [x] `GradientBackground` — ciemny gradient kosmiczny na wszystkich ekranach
-- [x] 3-warstwowy 3D bevel button system: bevel LinearGradient → kolor → depth overlay
-- [x] `PageHeader` — transparentny header wszędzie (lewy slot: ⚙️/←, środek: title badge, prawy: MuteButton)
-- [x] `MuteButton` — rozmiary `md`/`sm`, shadow+clip pattern dla kołowych przycisków
-- [x] Efekt `shadow+clip`: outer View (shadow, bez overflow) + inner TouchableOpacity (overflow:hidden, clip)
-- [x] Białe obwódki bevelowe przy ikonach (gradient white→dimwhite, bez czarnego dołu)
-- [x] Animacja wejścia Home — `useFocusEffect` (gra przy każdej wizycie), emoji + tekst równocześnie
-- [x] Orange Start button w game ready state — identyczny 3D styl jak "Zagraj" na Home
-- [x] Nagłówki sekcji w Decks — białe (`rgba(255,255,255,0.85)`)
-- [x] "Przygotuj się!" badge — wyraźniejszy (wyższy kontrast, większy tekst)
-- [x] `settingsStore.ts` — singleton pub/sub: MuteButton i Switch w Settings synchronizują się bez reload
-- [x] Banner "Odblokuj Premium" — tekst zawija się i jest wyśrodkowany
-- [ ] Dźwięki (expo-av) — deferred do Fazy 7/8
+- [x] 3-warstwowy 3D bevel button system: kolorowe tint-bevel (formuła: top = 40% white + kolor, bottom = 60% kolor) + convex depth overlay — zastosowany wszędzie (przyciski, DeckCard, duration chips, PackageBtn, title badge)
+- [x] `PageHeader` — title badge animowany od góry przy każdym focusie ekranu (`useFocusEffect`), convex bevel na icon buttons (⚙️/←/🔊), SVG chevron zamiast ← tekstu
+- [x] `MuteButton` — convex glass bevel, `shadow+clip` pattern (outer View: shadow; inner TouchableOpacity: overflow:hidden)
+- [x] `settingsStore.ts` — singleton pub/sub: MuteButton i Settings synchronizują się na żywo bez reload
+- [x] `DeckCard` — `computeBevel(hex)`: dynamiczne tint-bevele z dowolnego koloru talii, usunięty accent strip
+- [x] WordCard fullscreen — HUD overlays pozycjonowane absolutnie (timer góra, score+controls dół), `pointerEvents="box-none"` — strefy tap góra/dół działają przez HUD
+- [x] Animacje wejścia (utility `makeEntranceAnim`/`startEntranceAll`): sekcje od dołu ze spring bounce na każdym ekranie; karty w Decks od lewej z opóźnieniem 100ms; ResultsView `AnimatedItem` spring bounce
+- [ ] Dźwięki (`expo-av`) — SFX: click-button/correct/skip/game-over/countdown; respektuj `soundEnabled` — deferred do Fazy 8
 - [ ] Gra przetestowana na fizycznym urządzeniu (wymaga EAS dev build)
 
-**Część 2 — Przeprojektowanie widoku gry + Reużywalny UI system (plan):**
+**Część 2 — Reużywalny UI system:**
 
-*Widok gry podczas rozgrywki:*
-- [ ] Usunąć osobny header bar z `LinearGradient` — timer/score/pauza mają być NAD słowem, nie w osobnym pasku
-- [ ] Słowo (`WordCard`) zajmuje pełnię ekranu (flex:1), strefy tap góra/dół bez zmian
-- [ ] Nad słowem (wewnątrz ekranu, nie w headerze): `TimerRing` + liczniki (Dobrze/Pominięte) + przycisk Pauza
-- [ ] Rozważyć lekki glassmorphism overlay na te kontrolki (semi-transparent, żeby nie zasłaniały słowa)
-- [ ] MuteButton przenieść do PageHeader lub wyrzucić z game header (jest już w PageHeader)
+- [x] `src/game-engine/store/settingsStore.ts` — `createSettingsStore<T>()`: generyczny pub/sub store z AsyncStorage
+- [x] `src/game-engine/ui/` — `createUseSettings(store)` factory hook, barrel re-eksporty theme i komponentów
+- [x] `src/game-engine/index.ts` — główny barrel z inline doc "jak zbudować nową grę w < 1 dzień"
+- [x] `src/game/{store,hooks}/` — WordRush instancje używające factory; backward-compat re-exports ze starych ścieżek
+- [x] Wibracje — `WordCard.vibrationEnabled` prop + last-5s haptic tick respektują `settings.vibrationEnabled`
+- [x] `ARCHITECTURE.md` — zaktualizowany: sekcja game-engine, schemat folderów, instrukcja nowej gry
 
-*Reużywalny UI system:*
-- [ ] Wyciągnąć `theme/` (colors, spacing, borderRadius) do shared `game-engine/ui/theme/`
-- [ ] Wyciągnąć `GradientBackground`, `PageHeader`, `MuteButton`, `Button` do `game-engine/ui/components/`
-- [ ] Stworzyć `game-engine/ui/hooks/` — `useSettings`, `useGame` jako generyczne (nie WordRush-specific)
-- [ ] `settingsStore` generyczny — dowolne pola settings per-gra (nie hardcoded `soundEnabled` itd.)
-- [ ] Dokumentacja: "jak zbudować nową grę na tym silniku w < 1 dzień"
+**Część 3 — Poprawa mechaniki odpowiedzi + UI:**
+
+- [ ] Nowa mechanika wyboru odpowiedzi (prawidłowa/błędna) w tablicy (klikniecie na odpowiednią część tablicy lub przechylenie telefonu do góry to poprawnie, w dół to źle i następna tablica) — poprawa UX i wizualna
+- [ ] Po wyborze odpowiedzi (prawidłowa/błędna), tablica podświetla się na odpowiedni kolor przed flipem
+- [ ] WordCard — rotateY flip z nowym słowem
+- [ ] Konfetti w ResultsView przy score >70% accuracy
 
 ---
 
-### Pomysły i drobne poprawki wizualne (backlog)
+### Backlog
 
-> Luźny backlog — przenieść do Część 2/3 gdy będzie czas
+_Features:_
 
-- [ ] `WordCard` — animacja "slide in" słowa (nowe słowo wjeżdża z dołu/boku zamiast flip)
-- [ ] `ResultsView` — confetti animacja przy wysokim score (>80% accuracy)
-- [ ] `DeckCard` — efekt shimmer na zablokowanych kartach premium
-- [ ] Home — particle/glow tło animowane (bardzo subtelne, żeby nie rozpraszało)
-- [ ] Game countdown — liczby 3/2/1 mogą mieć kolor zmieniony stopniowo (biały → żółty → pomarańczowy → czerwony)
-- [ ] Deck selection — po wyborze talii karta "rośnie" i wypełnia ekran (hero transition do game ready)
-- [ ] Settings — animacja toggle'a (ikona 🔊/🔇 może "wskakiwać" zamiast po prostu się zmienić)
-- [ ] PageHeader title — subtelny shimmer/glow na tytule (animowany `opacity` loop)
-- [ ] Onboarding tooltip (pierwsza wizyta) — wskazówka "przeciągnij w górę = dobrze"
+- [ ] Onboarding tooltip przy pierwszej wizycie — "góra = dobrze, dół = pas"
+- [ ] Offline indicator — subtelny badge gdy brak sieci
+- [ ] Wibracje — dodatkowe wzorce: `Heavy` dla game over, `Medium` dla last-3s
 
 ### Faza 7 — Testy
 
@@ -128,6 +118,7 @@
 - [ ] Ręczne testy na iOS + Android
 
 **Dług z Fazy 5 — brakujące testy `usePayments`:**
+
 - [ ] `purchase` rzuca błąd (nie `userCancelled`) → Alert "Błąd zakupu" się pojawia
 - [ ] `purchase` z `userCancelled: true` → Alert się NIE pojawia
 - [ ] `isPurchasing` jest `true` podczas zakupu, `false` po zakończeniu
@@ -153,321 +144,85 @@
 
 ## Log sesji
 
-### 2026-06-09
+### 2026-06-09 — Faza 1: Setup
 
-**Co zrobiono:**
-
-- Reorganizacja repozytorium: obecna gra webowa przeniesiona do `web/`, projekt Expo stworzony w `mobile/`
-- Struktura folderów `src/` zgodna z ARCHITECTURE.md (core, game, shared, config)
-- `mobile/src/config/env.ts` — walidacja wymaganych zmiennych przy starcie
-- `mobile/.env.example` — szablon z Firebase (wymagane) i placeholderami TODO_FILL_LATER dla AdMob/RevenueCat
-- Root `.gitignore` zaktualizowany dla monorepo (web + mobile)
-- Placeholder `index.ts` we wszystkich folderach
-
-**Problemy napotkane:**
-
-- `create-expo-app` czekał na pytanie o git init (projekt wewnątrz istniejącego repo) — zatrzymano ręcznie po tym jak projekt był już gotowy
-
-**Decyzje podjęte:**
-
-- Managed workflow + EAS Build (bez Xcode/Gradle ręcznie)
-- AdMob i RevenueCat konfigurowane dopiero w Fazach 4 i 5
-- `firebase.ts` (inicjalizacja SDK) tworzymy w Fazie 2, nie teraz
-
-**Następny krok:**
-
-- Faza 3: React Navigation v6 + shared komponenty + theme
+- Reorganizacja repo: gra webowa → `web/`, Expo managed workflow w `mobile/`
+- Struktura `src/` (core, game, shared, config), `.env.example`, `config/env.ts` z walidacją zmiennych
 
 ---
 
-### 2026-06-10
+### 2026-06-10 — Faza 2: Firebase
 
-**Co zrobiono:**
-
-- Zainstalowano `@react-native-firebase/app`, `auth`, `firestore`, `@react-native-google-signin/google-signin`, `expo-apple-authentication`
-- `app.json` zaktualizowany: config plugins (Firebase, GoogleSignin, AppleAuth), bundleIdentifier, googleServicesFile
-- `mobile/src/config/firebase.ts` — eksport instancji auth i firestore
-- `mobile/src/core/auth/AuthProvider.tsx` — React Context z auto-anonimowym logowaniem przy starcie
-- `mobile/src/core/auth/useAuth.ts` — hook
-- `mobile/src/core/auth/authHelpers.ts` — signInAnonymously, signInWithGoogle (GoogleSignin), signInWithApple (expo-apple-authentication), signOut, linkAnonymousWithGoogle
-- `mobile/src/core/auth/__tests__/useAuth.test.ts` — 4 testy jednostkowe (loading state, anonymous login, user set, error handling)
-- `mobile/src/core/storage/storageTypes.ts` — typy PlayerData, GameSettings, LeaderboardEntry
-- `mobile/src/core/storage/firestore.ts` — savePlayerProgress, loadPlayerProgress (offline-first), updateLeaderboard, getTopLeaderboard
-- `mobile/src/core/storage/localStorage.ts` — AsyncStorage wrapper dla PlayerData i GameSettings
-- `mobile/firestore.rules` — security rules z walidacją danych i anti-cheat (max +10000 score na zapis)
-
-**Problemy napotkane:**
-
-- Brak (instalacja i kod przeszły czysto)
-
-**Decyzje podjęte:**
-
-- `@react-native-firebase` używa natywnej inicjalizacji przez google-services.json/plist — EXPO_PUBLIC_FIREBASE_* env vars są dokumentacją, nie używane przez SDK
-- bundleIdentifier ustawiony na `com.marekficht.gameonmaker` — zmień gdy znasz docelową nazwę gry
-- `iosUrlScheme` w app.json ma placeholder `TODO_REPLACE_WITH_REVERSED_CLIENT_ID` — zastąp wartością z GoogleService-Info.plist
-
-**Następny krok:**
-
-- Faza 3: React Navigation v6 + shared komponenty (Button, Modal, Typography, LoadingScreen) + theme (colors, spacing, typography)
+- Auth: anonymous, Google (GoogleSignin), Apple (expo-apple-authentication)
+- Firestore: `savePlayerProgress`/`loadPlayerProgress` offline-first, security rules z anti-cheat (+10k/write)
+- TypeScript audit: 4 błędy naprawione → 0 errors; Firebase rules wdrożone
 
 ---
 
-### 2026-06-10 (continued) — Phase 2 Audit
+### 2026-06-10 — Faza 3: Nawigacja + Shared
 
-**Co zrobiono:**
-
-- **Full code audit — TypeScript**: `npx tsc --noEmit` → 0 błędów ✅
-- **Fixes**:
-  - env.ts: dodano `EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID` do OPTIONAL_VARS
-  - authHelpers.ts: GoogleSignin.configure() wywołuje się przy module load (z env.firebase.webClientId)
-  - authHelpers.ts: fixed doSignOut() — GoogleSignin.signOut() w try-catch
-  - firestore.ts: fixed `doc.exists` check (!!doc.exists zamiast `doc &&`)
-- **Dependencies**: zainstalowano `@react-native-async-storage/async-storage`, `@types/jest`, `jest-expo`, `jest`, `@testing-library/react-native`, `@testing-library/jest-native`
-- **Jest setup**: `jest.config.js` + `jest.setup.js` + test script w package.json
-- **Import audit**: Wszystkie relative imports sprawdzone ✅
-  - authHelpers.ts → `../../config/env` ✓
-  - firestore.ts → `../../config/constants` ✓
-- **Firestore rules**: wdrożono na Firebase (`firebase deploy --only firestore:rules`) ✅
-- **firebase.json**: stworzony w root projektu z poprawnym project ID
-
-**Security checklist — wszystkie ✅:**
-- Brak hardcoded keys
-- Firestore rules z access control per user
-- Anti-cheat: max +10k score per write
-- Input validation (displayName max 32 chars, score bounds 0–9,999,999)
-- Platform-aware code (Apple Sign-In tylko iOS)
-- Error messages nie wyciekają danych
-- AsyncStorage tylko dla non-sensitive data
-
-**Problemy napotkane:**
-
-- TypeScript errors (4 początkowo) — wszystkie naprawione
-- Firebase deploy poszedł na inny projekt — użytkownik ręcznie poprawił reguły i ustawił correct project ID
-- Jest config: skomplikowane peer deps w Expo SDK 56 — deferred na Phase 3
-
-**Decyzje podjęte:**
-
-- Placeholder index.ts dla Phase 3+ (ads, analytics, payments, game, shared) — żeby nie było TS errors
-- GoogleSignin.configure() przy module load (secure, nie wymaga ręcznego call)
-- Offline-first strategy: LocalStorage → Firestore sync (network errors zwracają local data)
-
-**Status Phase 2:**
-
-✅ **PRODUCTION-READY** — kod przeszedł pełny audit:
-- Architecture ✅
-- Type safety ✅
-- Security ✅
-- Error handling ✅
-- Performance ✅
-
-**Następny krok:**
-
-- Faza 3: React Navigation v6 + shared komponenty + theme system
+- Expo Router v4 zamiast React Navigation v6 (SDK 56 nie wspiera v6 bezpośrednio)
+- Shared: Button, Typography, Modal, LoadingScreen + 21 testów; theme: colors, spacing, borderRadius
+- `jest-expo@56` wymaga Jest 29 (nie 30); `jest.requireMock()` zamiast outer hoisting → udokumentowane
 
 ---
 
-### 2026-06-10 (continued) — Phase 3
+### 2026-06-10 — Faza 4: AdMob
 
-**Co zrobiono:**
-
-- Expo Router v4 zainstalowany i skonfigurowany (`scheme`, `typedRoutes`, `main: expo-router/entry`)
-- `app/_layout.tsx` — root Stack z AuthProvider, ciemny motyw
-- `app/index.tsx` — Home screen z przyciskami nawigacji
-- `app/game.tsx`, `app/game-over.tsx`, `app/settings.tsx`, `app/store.tsx` — placeholdery na Fazy 5 i 6
-- `src/shared/theme/colors.ts` — paleta kolorów (primary, surface, text, semantic)
-- `src/shared/theme/spacing.ts` — spacing (xs→xxxl) + borderRadius
-- `src/shared/theme/typography.ts` — fontSize, fontFamily (platform-aware), lineHeight
-- `src/shared/components/Button.tsx` — warianty: primary/secondary/outline/ghost, rozmiary, loading state
-- `src/shared/components/Typography.tsx` — warianty: h1/h2/h3/body/bodySmall/caption/label
-- `src/shared/components/Modal.tsx` — animated fade, overlay press to close, opcjonalny title
-- `src/shared/components/LoadingScreen.tsx` — fullscreen loader z opcjonalnym message
-- Testy jednostkowe dla wszystkich 4 komponentów (21 testów łącznie)
-
-**Decyzje podjęte:**
-
-- Expo Router zamiast React Navigation v6 — SDK 56 nie wspiera bezpośrednich importów `@react-navigation/*`
-- `app/` na poziomie root (obok `src/`) — ekrany są cienkimi wrapperami, logika w `src/`
-- Ciemny motyw domyślny (gry mobilne zazwyczaj dark)
-- `shared/navigation/index.ts` eksportuje tylko `AppRoute` type — Expo Router zarządza nawigacją
-
-**Problemy napotkane:**
-
-- Expo Router config plugin dodał się automatycznie do `app.json` podczas `npx expo install`
-- `jest-expo@56` wymaga Jest 29 (nie 30) — downgrade + `@react-native/jest-preset` jako explicit dep
-- `jest-expo` nie hoist'uje outer variables do `jest.mock()` — użyto `jest.requireMock()` (udokumentowane w TESTING.md §7)
-- `npm run web` wymagało doinstalowania `react-native-web`, `react-dom`, `@expo/metro-runtime` + `metro.config.js`
-- `@react-native-firebase` crashuje w Expo Go / web — `AuthProvider` owinięty w try/catch (graceful degradation)
-
-**Decyzje podjęte:**
-
-- Expo Router zamiast React Navigation v6 — SDK 56 nie wspiera bezpośrednich importów `@react-navigation/*`
-- `app/` na poziomie root (obok `src/`) — ekrany są cienkimi wrapperami, logika w `src/`
-- Ciemny motyw domyślny (gry mobilne zazwyczaj dark)
-- `shared/navigation/index.ts` eksportuje tylko `AppRoute` type — Expo Router zarządza nawigacją
-- Testy na Expo Go wymagają development build (EAS) — web (`npm run web`) wystarczy do testowania UI
-
-**Status Phase 3:**
-
-✅ **DONE** — `npx tsc --noEmit` → 0 błędów, `npm test` → 25/25 testów zielonych
-
-**Następny krok:**
-
-- Faza 4: AdMob — `react-native-google-mobile-ads`, AdsProvider, BannerAd, useRewardedAd, useInterstitialAd
+- AdsProvider: ATT (iOS) → consent → init; BannerAd, useInterstitialAd, useRewardedAd
+- Dynamic `import()` / `require()` dla web-safe bundlingu; graceful degradation w Expo Go
+- 13 nowych testów → **38/38** ✅
 
 ---
 
-### 2026-06-10 (continued) — Phase 4
+### 2026-06-10 — Faza 5: Płatności (RevenueCat)
 
-**Co zrobiono:**
-
-- `react-native-google-mobile-ads` + `expo-tracking-transparency` zainstalowane
-- `app.json` — plugin z Google test App IDs (safe to commit), ATT permission string (PL), `delay_app_measurement_init: true`
-- `src/core/ads/AdsProvider.tsx` — flow: ATT (iOS) → `AdsConsent.gatherConsent()` → `canRequestAds` check → `mobileAds().initialize()`. Graceful degradation na web/Expo Go (try/catch, dynamic imports). `isPremium` prop blokuje całą inicjalizację.
-- `src/core/ads/BannerAd.tsx` — render-nothing jeśli `!canShowAds` lub web. Lazy require natywnego modułu (bezpieczne dla web bundlera). `TestIds.ADAPTIVE_BANNER` w `__DEV__`.
-- `src/core/ads/useInterstitialAd.ts` — zarządza lifecycle (load → loaded → show → closed → reload). No-op gdy `canShowAds: false`.
-- `src/core/ads/useRewardedAd.ts` — jak wyżej + `onRewarded` callback przez ref (stabilna tożsamość).
-- `app/_layout.tsx` — `<AdsProvider isPremium={false}>` owinięty wokół Stack (isPremium zostanie podłączone w Fazie 5)
-- Testy: 13 nowych testów (AdsProvider ×5, useInterstitialAd ×4, useRewardedAd ×4) → łącznie **38/38** ✅
-
-**Decyzje podjęte:**
-
-- Dynamic `import()` w `AdsProvider.initializeAds()` zamiast top-level importu — web bundler nie próbuje rozwiązać natywnych modułów
-- `require()` w `BannerAdNative` i `createAd()` — ten sam powód
-- Google test App IDs w `app.json` (oficjalne testowe IDs Google, bezpieczne w repo). Produkcyjne App IDs idą przez EAS Secrets lub `app.config.js`.
-- `isPremium` jako prop (nie z kontekstu) — luźne sprzężenie, łatwa integracja z Fazą 5
-- `onRewarded` przez `useRef` w `useRewardedAd` — żeby `show()` miało stabilną tożsamość (nie re-tworzy się przy każdym renderze)
-
-**Problemy napotkane:**
-
-- TypeScript error: `children` required w `AdsProviderProps` vs `React.createElement` — naprawione przez `children?: React.ReactNode`
-
-**Status Phase 4:**
-
-✅ **DONE** — `npx tsc --noEmit` → 0 błędów, `npm test` → 38/38 testów zielonych
-
-**Następny krok:**
-
-- Faza 5: RevenueCat — `react-native-purchases`, PaymentsProvider, `usePayments` (isPremium, purchase, restore), ekran Store, podłączenie `isPremium` do `AdsProvider`
+- PaymentsProvider, usePayments (purchase + Alert obsługa, restore), ekran Store
+- `AdsProviderBridge` łączy isPremium między PaymentsProvider → AdsProvider
+- `require()` zamiast `await import()` — konieczne dla poprawnego mockowania w Jest; **48/48** ✅
 
 ---
 
-### 2026-06-10 (continued) — Phase 5
+### 2026-06-10 — Faza 6 Część 0: Mechanika gry
 
-**Co zrobiono:**
-
-- `react-native-purchases` zainstalowane
-- `src/core/payments/paymentsConfig.ts` — `ENTITLEMENT_ID`, `OFFERING_ID`, `getRevenueCatApiKey()`
-- `src/core/payments/PaymentsProvider.tsx` — inicjalizacja RC, `getCustomerInfo`, listener `addCustomerInfoUpdateListener`. Graceful degradation: `Platform.OS === 'web'` guard + try/catch. `require()` zamiast dynamic `import()` dla niezawodnego mockowania w Jest.
-- `src/core/payments/usePayments.ts` — `fetchOfferings`, `purchase` (Alert przy błędzie, obsługa `userCancelled`), `restore` (Alert sukces/brak/błąd). `require()` zamiast dynamic `import()`.
-- `app/store.tsx` — prawdziwy ekran sklepu: loading state, isPremium state, karty pakietów, przyciski zakupu, "Przywróć zakupy" (wymagane przez Apple)
-- `app/_layout.tsx` — `PaymentsProvider` + `AdsProviderBridge` (czyta `isPremium` z PaymentsContext, przekazuje do `AdsProvider`)
-- Testy: 10 nowych testów (PaymentsProvider ×5, usePayments ×5) → łącznie **48/48** ✅
-
-**Decyzje podjęte:**
-
-- `require()` zamiast `await import()` w PaymentsProvider i usePayments — `jest-expo` nie hoist'uje dynamicznych importów tak samo jak `require()`. Identyczny pattern jak w ads hookach.
-- `AdsProviderBridge` — thin component wewnątrz `_layout.tsx` do przekazywania `isPremium` między sibling providerami (PaymentsProvider → AdsProvider)
-- `children?: React.ReactNode` w PaymentsProviderProps — spójnie z AdsProvider
-
-**Problemy napotkane:**
-
-- `await import('react-native-purchases')` nie był przechwytywany przez `jest.mock()` w jest-expo → testy dawały 0 wywołań / null offerings. Naprawione przez `require()`.
-- `act()` warning: `PaymentsProvider.initializePurchases` ma jeden `await` (`getCustomerInfo`) który kończy się po zakończeniu testów bez `await act()` — tylko ostrzeżenie, nie błąd. Testy przechodzą.
-
-**Status Phase 5:**
-
-✅ **DONE** (kod) — `npx tsc --noEmit` → 0 błędów, `npm test` → 48/48 testów zielonych  
-⏳ Testowe zakupy na sandbox wymagają EAS dev build + kont testowych RevenueCat
-
-**Następny krok:**
-
-- Faza 6: Migracja mechaniki gry z web React do React Native
+- Game engine skopiowany 1:1 z web (czysty JS, zero zależności UI); 6 talii PL
+- useGame hook (adapter engine → React state), useSettings (AsyncStorage persistence)
+- Komponenty: TimerRing (SVG), WordCard (strefy tap + flip spring + haptics), DeckCard, ResultsView
+- Pełny flow gry w `game.tsx`: ready → countdown → playing → paused → results
 
 ---
 
-### 2026-06-10 (continued) — Phase 6
+### 2026-06-10 — Faza 6 Część 1a: Visual Overhaul (baza)
 
-**Co zrobiono:**
-
-- `react-native-svg` + `expo-haptics` zainstalowane
-- `src/game/types.ts`, `engine.ts`, `utils.ts` — kopiowane 1:1 z web (czysty JS bez zależności UI, działa w RN bez zmian)
-- `src/game/decks.ts` — 6 talii przetłumaczonych na PL (Filmy i seriale, Zwierzęta, Sport, Jedzenie, Znane osoby, Czynności)
-- `src/hooks/useGame.ts` — adapter GameEngine → React hooks (setState przez event subscription)
-- `src/hooks/useSettings.ts` — persistence przez AsyncStorage (roundDuration 30/60/90/120, sound, vibration)
-- `src/core/storage/storageTypes.ts` — `GameSettings` zaktualizowany (dodano `roundDuration`, usunięto nieużywane pola)
-- `src/game/components/TimerRing.tsx` — SVG ring przez react-native-svg, kolory dynamiczne (zielony/żółty/czerwony jak na web), obrót -90° żeby start był u góry
-- `src/game/components/WordCard.tsx` — dwie strefy TouchableOpacity (góra=dobrze/dół=pas), flip animacja przez `Animated.spring` (rotateY) przy zmianie słowa, haptyka przez expo-haptics, słowo jako overlay pointerEvents="none"
-- `src/game/components/DeckCard.tsx` — Pressable z ikoną, nazwą, opisem, PRO badge, lock overlay dla premium
-- `src/game/components/ResultsView.tsx` — trofeum + badge ze score, 3-kolumnowa siatka statystyk, scrollowalna lista słów (✓/✕), przyciski Home/Zagraj ponownie
-- `app/index.tsx` — Home: emoji 🎯, "WordRush", przyciski Zagraj/Premium/Ustawienia, footer
-- `app/decks.tsx` — nowy ekran: losowe darmowe/premium, lista darmowych, lista premium (z lockiem)
-- `app/game.tsx` — pełny flow gry: Ready → Countdown (3,2,1 z animacją scale) → Playing (header z timerem, wynikami, pauzą) → Paused (Resume/End/Home) → Results
-- `app/settings.tsx` — Czas rundy (segmentowe przyciski 30/60/90/120s), Switch sound/vibration, Przywróć zakupy
-- `app/_layout.tsx` — zarejestrowano ekran `decks`
-
-**Decyzje podjęte:**
-
-- Game engine kopiowany verbatim — kod był celowo UI-agnostyczny (komentarz w web: "Pure logic, no UI dependencies. Can be used in React, React Native, Node.js")
-- WordCard: brak hover na mobile → strefy są zawsze widoczne (ikona z opacity 0.25 + label). Kliknięcie → haptyka → 80ms scale anim → callback. Flip animacji: `Animated.spring` (rotateY 90°→0°) przy zmianie `word.id`
-- Settings: slider zastąpiony 4 przyciskami (30/60/90/120s) — zero dodatkowych zależności, lepsza UX na małych ekranach
-- Talie przetłumaczone na PL — gra imprezowa po polsku
-
-**Status Phase 6:**
-
-✅ **DONE** — `npx tsc --noEmit` → 0 błędów, `npm test` → 48/48 testów zielonych
-
-**Następny krok:**
-
-- Faza 7: Testy jednostkowe GameEngine + spłata długu z Fazy 5 (edge case'y usePayments)
+- GradientBackground na wszystkich ekranach; TimerRing: pulse loop + glow shadowColor
+- WordCard: adaptive sizing (portrait/landscape), LinearGradient glass, flash overlay przy tapie
+- DeckCard: LinearGradient tint z koloru talii, spring press anim, PRO badge, lock overlay
+- Home: spring entry (emoji + title równocześnie), pulse loop na Zagraj; ResultsView: spring AnimatedItem
 
 ---
 
-### 2026-06-11 — Faza 6 Część 1: Polish
+### 2026-06-11 — Faza 6 Część 1b: Polish kosmetyczny
 
-**Co zrobiono:**
-
-- **`settingsStore.ts`** — nowy singleton z pub/sub: `subscribeSettings`, `getSettings`, `loadSettingsOnce`, `updateSettings`. Zastąpił izolowany `useState` w każdym `useSettings()`. Dzięki temu MuteButton w PageHeader i Switch w Settings synchronizują się w czasie rzeczywistym (bez F5).
-- **`useSettings.ts`** — przepisany na store-based; ten sam interfejs na zewnątrz, ale każdy subskrybent widzi te same dane.
-- **Home animacja** — `useEffect([])` zastąpiony `useFocusEffect` → animacja gra przy każdej wizycie, nie tylko przy starcie. Emoji i tekst tytułu wchodzą równocześnie (jeden `Animated.parallel`).
-- **Orange Start button** — custom 3-warstwowy Pressable (identyczny z "Zagraj" na Home) zastąpił generyczny `<Button>` w game ready state.
-- **"Przygotuj się!" badge** — tło opacity 0.18→0.45, border 1px→1.5px, tekst 18→21px, jaśniejszy fiolet.
-- **Białe obwódki icon buttons** — bevel gradient `rgba(0,0,0,0.30)` → `rgba(255,255,255,0.12)` w PageHeader i MuteButton.
-- **Ikony wyśrodkowane** — uproszczony `btnLabel` (usunięte `includeFontPadding`/`textAlignVertical`), flex centering.
-- **Nagłówki sekcji Decks** — kolor zmieniony z `textSecondary` na `rgba(255,255,255,0.85)`.
-- **"Odblokuj wszystkie"** — `alignSelf: 'flex-start'` podniosło tekst do poziomu tytułu sekcji.
-- **Banner "Odblokuj Premium"** — wewnętrzny View dostał `flex: 1`, subtitle `textAlign: 'center'` → poprawne zawijanie i wyśrodkowanie.
-
-**Status:** `npx tsc --noEmit` → 0 błędów, `npm test` → 48/48 ✅
+- 3-warstwowy 3D bevel system (kolorowe tints: top = 40% white + kolor, bottom = 60% kolor) — wszędzie
+- PageHeader: SVG chevron ←, convex bevel na icon buttons, title badge animowany od góry (`useFocusEffect`)
+- `settingsStore.ts` singleton pub/sub — MuteButton ↔ Settings synchronizują się na żywo
+- WordCard fullscreen + HUD overlays absolutne (timer góra, score+controls dół), `pointerEvents="box-none"`
+- `computeBevel(hex)` w DeckCard — dynamiczne tint-bevele z dowolnego koloru talii
 
 ---
 
-### 2026-06-10 (continued) — Phase 6 Visual Overhaul
+### 2026-06-11 — Faza 6 Część 2: Reużywalny UI system
 
-**Co zrobiono:**
+- `src/game-engine/` — `createSettingsStore<T>()` + `createUseSettings(store)`: generyczny pub/sub store + hook factory
+- WordRush instancje w `src/game/{store,hooks}/`; backward-compat re-exports ze starych ścieżek
+- `vibrationEnabled` prop w WordCard + last-5s haptic; `ARCHITECTURE.md` zaktualizowany
 
-- `expo-linear-gradient` zainstalowane
-- `src/shared/components/GradientBackground.tsx` — reużywalny wrapper z ciemnym gradientem kosmicznym (`#0A0E1A → #0F172A → #1A1033`), translucent StatusBar
-- **TimerRing** — przeprojektowany: pulsujący `Animated.loop` (scale 1→1.06) gdy ≤25% czasu, kolorowy `shadowColor` dopasowany do koloru pierścienia (glow effect), przezroczysty track stroke
-- **WordCard** — przeprojektowany: `useWindowDimensions` dla portrait/landscape adaptive sizing (cardHeight, wordFontSize, iconSize), LinearGradient glass background, animowane flash overlay przy kliknięciu (zielony/amber), `adjustsFontSizeToFit`, text shadow glow
-- **ResultsView** — przeprojektowany: `Animated.spring` trofeum przy wejściu, staggered `AnimatedItem` (delay 0/150/500/600ms) dla każdej sekcji, StatCard ze spring scale pop, LinearGradient per-row w liście słów
-- **DeckCard** — przeprojektowany: `hexToRgba()` helper, LinearGradient tint z koloru talii (18%→4% opacity), vertical accent strip, animowany press (`Animated.spring` scale), gradient PRO badge, lepszy lock overlay z etykietą "PREMIUM"
-- **Home screen** — GradientBackground, staggered entry sequence (emoji spring + title/actions fade-translate), pulsujący `Animated.loop` na przycisku Zagraj (scale 1→1.03), glow blob za emoji (animated opacity), glow shadow na play button
-- **Game screen** — GradientBackground na wszystkich stanach, responsive header w `playing`: `TimerRing` size=56 w landscape (72 portrait), separator między score items, LinearGradient na header box, landscape-compact score labels, `⏸` zamiast "Pauza" w landscape, Zagraj button z primary shadow glow, getReady badge z border
-- **Decks screen** — GradientBackground, section labels uppercase+letterSpacing, separator linie, Premium Banner dla non-premium userów (gradient + LinearGradient border), "Odblokuj wszystkie" hint link
-- **Settings screen** — GradientBackground, GlassCard z LinearGradient overlay, ikony per-card, gradient PRO duration buttons (primary→purple), rowDivider, `borderColor: rgba` borders
+---
 
-**Decyzje podjęte:**
+### 2026-06-11 — Faza 6 Część 2 (c.d.): Animacje spring
 
-- `StyleSheet.absoluteFillObject` nie istnieje w Expo SDK 56 → zastąpione explicit `position: 'absolute', top: 0, left: 0, right: 0, bottom: 0`
-- `borderRadius` na `LinearGradient` nie jest valid prop → przeniesiony do `style`
-- Glow effect simulowany przez `shadowColor + shadowRadius + shadowOpacity` (natywne cienie) bez dodatkowych bibliotek blur
-- Landscape detection: `useWindowDimensions` + `width > height` (nie orientation API) — bardziej niezawodne, auto-update przy obrocie
-
-**Status Phase 6 Visual Overhaul:**
-
-✅ **DONE** — `npx tsc --noEmit` → 0 błędów, `npm test` → 48/48 testów zielonych
-
-**Następny krok:**
-
-- Faza 7: Testy jednostkowe GameEngine + spłata długu z Fazy 5 (edge case'y usePayments)
-
+- `src/shared/animation/entrance.ts` — utility `makeEntranceAnim`/`startEntranceAll`/`entranceStyle`
+- Animacje wejścia z spring bounce (fade + translateY) na każdym ekranie, staggered 75ms
+- Decks: `SlideCard` — per-karta slide od lewej ze spring bounce, stagger 100ms
+- PageHeader title: `useFocusEffect` zamiast `useEffect` — animacja na każdy powrót (fix dla Home)
+- ResultsView `AnimatedItem`: `friction 8→6`, `translateY 20→28` — wyraźniejsze odbicie

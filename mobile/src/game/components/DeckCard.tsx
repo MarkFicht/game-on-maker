@@ -14,6 +14,19 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+// Bevel: top = color + 40% white, bottom = color × 60%  (matches web btn-3d formula)
+function computeBevel(hex: string): [string, string] {
+  const clean = hex.replace('#', '');
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return ['#9590EF', '#2F2A89'];
+  return [
+    `rgb(${Math.round(0.4 * 255 + 0.6 * r)},${Math.round(0.4 * 255 + 0.6 * g)},${Math.round(0.4 * 255 + 0.6 * b)})`,
+    `rgb(${Math.round(0.6 * r)},${Math.round(0.6 * g)},${Math.round(0.6 * b)})`,
+  ];
+}
+
 const DIFFICULTY_LABEL: Record<string, string> = {
   easy: 'łatwy',
   medium: 'średni',
@@ -33,6 +46,7 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
   const tintColor = deck.color ?? colors.primary;
   const tintHigh = hexToRgba(tintColor, 0.18);
   const tintLow = hexToRgba(tintColor, 0.04);
+  const [bevelTop, bevelBot] = computeBevel(tintColor);
 
   const handlePressIn = () =>
     Animated.spring(pressAnim, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }).start();
@@ -48,9 +62,9 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
 
   return (
     <Animated.View style={[styles.shadow, { shadowColor: tintColor, transform: [{ scale }] }]}>
-      {/* 3D bevel border */}
+      {/* 3D bevel border — colored tints derived from deck's own color */}
       <LinearGradient
-        colors={['rgba(255,255,255,0.32)', 'rgba(0,0,0,0.30)']}
+        colors={[bevelTop, bevelBot]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={styles.bevel}
@@ -78,9 +92,6 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
-
-          {/* Left accent strip */}
-          <View style={[styles.accent, { backgroundColor: tintColor }]} />
 
           {/* Lock overlay */}
           {isLocked && (
@@ -134,23 +145,13 @@ const styles = StyleSheet.create({
   },
   bevel: {
     borderRadius: borderRadius.lg,
-    padding: 2,
+    padding: 3,
   },
   card: {
     backgroundColor: 'rgba(30,41,59,0.95)',
-    borderRadius: borderRadius.lg - 2,
+    borderRadius: borderRadius.lg - 3,
     padding: spacing.md,
-    paddingLeft: spacing.md + 6,
     overflow: 'hidden',
-  },
-  accent: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    borderTopLeftRadius: borderRadius.lg - 2,
-    borderBottomLeftRadius: borderRadius.lg - 2,
   },
   lockOverlay: {
     position: 'absolute',

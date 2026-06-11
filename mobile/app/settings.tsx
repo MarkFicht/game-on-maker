@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, Switch, StyleSheet, ScrollView, Pressable, SafeAreaView, Linking } from 'react-native';
+import React, { useMemo, useEffect } from 'react';
+import { View, Text, Switch, StyleSheet, ScrollView, Pressable, SafeAreaView, Linking, Animated } from 'react-native';
+import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSettings } from '../src/hooks/useSettings';
 import { usePayments } from '../src/core/payments/usePayments';
@@ -41,7 +42,7 @@ function LinkRow({ icon, label, url }: { icon: string; label: string; url: strin
       style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
     >
       <LinearGradient
-        colors={['rgba(255,255,255,0.16)', 'rgba(0,0,0,0.14)']}
+        colors={['rgba(149,144,239,0.25)', 'rgba(47,42,137,0.25)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={styles.linkBevel}
@@ -68,6 +69,15 @@ export default function SettingsScreen() {
   const { settings, updateSettings, loading } = useSettings();
   const { restore, isRestoring } = usePayments();
 
+  const anims = useMemo(() => [
+    makeEntranceAnim(), // Gra
+    makeEntranceAnim(), // Dźwięk
+    makeEntranceAnim(), // Zakupy
+    makeEntranceAnim(), // Prawne
+  ], []);
+
+  useEffect(() => { startEntranceAll(anims); }, []);
+
   if (loading) {
     return (
       <GradientBackground>
@@ -91,6 +101,7 @@ export default function SettingsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Game settings */}
+          <Animated.View style={entranceStyle(anims[0])}>
           <GlassCard title="Gra" icon="🎮">
             <Text style={styles.durationLabel}>
               Czas rundy: <Text style={styles.durationValue}>{settings.roundDuration}s</Text>
@@ -106,8 +117,8 @@ export default function SettingsScreen() {
                   >
                     <LinearGradient
                       colors={isActive
-                        ? ['rgba(255,255,255,0.48)', 'rgba(0,0,0,0.40)']
-                        : ['rgba(255,255,255,0.18)', 'rgba(0,0,0,0.16)']}
+                        ? ['#9590EF', '#2F2A89']
+                        : ['rgba(149,144,239,0.22)', 'rgba(47,42,137,0.22)']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 0, y: 1 }}
                       style={styles.durationBevel}
@@ -141,7 +152,10 @@ export default function SettingsScreen() {
             </View>
           </GlassCard>
 
+          </Animated.View>
+
           {/* Sound & Haptics */}
+          <Animated.View style={entranceStyle(anims[1])}>
           <GlassCard title="Dźwięk i haptyka" icon="🔔">
             <SettingRow label="Efekty dźwiękowe">
               <Switch
@@ -162,7 +176,10 @@ export default function SettingsScreen() {
             </SettingRow>
           </GlassCard>
 
+          </Animated.View>
+
           {/* Purchases */}
+          <Animated.View style={entranceStyle(anims[2])}>
           <GlassCard title="Zakupy" icon="💳">
             <Pressable
               onPress={restore}
@@ -170,7 +187,7 @@ export default function SettingsScreen() {
               style={({ pressed }) => [{ opacity: pressed || isRestoring ? 0.7 : 1 }]}
             >
               <LinearGradient
-                colors={['rgba(255,255,255,0.22)', 'rgba(0,0,0,0.20)']}
+                colors={['rgba(149,144,239,0.35)', 'rgba(47,42,137,0.35)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={styles.restoreBevel}
@@ -192,7 +209,10 @@ export default function SettingsScreen() {
             </Pressable>
           </GlassCard>
 
+          </Animated.View>
+
           {/* Legal — mirrors web's Settings legal section */}
+          <Animated.View style={entranceStyle(anims[3])}>
           <GlassCard title="Prawne" icon="📄">
             <LinkRow
               icon="🛡"
@@ -206,6 +226,8 @@ export default function SettingsScreen() {
               url="https://wordrush.app/terms"
             />
           </GlassCard>
+
+          </Animated.View>
 
           <Text style={styles.version}>WordRush v1.0.0{'\n'}Made with ❤️</Text>
         </ScrollView>
@@ -268,10 +290,10 @@ const styles = StyleSheet.create({
   durationBtn: { flex: 1 },
   durationBevel: {
     borderRadius: borderRadius.md,
-    padding: 2,
+    padding: 3,
   },
   durationInner: {
-    borderRadius: borderRadius.md - 2,
+    borderRadius: borderRadius.md - 3,
     paddingVertical: spacing.sm,
     alignItems: 'center',
     backgroundColor: 'rgba(22,36,58,0.55)',
@@ -299,10 +321,10 @@ const styles = StyleSheet.create({
   },
   restoreBevel: {
     borderRadius: borderRadius.md,
-    padding: 2,
+    padding: 3,
   },
   restoreInner: {
-    borderRadius: borderRadius.md - 2,
+    borderRadius: borderRadius.md - 3,
     paddingVertical: spacing.md,
     alignItems: 'center',
     backgroundColor: 'rgba(30,41,59,0.60)',
@@ -316,7 +338,7 @@ const styles = StyleSheet.create({
   // Legal link rows
   linkBevel: {
     borderRadius: borderRadius.md,
-    padding: 2,
+    padding: 3,
   },
   linkInner: {
     flexDirection: 'row',
@@ -324,7 +346,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     backgroundColor: 'rgba(22,36,58,0.50)',
-    borderRadius: borderRadius.md - 2,
+    borderRadius: borderRadius.md - 3,
     gap: spacing.sm,
     overflow: 'hidden',
   },

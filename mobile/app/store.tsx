@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import {
   View,
   Text,
@@ -39,9 +40,10 @@ function PackageBtn({
   loading?: boolean;
   onPress: () => void;
 }) {
+  // Best: full indigo tints. Others: subtle semi-transparent indigo glass edge.
   const bevelColors: readonly [string, string] = isBest
-    ? ['rgba(255,255,255,0.50)', 'rgba(0,0,0,0.40)']
-    : ['rgba(255,255,255,0.24)', 'rgba(0,0,0,0.22)'];
+    ? ['#9590EF', '#2F2A89']
+    : ['rgba(149,144,239,0.30)', 'rgba(47,42,137,0.30)'];
 
   const innerColors: readonly [string, string] = isPurchased
     ? ['#059669', '#065F46']
@@ -93,19 +95,23 @@ export default function StoreScreen() {
     usePayments();
 
   const crownRotate = useRef(new Animated.Value(-10)).current;
-  const fade = useRef(new Animated.Value(0)).current;
+
+  const anims = useMemo(() => [
+    makeEntranceAnim(), // hero
+    makeEntranceAnim(), // features
+    makeEntranceAnim(), // packages
+    makeEntranceAnim(), // restore
+  ], []);
 
   useEffect(() => {
     fetchOfferings();
-    Animated.parallel([
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(crownRotate, { toValue: 10,  duration: 1800, useNativeDriver: true }),
-          Animated.timing(crownRotate, { toValue: -10, duration: 1800, useNativeDriver: true }),
-        ]),
-      ),
-      Animated.timing(fade, { toValue: 1, duration: 380, useNativeDriver: true }),
-    ]).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(crownRotate, { toValue: 10,  duration: 1800, useNativeDriver: true }),
+        Animated.timing(crownRotate, { toValue: -10, duration: 1800, useNativeDriver: true }),
+      ]),
+    ).start();
+    startEntranceAll(anims);
   }, []);
 
   const rotate = crownRotate.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] });
@@ -160,7 +166,7 @@ export default function StoreScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Hero */}
-          <Animated.View style={[styles.hero, { opacity: fade }]}>
+          <Animated.View style={[styles.hero, entranceStyle(anims[0])]}>
             <View style={styles.heroCard}>
               <LinearGradient
                 colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
@@ -173,9 +179,9 @@ export default function StoreScreen() {
           </Animated.View>
 
           {/* Features */}
-          <View style={styles.features}>
+          <Animated.View style={[{ gap: 8 }, entranceStyle(anims[1])]}>
             {FEATURES.map((f, i) => (
-              <View key={i} style={styles.featureRow}>
+              <View key={i} style={[styles.featureRow]}>
                 <LinearGradient
                   colors={[colors.primary, '#7C3AED']}
                   style={styles.featureIconWrap}
@@ -189,10 +195,10 @@ export default function StoreScreen() {
                 <Text style={styles.featureCheck}>✓</Text>
               </View>
             ))}
-          </View>
+          </Animated.View>
 
           {/* Packages */}
-          <View style={styles.packages}>
+          <Animated.View style={[{ gap: 8 }, entranceStyle(anims[2])]}>
             {offerings?.availablePackages.length ? (
               offerings.availablePackages.map((pkg, i) => (
                 <PackageBtn
@@ -213,9 +219,10 @@ export default function StoreScreen() {
                 </Text>
               </View>
             )}
-          </View>
+          </Animated.View>
 
           {/* Restore */}
+          <Animated.View style={entranceStyle(anims[3])}>
           <Button
             label={isRestoring ? 'Przywracanie…' : '↺  Przywróć zakupy'}
             onPress={restore}
@@ -223,6 +230,8 @@ export default function StoreScreen() {
             loading={isRestoring}
             style={styles.restoreBtn}
           />
+
+          </Animated.View>
 
           {/* Footer */}
           <Text style={styles.footer}>⚡ Jednorazowy zakup. Bez subskrypcji.</Text>
@@ -294,6 +303,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#F59E0B',
     letterSpacing: -0.5,
+    textAlign: 'center',
   },
   heroSub: {
     fontSize: 15,
@@ -346,17 +356,17 @@ const styles = StyleSheet.create({
   },
   pkgBevel: {
     borderRadius: borderRadius.lg,
-    padding: 2,
+    padding: 3,
   },
   pkgBevelBest: {
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
     elevation: 10,
   },
   pkgInner: {
-    borderRadius: borderRadius.lg - 2,
+    borderRadius: borderRadius.lg - 3,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     flexDirection: 'row',

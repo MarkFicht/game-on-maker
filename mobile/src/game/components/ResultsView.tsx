@@ -22,12 +22,18 @@ function getTitle(correct: number): string {
 
 function AnimatedItem({ children, delay }: { children: React.ReactNode; delay: number }) {
   const anim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(20)).current;
+  const translateY = useRef(new Animated.Value(28)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(anim, { toValue: 1, duration: 350, delay, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 350, delay, useNativeDriver: true }),
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(anim, { toValue: 1, duration: 260, useNativeDriver: true }),
+      ]),
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.spring(translateY, { toValue: 0, tension: 80, friction: 6, useNativeDriver: true }),
+      ]),
     ]).start();
   }, []);
 

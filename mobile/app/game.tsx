@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import {
   View,
   Text,
@@ -39,7 +40,7 @@ export default function GameScreen() {
     updateConfig({ roundDuration: settings.roundDuration });
   }, [settings.roundDuration]);
 
-  // Countdown logic
+  // Countdown animation
   useEffect(() => {
     if (!deck || gamePhase !== 'countdown') return;
 
@@ -68,17 +69,29 @@ export default function GameScreen() {
     return () => clearInterval(timer);
   }, [gamePhase, deck]);
 
-  // Haptic on last 5 seconds
+  // Haptic tick on last 5 seconds (respects vibrationEnabled)
   const lastWarningRef = useRef(-1);
+  const readyAnim = useMemo(() => makeEntranceAnim(), []);
+  const pauseAnim = useMemo(() => makeEntranceAnim(), []);
+
+  useEffect(() => {
+    if (gamePhase === 'ready') startEntranceAll([readyAnim]);
+  }, [gamePhase]);
+
+  useEffect(() => {
+    if (state.status === 'paused') startEntranceAll([pauseAnim]);
+  }, [state.status]);
   useEffect(() => {
     if (state.status === 'playing' && state.timeRemaining <= 5 && state.timeRemaining > 0) {
       if (lastWarningRef.current !== state.timeRemaining) {
         lastWarningRef.current = state.timeRemaining;
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (settings.vibrationEnabled) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
       }
     }
     if (state.status !== 'playing') lastWarningRef.current = -1;
-  }, [state.timeRemaining, state.status]);
+  }, [state.timeRemaining, state.status, settings.vibrationEnabled]);
 
   const handleStartCountdown = () => {
     setGamePhase('countdown');
@@ -125,19 +138,18 @@ export default function GameScreen() {
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
           <PageHeader title={deck.name} onBack={handleCancel} />
-          {/* Everything centered together so Start is never at the bottom */}
-          <View style={styles.centeredFull}>
+          <Animated.View style={[styles.centeredFull, entranceStyle(readyAnim)]}>
             <Text style={styles.deckEmoji}>{deck.icon}</Text>
             <Text style={styles.deckName}>{deck.name}</Text>
             <Text style={styles.deckMeta}>{deck.words.length} słów · {deck.difficulty}</Text>
             <View style={{ height: spacing.xl }} />
-            {/* Orange 3-layer button matching home "Zagraj" */}
             <Pressable
               onPress={handleStartCountdown}
               style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
             >
+              {/* Bevel: top = orange + 40% white (#FBAB73), bottom = orange × 60% (#95450D) */}
               <LinearGradient
-                colors={['rgba(255,255,255,0.42)', 'rgba(0,0,0,0.46)']}
+                colors={['#FBAB73', '#95450D']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={styles.startBevel}
@@ -160,7 +172,7 @@ export default function GameScreen() {
                 </LinearGradient>
               </LinearGradient>
             </Pressable>
-          </View>
+          </Animated.View>
         </SafeAreaView>
       </GradientBackground>
     );
@@ -194,7 +206,7 @@ export default function GameScreen() {
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
           <PageHeader title="Gra wstrzymana" onBack={resumeGame} />
-          <View style={styles.centeredFull}>
+          <Animated.View style={[styles.centeredFull, entranceStyle(pauseAnim)]}>
             <Text style={styles.pauseEmoji}>⏸️</Text>
             <Text style={styles.pauseMeta}>{state.timeRemaining}s pozostało</Text>
             <View style={styles.pauseActions}>
@@ -207,7 +219,7 @@ export default function GameScreen() {
                 style={{ marginTop: spacing.xs }}
               />
             </View>
-          </View>
+          </Animated.View>
         </SafeAreaView>
       </GradientBackground>
     );
@@ -231,60 +243,56 @@ export default function GameScreen() {
   }
 
   // ── Playing ──────────────────────────────────────────────
-  const timerSize = isLandscape ? 56 : 72;
+  // Layout: card fills padded area. Two non-blocking overlays:
+  //   • hudTop  — timer ring centered at the top of the card
+  //   • hudBottom — scores + controls centered at the bottom of the card
+  // Both are pointerEvents="none/box-none" so taps pass through to the WordCard
+  // tap zones (top half = correct, bottom half = skip).
+  const timerSize = isLandscape ? 52 : 64;
   const timerStroke = isLandscape ? 5 : 6;
 
   return (
     <GradientBackground>
       <SafeAreaView style={styles.safe}>
-        <View style={styles.container}>
-          {/* Header: Timer + Scores + Pause + Mute */}
-          <LinearGradient
-            colors={['rgba(30,41,59,0.9)', 'rgba(15,23,42,0.85)']}
-            style={[styles.header, isLandscape && styles.headerLandscape]}
-          >
+        <View style={styles.playContainer}>
+          {/* Word card — fills the padded container */}
+          <WordCard
+            word={currentWord}
+            deckIcon={deck.icon}
+            onCorrect={markCorrect}
+            onSkip={markSkipped}
+            fullscreen
+            vibrationEnabled={settings.vibrationEnabled}
+          />
+
+          {/* Timer — centered top, passes all touches through */}
+          <View style={styles.hudTop} pointerEvents="none">
             <TimerRing
               timeRemaining={state.timeRemaining}
               totalTime={state.totalTime}
               size={timerSize}
               strokeWidth={timerStroke}
             />
+          </View>
 
-            <View style={[styles.scoreBox, isLandscape && styles.scoreBoxLandscape]}>
-              <View style={styles.scoreItem}>
-                <Text style={[styles.scoreValue, { color: colors.success }, isLandscape && styles.scoreValueCompact]}>
-                  {stats.correctCount}
-                </Text>
-                <Text style={styles.scoreLabel}>Dobrze</Text>
-              </View>
-              <View style={styles.scoreDivider} />
-              <View style={styles.scoreItem}>
-                <Text style={[styles.scoreValue, { color: colors.warning }, isLandscape && styles.scoreValueCompact]}>
-                  {stats.skippedCount}
-                </Text>
-                <Text style={styles.scoreLabel}>Pominięte</Text>
-              </View>
+          {/* Scores + controls — centered bottom */}
+          <View
+            style={[styles.hudBottom, isLandscape && styles.hudBottomLandscape]}
+            pointerEvents="box-none"
+          >
+            <View style={styles.scoreRow} pointerEvents="none">
+              <Text style={[styles.scoreNum, { color: colors.success }]}>
+                ✓ {stats.correctCount}
+              </Text>
+              <Text style={styles.scoreSep}>·</Text>
+              <Text style={[styles.scoreNum, { color: colors.warning }]}>
+                ✗ {stats.skippedCount}
+              </Text>
             </View>
-
-            <View style={styles.headerRight}>
+            <View style={styles.hudButtons}>
               <MuteButton size="sm" />
-              <Button
-                label={isLandscape ? '⏸' : 'Pauza'}
-                onPress={pauseGame}
-                variant="outline"
-                size="sm"
-              />
+              <Button label="⏸" onPress={pauseGame} variant="outline" size="sm" />
             </View>
-          </LinearGradient>
-
-          {/* Word card */}
-          <View style={styles.cardContainer}>
-            <WordCard
-              word={currentWord}
-              deckIcon={deck.icon}
-              onCorrect={markCorrect}
-              onSkip={markSkipped}
-            />
           </View>
         </View>
       </SafeAreaView>
@@ -295,10 +303,6 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-  },
-  container: {
-    flex: 1,
-    padding: spacing.md,
   },
   centered: {
     flex: 1,
@@ -317,13 +321,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.textSecondary,
   },
-  // Ready
-  readyContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
+
+  // ── Ready ────────────────────────────────────────────────
   deckEmoji: {
     fontSize: 80,
     marginBottom: spacing.sm,
@@ -342,23 +341,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
   },
-  readyActions: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.lg,
-    alignItems: 'center',
-  },
   startBevel: {
     borderRadius: borderRadius.xl,
-    padding: 3,
+    padding: 4,
     minWidth: 200,
-    shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.65,
-    shadowRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.58,
+    shadowRadius: 10,
     elevation: 12,
   },
   startInner: {
-    borderRadius: borderRadius.xl - 3,
+    borderRadius: borderRadius.xl - 4,
     paddingVertical: spacing.md + 2,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
@@ -370,7 +364,8 @@ const styles = StyleSheet.create({
     color: colors.white,
     letterSpacing: 0.3,
   },
-  // Countdown
+
+  // ── Countdown ────────────────────────────────────────────
   countdownNumber: {
     fontSize: 112,
     fontWeight: '800',
@@ -394,7 +389,8 @@ const styles = StyleSheet.create({
     color: '#C4B5FD',
     letterSpacing: 0.8,
   },
-  // Paused
+
+  // ── Paused ───────────────────────────────────────────────
   pauseEmoji: {
     fontSize: 56,
   },
@@ -406,59 +402,51 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: spacing.xl,
   },
-  // Playing header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-    borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
+
+  // ── Playing ──────────────────────────────────────────────
+  playContainer: {
+    flex: 1,
+    padding: spacing.sm,  // breathing room from screen edges
   },
-  headerLandscape: {
-    paddingVertical: spacing.xs,
-    marginBottom: spacing.sm,
-  },
-  headerRight: {
-    flexDirection: 'row',
+
+  // Timer centered at top of the card
+  hudTop: {
+    position: 'absolute',
+    top: spacing.xl,
+    left: 0,
+    right: 0,
     alignItems: 'center',
+  },
+
+  // Scores + buttons centered at bottom of the card
+  hudBottom: {
+    position: 'absolute',
+    bottom: spacing.xl,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  hudBottomLandscape: {
+    bottom: spacing.md,
     gap: spacing.xs,
   },
-  scoreBox: {
+  scoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
   },
-  scoreBoxLandscape: {
-    gap: spacing.sm,
-  },
-  scoreItem: {
-    alignItems: 'center',
-    minWidth: 52,
-  },
-  scoreDivider: {
-    width: 1,
-    height: 28,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  scoreValue: {
+  scoreNum: {
     fontSize: 22,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
-  scoreValueCompact: {
-    fontSize: 18,
+  scoreSep: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.30)',
   },
-  scoreLabel: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    marginTop: 1,
-    fontWeight: '600',
-  },
-  cardContainer: {
-    flex: 1,
+  hudButtons: {
+    flexDirection: 'row',
+    gap: spacing.xs,
   },
 });

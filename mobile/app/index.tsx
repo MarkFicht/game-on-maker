@@ -41,10 +41,16 @@ export default function HomeScreen() {
       const entrance = Animated.parallel([
         Animated.spring(emojiScale,  { toValue: 1, tension: 120, friction: 7, useNativeDriver: true }),
         Animated.spring(emojiRotate, { toValue: 0, tension: 120, friction: 7, useNativeDriver: true }),
-        Animated.timing(fadeUp1,  { toValue: 1, duration: 300, useNativeDriver: true }),
-        Animated.timing(slideUp1, { toValue: 0, duration: 300, useNativeDriver: true }),
-        Animated.timing(fadeUp2,  { toValue: 1, duration: 380, useNativeDriver: true }),
-        Animated.timing(slideUp2, { toValue: 0, duration: 380, useNativeDriver: true }),
+        Animated.timing(fadeUp1,  { toValue: 1, duration: 260, useNativeDriver: true }),
+        Animated.spring(slideUp1, { toValue: 0, tension: 80, friction: 7, useNativeDriver: true }),
+        Animated.sequence([
+          Animated.delay(90),
+          Animated.timing(fadeUp2,  { toValue: 1, duration: 260, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.delay(90),
+          Animated.spring(slideUp2, { toValue: 0, tension: 80, friction: 7, useNativeDriver: true }),
+        ]),
       ]);
 
       let pulseLoop: Animated.CompositeAnimation | null = null;
@@ -122,8 +128,9 @@ export default function HomeScreen() {
                 onPress={() => router.push('/decks')}
                 style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
               >
+                {/* Bevel: top = orange + 40% white (#FBAB73), bottom = orange × 60% (#95450D) */}
                 <LinearGradient
-                  colors={['rgba(255,255,255,0.42)', 'rgba(0,0,0,0.46)']}
+                  colors={['#FBAB73', '#95450D']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
                   style={styles.playBevel}
@@ -153,8 +160,9 @@ export default function HomeScreen() {
               onPress={() => router.push('/store')}
               style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
             >
+              {/* Bevel: top = color + 40% white, bottom = color × 60% (darker edge) */}
               <LinearGradient
-                colors={['rgba(255,255,255,0.32)', 'rgba(0,0,0,0.30)']}
+                colors={isPremium ? ['#69C0A5', '#035A3F'] : ['#9590EF', '#2F2A89']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={styles.premBevel}
@@ -260,21 +268,21 @@ const styles = StyleSheet.create({
 
   actions: {
     width: '100%',
-    gap: spacing.sm,
+    gap: spacing.lg,
   },
 
   // Play button
   playBevel: {
     borderRadius: borderRadius.xl,
-    padding: 3,
-    shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.65,
-    shadowRadius: 18,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.58,
+    shadowRadius: 10,
     elevation: 12,
   },
   playInner: {
-    borderRadius: borderRadius.xl - 3,
+    borderRadius: borderRadius.xl - 4,
     paddingVertical: spacing.md + 2,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
@@ -290,15 +298,15 @@ const styles = StyleSheet.create({
   // Premium button — solid opaque colors
   premBevel: {
     borderRadius: borderRadius.lg,
-    padding: 2,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.50,
-    shadowRadius: 12,
+    padding: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
     elevation: 8,
   },
   premInner: {
-    borderRadius: borderRadius.lg - 2,
+    borderRadius: borderRadius.lg - 3,
     paddingVertical: spacing.sm + 4,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   useWindowDimensions,
+  ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -18,16 +19,20 @@ interface WordCardProps {
   deckIcon?: string;
   onCorrect?: () => void;
   onSkip?: () => void;
+  /** When true, card fills flex:1 from parent instead of using computed height */
+  fullscreen?: boolean;
+  /** Whether haptic feedback fires on answer — respects user's vibration setting */
+  vibrationEnabled?: boolean;
 }
 
-export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
+export function WordCard({ word, deckIcon, onCorrect, onSkip, fullscreen, vibrationEnabled = true }: WordCardProps) {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
-  // Adaptive sizes
   const cardHeight = isLandscape
     ? Math.max(height * 0.68, 180)
     : Math.min(height * 0.56, 520);
+
   const wordFontSize = isLandscape ? 34 : 54;
   const iconSize = isLandscape ? 22 : 30;
 
@@ -37,10 +42,8 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
 
   useEffect(() => {
     if (!word) return;
-    // Reset zone overlays
     correctOpacity.setValue(0);
     skipOpacity.setValue(0);
-    // Flip in
     flipAnim.setValue(1);
     Animated.spring(flipAnim, {
       toValue: 0,
@@ -56,7 +59,9 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
   });
 
   const handleCorrect = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (vibrationEnabled) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
     Animated.sequence([
       Animated.timing(correctOpacity, { toValue: 1, duration: 100, useNativeDriver: true }),
       Animated.timing(correctOpacity, { toValue: 0.6, duration: 80, useNativeDriver: true }),
@@ -67,7 +72,9 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
   };
 
   const handleSkip = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    if (vibrationEnabled) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    }
     Animated.sequence([
       Animated.timing(skipOpacity, { toValue: 1, duration: 100, useNativeDriver: true }),
       Animated.timing(skipOpacity, { toValue: 0.6, duration: 80, useNativeDriver: true }),
@@ -79,11 +86,14 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
 
   if (!word) return null;
 
+  const cardSizeStyle: ViewStyle = fullscreen ? { flex: 1 } : { height: cardHeight };
+
   return (
     <Animated.View
       style={[
         styles.card,
-        { height: cardHeight, transform: [{ perspective: 1200 }, { rotateY }] },
+        cardSizeStyle,
+        { transform: [{ perspective: 1200 }, { rotateY }] },
       ]}
     >
       {/* Card glass background */}
@@ -101,7 +111,6 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
         onPress={handleCorrect}
         activeOpacity={1}
       >
-        {/* Persistent hint icon */}
         <View style={styles.hintContainer}>
           <Text style={[styles.hintIcon, { color: colors.success, fontSize: iconSize }]}>✓</Text>
           <Text style={[styles.hintLabel, { color: colors.success, fontSize: isLandscape ? 11 : 13 }]}>
@@ -109,7 +118,6 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
           </Text>
         </View>
 
-        {/* Flash overlay on tap */}
         <Animated.View
           style={[styles.zoneFlash, { opacity: correctOpacity }]}
           pointerEvents="none"
@@ -130,7 +138,6 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
         onPress={handleSkip}
         activeOpacity={1}
       >
-        {/* Persistent hint icon */}
         <View style={[styles.hintContainer, styles.hintBottom]}>
           <Text style={[styles.hintIcon, { color: colors.warning, fontSize: iconSize }]}>✕</Text>
           <Text style={[styles.hintLabel, { color: colors.warning, fontSize: isLandscape ? 11 : 13 }]}>
@@ -138,7 +145,6 @@ export function WordCard({ word, deckIcon, onCorrect, onSkip }: WordCardProps) {
           </Text>
         </View>
 
-        {/* Flash overlay on tap */}
         <Animated.View
           style={[styles.zoneFlash, { opacity: skipOpacity }]}
           pointerEvents="none"
@@ -178,7 +184,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
-    // 3D depth shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.6,
@@ -255,7 +260,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: -0.5,
     lineHeight: undefined,
-    // Subtle text shadow for depth
     textShadowColor: 'rgba(79,70,229,0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,

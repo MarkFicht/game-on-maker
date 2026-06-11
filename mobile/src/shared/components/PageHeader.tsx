@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useCallback, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import Svg, { Path } from 'react-native-svg';
+import { router, useFocusEffect } from 'expo-router';
 import { MuteButton } from './MuteButton';
 import { colors, spacing, borderRadius } from '../theme';
 
@@ -18,6 +19,20 @@ interface PageHeaderProps {
 const BTN = 52;
 const BTN_INNER = BTN - 6; // 3 px bevel on each side
 
+function BackChevron() {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18L9 12L15 6"
+        stroke="white"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 // Identical structure to MuteButton so both buttons look the same
 function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
   return (
@@ -25,8 +40,9 @@ function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
     <View style={styles.btnShadow}>
       {/* Clip wrapper — clips LinearGradient to circle on Android */}
       <TouchableOpacity onPress={onPress} style={styles.btnClip} accessibilityRole="button">
+        {/* Convex bevel: bright top-edge (light hits raised surface), dark bottom-edge (shadow) */}
         <LinearGradient
-          colors={['rgba(255,255,255,0.55)', 'rgba(255,255,255,0.12)']}
+          colors={['rgba(255,255,255,0.55)', 'rgba(0,0,0,0.30)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
           style={styles.btnBevel}
@@ -41,7 +57,10 @@ function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
               style={StyleSheet.absoluteFill}
               pointerEvents="none"
             />
-            <Text style={styles.btnLabel}>{label}</Text>
+            {label === '←'
+              ? <BackChevron />
+              : <Text style={styles.btnLabel}>{label}</Text>
+            }
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -50,6 +69,24 @@ function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
 }
 
 export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, onBack }: PageHeaderProps) {
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleSlide   = useRef(new Animated.Value(-12)).current;
+  const titleAnim    = useRef<Animated.CompositeAnimation | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      titleAnim.current?.stop();
+      titleOpacity.setValue(0);
+      titleSlide.setValue(-12);
+      titleAnim.current = Animated.parallel([
+        Animated.timing(titleOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.spring(titleSlide, { toValue: 0, tension: 100, friction: 9, useNativeDriver: true }),
+      ]);
+      titleAnim.current.start();
+      return () => { titleAnim.current?.stop(); };
+    }, [title])
+  );
+
   // Show left button when: home screen (gear), explicit showBack, or custom onBack provided
   const showLeft = isHome || showBack || !!onBack;
 
@@ -66,11 +103,13 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
         {showLeft && <HeaderBtn onPress={handleLeft} label={isHome ? '⚙️' : '←'} />}
       </View>
 
-      {/* Center — title badge wraps to text width only */}
+      {/* Center — title badge animates in from top on each title change */}
       <View style={styles.centerSlot}>
+        <Animated.View style={{ opacity: titleOpacity, transform: [{ translateY: titleSlide }] }}>
         <View style={styles.titleShadow}>
+          {/* Title badge: subtle glass bevel — neutral light/shadow, no color accent */}
           <LinearGradient
-            colors={['rgba(255,255,255,0.32)', 'rgba(0,0,0,0.42)']}
+            colors={['rgba(255,255,255,0.22)', 'rgba(0,0,0,0.30)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={styles.titleBevel}
@@ -88,6 +127,7 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
             </View>
           </LinearGradient>
         </View>
+        </Animated.View>
       </View>
 
       {/* Right slot — MuteButton always visible */}
@@ -151,11 +191,12 @@ const styles = StyleSheet.create({
     borderRadius: BTN_INNER / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(22,36,58,0.82)',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
   },
   btnLabel: {
     fontSize: 22,
+    marginBottom: 2,
     color: colors.white,
   },
 
