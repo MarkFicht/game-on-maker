@@ -1,11 +1,12 @@
 import React from 'react';
 import {
   TouchableOpacity,
+  View,
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
-  TextStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius } from '../theme';
 import { Typography } from './Typography';
 
@@ -23,24 +24,73 @@ interface ButtonProps {
   testID?: string;
 }
 
-const variantStyles: Record<Variant, ViewStyle> = {
-  primary: { backgroundColor: colors.primary },
-  secondary: { backgroundColor: colors.secondary },
-  outline: { backgroundColor: colors.transparent, borderWidth: 2, borderColor: colors.primary },
-  ghost: { backgroundColor: colors.transparent },
+const radiusMap: Record<Size, number> = {
+  sm: borderRadius.md,
+  md: borderRadius.md,
+  lg: borderRadius.lg,
+};
+
+// Layer 1: white-top → black-bottom bevel border ("chrome edge")
+const bevelColors: Record<Variant, readonly [string, string]> = {
+  primary:   ['rgba(255,255,255,0.50)', 'rgba(0,0,0,0.40)'],
+  secondary: ['rgba(255,255,255,0.44)', 'rgba(0,0,0,0.36)'],
+  outline:   ['rgba(255,255,255,0.24)', 'rgba(0,0,0,0.22)'],
+  ghost:     ['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.06)'],
+};
+
+// Layer 2: actual button face background
+const innerBg: Record<Variant, string> = {
+  primary:   colors.primary,
+  secondary: colors.secondary,
+  outline:   'rgba(22,36,58,0.72)',
+  ghost:     'rgba(255,255,255,0.04)',
+};
+
+// Layer 3: convex depth gradient — bright top, dark bottom, smooth center
+const DEPTH: readonly [string, string, string, string] = [
+  'rgba(255,255,255,0.22)',
+  'rgba(255,255,255,0)',
+  'rgba(0,0,0,0)',
+  'rgba(0,0,0,0.18)',
+];
+
+const textColors: Record<Variant, string> = {
+  primary:   colors.white,
+  secondary: colors.white,
+  outline:   colors.white,
+  ghost:     colors.primaryLight,
+};
+
+// Shadow sits on the bevel LinearGradient which has a visible bg → iOS shadow works
+const bevelShadow: Record<Variant, ViewStyle> = {
+  primary: {
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.50,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  secondary: {
+    shadowColor: colors.secondary,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.50,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  outline: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.28,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  ghost: {},
 };
 
 const sizeStyles: Record<Size, ViewStyle> = {
-  sm: { paddingVertical: spacing.xs, paddingHorizontal: spacing.md },
-  md: { paddingVertical: spacing.sm + 4, paddingHorizontal: spacing.lg },
-  lg: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
-};
-
-const textColors: Record<Variant, string> = {
-  primary: colors.white,
-  secondary: colors.white,
-  outline: colors.primary,
-  ghost: colors.primary,
+  sm: { paddingVertical: spacing.xs,      paddingHorizontal: spacing.md },
+  md: { paddingVertical: spacing.sm + 4,  paddingHorizontal: spacing.lg },
+  lg: { paddingVertical: spacing.md,      paddingHorizontal: spacing.xl },
 };
 
 export function Button({
@@ -54,6 +104,7 @@ export function Button({
   testID,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const radius = radiusMap[size];
 
   return (
     <TouchableOpacity
@@ -62,35 +113,58 @@ export function Button({
       disabled={isDisabled}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled }}
-      style={[
-        styles.base,
-        variantStyles[variant],
-        sizeStyles[size],
-        isDisabled && styles.disabled,
-        style,
-      ]}
+      style={[isDisabled && styles.disabled, style]}
     >
-      {loading ? (
-        <ActivityIndicator color={textColors[variant]} testID="button-loading-indicator" />
-      ) : (
-        <Typography
-          variant="label"
-          color={isDisabled ? colors.textDisabled : textColors[variant]}
+      {/* Layer 1: bevel gradient border (3 px "chrome edge") */}
+      <LinearGradient
+        colors={bevelColors[variant]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[styles.bevel, { borderRadius: radius }, bevelShadow[variant]]}
+      >
+        {/* Layer 2: actual button face */}
+        <View
+          style={[
+            styles.inner,
+            sizeStyles[size],
+            { backgroundColor: innerBg[variant], borderRadius: Math.max(1, radius - 3) },
+          ]}
         >
-          {label}
-        </Typography>
-      )}
+          {/* Layer 3: convex depth overlay */}
+          <LinearGradient
+            colors={DEPTH}
+            locations={[0, 0.38, 0.62, 1]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+          {loading ? (
+            <ActivityIndicator color={textColors[variant]} testID="button-loading-indicator" />
+          ) : (
+            <Typography
+              variant="label"
+              color={isDisabled ? colors.textDisabled : textColors[variant]}
+            >
+              {label}
+            </Typography>
+          )}
+        </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  base: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: borderRadius.md,
-  },
   disabled: {
     opacity: 0.5,
+  },
+  bevel: {
+    padding: 3,
+  },
+  inner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
 });

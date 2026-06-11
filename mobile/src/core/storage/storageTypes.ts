@@ -6,10 +6,9 @@ export interface PlayerData {
 }
 
 export interface GameSettings {
+  roundDuration: number;
   soundEnabled: boolean;
-  musicEnabled: boolean;
   vibrationEnabled: boolean;
-  language: 'pl' | 'en';
 }
 
 export interface LeaderboardEntry {
@@ -26,8 +25,7 @@ export const DEFAULT_PLAYER_DATA: Omit<PlayerData, 'uid'> = {
 };
 
 export const DEFAULT_SETTINGS: GameSettings = {
+  roundDuration: 60,
   soundEnabled: true,
-  musicEnabled: true,
   vibrationEnabled: true,
-  language: 'pl',
 };

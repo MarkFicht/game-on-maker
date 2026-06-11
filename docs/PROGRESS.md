@@ -4,9 +4,11 @@
 
 ## Aktualny status
 
-**Faza:** 6 — Migracja mechaniki gry  
-**Ostatnia sesja:** 2026-06-10  
-**Następny krok:** Faza 6 — Migracja mechaniki gry z web React do React Native
+**Faza:** 6 — Polish (Część 2 — komponent reuse system)  
+**Ostatnia sesja:** 2026-06-11  
+**Następny krok:** Faza 6 Część 2 — wyciągnięcie UI systemu do warstwy reużywalnej (patrz plan niżej)
+
+> Visual overhaul + polish ukończony (Część 1). Wszystkie ekrany mają glassmorphism dark style z 3D bevel buttons, PageHeader wszędzie, animacje, sync ustawień. Następna część: ekstrakcja systemu do `game-engine/ui` żeby był reużywalny dla kolejnych gier.
 
 ---
 
@@ -58,16 +60,64 @@
 - [x] Restore purchases działa (kod gotowy — wymaga sandbox do przetestowania)
 - [ ] Testowe zakupy na sandbox — wymaga EAS dev build + kont testowych
 
-### Faza 6 — Migracja mechaniki gry
+### Faza 6 — Migracja mechaniki gry + Visual Polish
 
-- [ ] Analiza istniejącego kodu React (web)
-- [ ] Lista komponentów do przepisania
-- [ ] Przepisanie mechaniki na RN primitives
-- [ ] Animacje (react-native-reanimated)
-- [ ] Dźwięki (expo-av)
-- [ ] Gra działa na Android (emulator)
-- [ ] Gra działa na iOS (symulator)
-- [ ] Gra działa na fizycznym urządzeniu
+**Część 0 — Mechanika i ekrany:**
+- [x] Analiza istniejącego kodu React (web)
+- [x] Game engine przepisany 1:1 (types, engine, utils, decks) — czysty JS, bez zależności UI
+- [x] Karty przetłumaczone na PL (talie: Filmy, Zwierzęta, Sport, Jedzenie, Znane osoby, Czynności)
+- [x] `useGame` hook — adapter engine → React state
+- [x] `useSettings` hook — AsyncStorage persistence (roundDuration, sound, vibration)
+- [x] `TimerRing`, `WordCard`, `DeckCard`, `ResultsView` — komponenty gry
+- [x] Wszystkie ekrany: Home, Decks, Game (ready/countdown/playing/paused/results), Settings, Store
+
+**Część 1 — Visual Overhaul + Polish:**
+- [x] `GradientBackground` — ciemny gradient kosmiczny na wszystkich ekranach
+- [x] 3-warstwowy 3D bevel button system: bevel LinearGradient → kolor → depth overlay
+- [x] `PageHeader` — transparentny header wszędzie (lewy slot: ⚙️/←, środek: title badge, prawy: MuteButton)
+- [x] `MuteButton` — rozmiary `md`/`sm`, shadow+clip pattern dla kołowych przycisków
+- [x] Efekt `shadow+clip`: outer View (shadow, bez overflow) + inner TouchableOpacity (overflow:hidden, clip)
+- [x] Białe obwódki bevelowe przy ikonach (gradient white→dimwhite, bez czarnego dołu)
+- [x] Animacja wejścia Home — `useFocusEffect` (gra przy każdej wizycie), emoji + tekst równocześnie
+- [x] Orange Start button w game ready state — identyczny 3D styl jak "Zagraj" na Home
+- [x] Nagłówki sekcji w Decks — białe (`rgba(255,255,255,0.85)`)
+- [x] "Przygotuj się!" badge — wyraźniejszy (wyższy kontrast, większy tekst)
+- [x] `settingsStore.ts` — singleton pub/sub: MuteButton i Switch w Settings synchronizują się bez reload
+- [x] Banner "Odblokuj Premium" — tekst zawija się i jest wyśrodkowany
+- [ ] Dźwięki (expo-av) — deferred do Fazy 7/8
+- [ ] Gra przetestowana na fizycznym urządzeniu (wymaga EAS dev build)
+
+**Część 2 — Przeprojektowanie widoku gry + Reużywalny UI system (plan):**
+
+*Widok gry podczas rozgrywki:*
+- [ ] Usunąć osobny header bar z `LinearGradient` — timer/score/pauza mają być NAD słowem, nie w osobnym pasku
+- [ ] Słowo (`WordCard`) zajmuje pełnię ekranu (flex:1), strefy tap góra/dół bez zmian
+- [ ] Nad słowem (wewnątrz ekranu, nie w headerze): `TimerRing` + liczniki (Dobrze/Pominięte) + przycisk Pauza
+- [ ] Rozważyć lekki glassmorphism overlay na te kontrolki (semi-transparent, żeby nie zasłaniały słowa)
+- [ ] MuteButton przenieść do PageHeader lub wyrzucić z game header (jest już w PageHeader)
+
+*Reużywalny UI system:*
+- [ ] Wyciągnąć `theme/` (colors, spacing, borderRadius) do shared `game-engine/ui/theme/`
+- [ ] Wyciągnąć `GradientBackground`, `PageHeader`, `MuteButton`, `Button` do `game-engine/ui/components/`
+- [ ] Stworzyć `game-engine/ui/hooks/` — `useSettings`, `useGame` jako generyczne (nie WordRush-specific)
+- [ ] `settingsStore` generyczny — dowolne pola settings per-gra (nie hardcoded `soundEnabled` itd.)
+- [ ] Dokumentacja: "jak zbudować nową grę na tym silniku w < 1 dzień"
+
+---
+
+### Pomysły i drobne poprawki wizualne (backlog)
+
+> Luźny backlog — przenieść do Część 2/3 gdy będzie czas
+
+- [ ] `WordCard` — animacja "slide in" słowa (nowe słowo wjeżdża z dołu/boku zamiast flip)
+- [ ] `ResultsView` — confetti animacja przy wysokim score (>80% accuracy)
+- [ ] `DeckCard` — efekt shimmer na zablokowanych kartach premium
+- [ ] Home — particle/glow tło animowane (bardzo subtelne, żeby nie rozpraszało)
+- [ ] Game countdown — liczby 3/2/1 mogą mieć kolor zmieniony stopniowo (biały → żółty → pomarańczowy → czerwony)
+- [ ] Deck selection — po wyborze talii karta "rośnie" i wypełnia ekran (hero transition do game ready)
+- [ ] Settings — animacja toggle'a (ikona 🔊/🔇 może "wskakiwać" zamiast po prostu się zmienić)
+- [ ] PageHeader title — subtelny shimmer/glow na tytule (animowany `opacity` loop)
+- [ ] Onboarding tooltip (pierwsza wizyta) — wskazówka "przeciągnij w górę = dobrze"
 
 ### Faza 7 — Testy
 
@@ -332,4 +382,92 @@
 **Następny krok:**
 
 - Faza 6: Migracja mechaniki gry z web React do React Native
+
+---
+
+### 2026-06-10 (continued) — Phase 6
+
+**Co zrobiono:**
+
+- `react-native-svg` + `expo-haptics` zainstalowane
+- `src/game/types.ts`, `engine.ts`, `utils.ts` — kopiowane 1:1 z web (czysty JS bez zależności UI, działa w RN bez zmian)
+- `src/game/decks.ts` — 6 talii przetłumaczonych na PL (Filmy i seriale, Zwierzęta, Sport, Jedzenie, Znane osoby, Czynności)
+- `src/hooks/useGame.ts` — adapter GameEngine → React hooks (setState przez event subscription)
+- `src/hooks/useSettings.ts` — persistence przez AsyncStorage (roundDuration 30/60/90/120, sound, vibration)
+- `src/core/storage/storageTypes.ts` — `GameSettings` zaktualizowany (dodano `roundDuration`, usunięto nieużywane pola)
+- `src/game/components/TimerRing.tsx` — SVG ring przez react-native-svg, kolory dynamiczne (zielony/żółty/czerwony jak na web), obrót -90° żeby start był u góry
+- `src/game/components/WordCard.tsx` — dwie strefy TouchableOpacity (góra=dobrze/dół=pas), flip animacja przez `Animated.spring` (rotateY) przy zmianie słowa, haptyka przez expo-haptics, słowo jako overlay pointerEvents="none"
+- `src/game/components/DeckCard.tsx` — Pressable z ikoną, nazwą, opisem, PRO badge, lock overlay dla premium
+- `src/game/components/ResultsView.tsx` — trofeum + badge ze score, 3-kolumnowa siatka statystyk, scrollowalna lista słów (✓/✕), przyciski Home/Zagraj ponownie
+- `app/index.tsx` — Home: emoji 🎯, "WordRush", przyciski Zagraj/Premium/Ustawienia, footer
+- `app/decks.tsx` — nowy ekran: losowe darmowe/premium, lista darmowych, lista premium (z lockiem)
+- `app/game.tsx` — pełny flow gry: Ready → Countdown (3,2,1 z animacją scale) → Playing (header z timerem, wynikami, pauzą) → Paused (Resume/End/Home) → Results
+- `app/settings.tsx` — Czas rundy (segmentowe przyciski 30/60/90/120s), Switch sound/vibration, Przywróć zakupy
+- `app/_layout.tsx` — zarejestrowano ekran `decks`
+
+**Decyzje podjęte:**
+
+- Game engine kopiowany verbatim — kod był celowo UI-agnostyczny (komentarz w web: "Pure logic, no UI dependencies. Can be used in React, React Native, Node.js")
+- WordCard: brak hover na mobile → strefy są zawsze widoczne (ikona z opacity 0.25 + label). Kliknięcie → haptyka → 80ms scale anim → callback. Flip animacji: `Animated.spring` (rotateY 90°→0°) przy zmianie `word.id`
+- Settings: slider zastąpiony 4 przyciskami (30/60/90/120s) — zero dodatkowych zależności, lepsza UX na małych ekranach
+- Talie przetłumaczone na PL — gra imprezowa po polsku
+
+**Status Phase 6:**
+
+✅ **DONE** — `npx tsc --noEmit` → 0 błędów, `npm test` → 48/48 testów zielonych
+
+**Następny krok:**
+
+- Faza 7: Testy jednostkowe GameEngine + spłata długu z Fazy 5 (edge case'y usePayments)
+
+---
+
+### 2026-06-11 — Faza 6 Część 1: Polish
+
+**Co zrobiono:**
+
+- **`settingsStore.ts`** — nowy singleton z pub/sub: `subscribeSettings`, `getSettings`, `loadSettingsOnce`, `updateSettings`. Zastąpił izolowany `useState` w każdym `useSettings()`. Dzięki temu MuteButton w PageHeader i Switch w Settings synchronizują się w czasie rzeczywistym (bez F5).
+- **`useSettings.ts`** — przepisany na store-based; ten sam interfejs na zewnątrz, ale każdy subskrybent widzi te same dane.
+- **Home animacja** — `useEffect([])` zastąpiony `useFocusEffect` → animacja gra przy każdej wizycie, nie tylko przy starcie. Emoji i tekst tytułu wchodzą równocześnie (jeden `Animated.parallel`).
+- **Orange Start button** — custom 3-warstwowy Pressable (identyczny z "Zagraj" na Home) zastąpił generyczny `<Button>` w game ready state.
+- **"Przygotuj się!" badge** — tło opacity 0.18→0.45, border 1px→1.5px, tekst 18→21px, jaśniejszy fiolet.
+- **Białe obwódki icon buttons** — bevel gradient `rgba(0,0,0,0.30)` → `rgba(255,255,255,0.12)` w PageHeader i MuteButton.
+- **Ikony wyśrodkowane** — uproszczony `btnLabel` (usunięte `includeFontPadding`/`textAlignVertical`), flex centering.
+- **Nagłówki sekcji Decks** — kolor zmieniony z `textSecondary` na `rgba(255,255,255,0.85)`.
+- **"Odblokuj wszystkie"** — `alignSelf: 'flex-start'` podniosło tekst do poziomu tytułu sekcji.
+- **Banner "Odblokuj Premium"** — wewnętrzny View dostał `flex: 1`, subtitle `textAlign: 'center'` → poprawne zawijanie i wyśrodkowanie.
+
+**Status:** `npx tsc --noEmit` → 0 błędów, `npm test` → 48/48 ✅
+
+---
+
+### 2026-06-10 (continued) — Phase 6 Visual Overhaul
+
+**Co zrobiono:**
+
+- `expo-linear-gradient` zainstalowane
+- `src/shared/components/GradientBackground.tsx` — reużywalny wrapper z ciemnym gradientem kosmicznym (`#0A0E1A → #0F172A → #1A1033`), translucent StatusBar
+- **TimerRing** — przeprojektowany: pulsujący `Animated.loop` (scale 1→1.06) gdy ≤25% czasu, kolorowy `shadowColor` dopasowany do koloru pierścienia (glow effect), przezroczysty track stroke
+- **WordCard** — przeprojektowany: `useWindowDimensions` dla portrait/landscape adaptive sizing (cardHeight, wordFontSize, iconSize), LinearGradient glass background, animowane flash overlay przy kliknięciu (zielony/amber), `adjustsFontSizeToFit`, text shadow glow
+- **ResultsView** — przeprojektowany: `Animated.spring` trofeum przy wejściu, staggered `AnimatedItem` (delay 0/150/500/600ms) dla każdej sekcji, StatCard ze spring scale pop, LinearGradient per-row w liście słów
+- **DeckCard** — przeprojektowany: `hexToRgba()` helper, LinearGradient tint z koloru talii (18%→4% opacity), vertical accent strip, animowany press (`Animated.spring` scale), gradient PRO badge, lepszy lock overlay z etykietą "PREMIUM"
+- **Home screen** — GradientBackground, staggered entry sequence (emoji spring + title/actions fade-translate), pulsujący `Animated.loop` na przycisku Zagraj (scale 1→1.03), glow blob za emoji (animated opacity), glow shadow na play button
+- **Game screen** — GradientBackground na wszystkich stanach, responsive header w `playing`: `TimerRing` size=56 w landscape (72 portrait), separator między score items, LinearGradient na header box, landscape-compact score labels, `⏸` zamiast "Pauza" w landscape, Zagraj button z primary shadow glow, getReady badge z border
+- **Decks screen** — GradientBackground, section labels uppercase+letterSpacing, separator linie, Premium Banner dla non-premium userów (gradient + LinearGradient border), "Odblokuj wszystkie" hint link
+- **Settings screen** — GradientBackground, GlassCard z LinearGradient overlay, ikony per-card, gradient PRO duration buttons (primary→purple), rowDivider, `borderColor: rgba` borders
+
+**Decyzje podjęte:**
+
+- `StyleSheet.absoluteFillObject` nie istnieje w Expo SDK 56 → zastąpione explicit `position: 'absolute', top: 0, left: 0, right: 0, bottom: 0`
+- `borderRadius` na `LinearGradient` nie jest valid prop → przeniesiony do `style`
+- Glow effect simulowany przez `shadowColor + shadowRadius + shadowOpacity` (natywne cienie) bez dodatkowych bibliotek blur
+- Landscape detection: `useWindowDimensions` + `width > height` (nie orientation API) — bardziej niezawodne, auto-update przy obrocie
+
+**Status Phase 6 Visual Overhaul:**
+
+✅ **DONE** — `npx tsc --noEmit` → 0 błędów, `npm test` → 48/48 testów zielonych
+
+**Następny krok:**
+
+- Faza 7: Testy jednostkowe GameEngine + spłata długu z Fazy 5 (edge case'y usePayments)
 
