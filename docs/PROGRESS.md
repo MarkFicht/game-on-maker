@@ -4,11 +4,11 @@
 
 ## Aktualny status
 
-**Faza:** 6 Część 3 — Mechanika odpowiedzi  
+**Faza:** 7 — Testy  
 **Ostatnia sesja:** 2026-06-11  
-**Następny krok:** Faza 6 Część 3 — poprawa mechaniki wyboru poprawnej/błędnej odpowiedzi w tablicy + UI
+**Następny krok:** Faza 7 — testy jednostkowe GameEngine + edge case'y usePayments
 
-> Faza 6 Części 1 i 2 ukończone. Visual overhaul (3D bevels, animacje wejścia, spring bounce wszędzie, HUD overlay) + reużywalny UI system (`game-engine/` factory, generyczny store, backward-compat). Część 3 zaplanowana: nowa mechanika odpowiedzi.
+> Faza 6 w ukończona (pojedyncze check-boxy zostały). Część 3: nowa mechanika odpowiedzi (tap + tilt), full-card flash, rotateY flip, konfetti w ResultsView. WordCard przebudowany na responder system (jeden hit-target na cały card, `locationY` decyduje góra/dół). Działa na web, symulatorze i natywnym.
 
 ---
 
@@ -94,10 +94,11 @@
 
 **Część 3 — Poprawa mechaniki odpowiedzi + UI:**
 
-- [ ] Nowa mechanika wyboru odpowiedzi (prawidłowa/błędna) w tablicy (klikniecie na odpowiednią część tablicy lub przechylenie telefonu do góry to poprawnie, w dół to źle i następna tablica) — poprawa UX i wizualna
-- [ ] Po wyborze odpowiedzi (prawidłowa/błędna), tablica podświetla się na odpowiedni kolor przed flipem
-- [ ] WordCard — rotateY flip z nowym słowem
-- [ ] Konfetti w ResultsView przy score >70% accuracy
+- [x] Nowa mechanika: tap góra/dół LUB przechylenie telefonu (góra = DOBRZE, dół = PAS) — oba jednocześnie; `expo-sensors` Accelerometer, 600ms startup delay, guard `y < -0.3`
+- [x] Full-card flash (zielony/pomarańczowy) przed flipem — `Animated.View` absoluteFill overlay
+- [x] WordCard — rotateY flip: flash → flip out 160ms → swap word na 90° → flip in spring
+- [x] Konfetti w ResultsView przy accuracy ≥ 70% (`react-native-confetti-cannon`, delay 400ms)
+- [x] WordCard przebudowany: `Animated.View` responder system (jeden hit-target, `locationY` góra/dół) — fix dla Expo web i symulatorów
 
 ---
 
@@ -226,3 +227,13 @@ _Features:_
 - Decks: `SlideCard` — per-karta slide od lewej ze spring bounce, stagger 100ms
 - PageHeader title: `useFocusEffect` zamiast `useEffect` — animacja na każdy powrót (fix dla Home)
 - ResultsView `AnimatedItem`: `friction 8→6`, `translateY 20→28` — wyraźniejsze odbicie
+
+---
+
+### 2026-06-11 — Faza 6 Część 3: Mechanika odpowiedzi
+
+- `expo-sensors` + `react-native-confetti-cannon` dodane do zależności
+- WordCard — nowa sekwencja odpowiedzi: full-card flash (zielony/pomarańczowy) → rotateY flip out 160ms → swap word → flip in spring + fade flash
+- WordCard — `Animated.View` responder system: `onStartShouldSetResponder` + `onResponderRelease` z `locationY` (góra = poprawnie, dół = pas); eliminuje problemy z pustymi TouchableOpacity na Expo web
+- Accelerometer tilt: `expo-sensors`, y < -0.3 guard (telefon w pionie), z < -0.65 → correct, z > 0.65 → skip; 600ms startup delay
+- `ResultsView` — konfetti (`ConfettiCannon`) po 400ms gdy accuracy ≥ 70%

@@ -21,6 +21,8 @@ Cała infrastruktura (auth, płatności, reklamy, storage) zostaje bez zmian i j
 | Backend          | Firebase — Auth + Firestore                     |
 | Reklamy          | AdMob (react-native-google-mobile-ads)          |
 | Płatności        | RevenueCat (react-native-purchases v7)          |
+| Sensory          | expo-sensors (Accelerometer — tilt detection)   |
+| Efekty           | react-native-confetti-cannon                    |
 | Testy            | Jest + React Native Testing Library             |
 | Build / deploy   | EAS Build + EAS Submit                          |
 
@@ -188,6 +190,7 @@ Level Complete → zapisz postęp → pokaż ad (jeśli nie premium)
 5. **Offline first** — gra działa bez internetu, synchronizacja z Firestore przy połączeniu.
 6. **Reklamy tylko dla free userów** — zawsze sprawdzaj `isPremium` przed pokazaniem reklamy.
 7. **Wibracje przez `vibrationEnabled`** — zawsze sprawdzaj ustawienie przed wywołaniem `expo-haptics`.
+8. **Touch na kartach przez responder system** — `onStartShouldSetResponder` + `onResponderRelease` na `Animated.View`; `locationY` decyduje o strefie. Nie używaj `TouchableOpacity` jako hit-area gdy masz nakładające się absolutne overlaye (psuje się na Expo web).
 
 ---
 

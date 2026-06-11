@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Animated, useWindowDimensions } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../shared/components';
 import { colors } from '../../shared/theme/colors';
@@ -68,8 +69,17 @@ function StatCard({ value, label, color }: { value: string | number; label: stri
 }
 
 export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: ResultsViewProps) {
+  const { width } = useWindowDimensions();
   const trophyScale = useRef(new Animated.Value(0)).current;
   const trophyRotate = useRef(new Animated.Value(-0.5)).current;
+  const [fireConfetti, setFireConfetti] = useState(false);
+
+  useEffect(() => {
+    if (stats.accuracy >= 70) {
+      const t = setTimeout(() => setFireConfetti(true), 400);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   useEffect(() => {
     Animated.parallel([
@@ -82,6 +92,17 @@ export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: R
 
   return (
     <View style={styles.container}>
+      {fireConfetti && (
+        <ConfettiCannon
+          count={200}
+          origin={{ x: width / 2, y: 0 }}
+          autoStart
+          fadeOut
+          explosionSpeed={400}
+          fallSpeed={3000}
+        />
+      )}
+
       {/* Trophy */}
       <AnimatedItem delay={0}>
         <View style={styles.trophyContainer}>
