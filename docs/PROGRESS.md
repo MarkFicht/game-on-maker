@@ -6,9 +6,9 @@
 
 **Faza:** 7 — Testy  
 **Ostatnia sesja:** 2026-06-12  
-**Następny krok:** Faza 7 — testy integracyjne flow zakupu + flow reklamy; ręczne testy na urządzeniu
+**Następny krok:** Faza 7 — ręczne testy na urządzeniu (EAS dev build); następnie Faza 8 (publikacja)
 
-> Faza 7 w toku: testy jednostkowe GameEngine (46 testów), utils (16 testów) i edge case'y usePayments (5 testów) — **123/123 ✅**. Przed testami przeprowadzono cleanup kodu: usunięto backward-compat warstwy, martwy game-over, zduplikowane stałe i nieużywane style.
+> Faza 7 ukończona (kod): testy jednostkowe + integracyjne — **142/142 ✅**, tsc 0 błędów. Pozostało: ręczne testy na fizycznym urządzeniu (wymaga EAS dev build).
 
 ---
 
@@ -104,8 +104,8 @@
 
 - [x] Testy jednostkowe: mechanika gry (`src/game/__tests__/engine.test.ts` — 46 testów; `utils.test.ts` — 16 testów)
 - [x] Testy jednostkowe: hooki (auth ✅ Faza 2, ads ✅ Faza 4, payments ✅ Faza 5 + edge case'y)
-- [ ] Testy integracyjne: flow zakupu
-- [ ] Testy integracyjne: flow reklamy
+- [x] Testy integracyjne: flow zakupu
+- [x] Testy integracyjne: flow reklamy
 - [ ] Ręczne testy na iOS + Android
 
 **Dług z Fazy 5 — brakujące testy `usePayments`:**
@@ -220,6 +220,16 @@
 
 ---
 
+### 2026-06-11 — Faza 6 Część 3: Mechanika odpowiedzi
+
+- `expo-sensors` + `react-native-confetti-cannon` dodane do zależności
+- WordCard — nowa sekwencja odpowiedzi: full-card flash (zielony/pomarańczowy) → rotateY flip out 160ms → swap word → flip in spring + fade flash
+- WordCard — `Animated.View` responder system: `onStartShouldSetResponder` + `onResponderRelease` z `locationY` (góra = poprawnie, dół = pas); eliminuje problemy z pustymi TouchableOpacity na Expo web
+- Accelerometer tilt: `expo-sensors`, y < -0.3 guard (telefon w pionie), z < -0.65 → correct, z > 0.65 → skip; 600ms startup delay
+- `ResultsView` — konfetti (`ConfettiCannon`) po 400ms gdy accuracy ≥ 70%
+
+---
+
 ### 2026-06-12 — Cleanup kodu + Faza 7: Testy jednostkowe
 
 **Cleanup (bez zmiany funkcjonalności):**
@@ -237,10 +247,9 @@
 
 ---
 
-### 2026-06-11 — Faza 6 Część 3: Mechanika odpowiedzi
+### 2026-06-12 — Faza 7: Testy integracyjne
 
-- `expo-sensors` + `react-native-confetti-cannon` dodane do zależności
-- WordCard — nowa sekwencja odpowiedzi: full-card flash (zielony/pomarańczowy) → rotateY flip out 160ms → swap word → flip in spring + fade flash
-- WordCard — `Animated.View` responder system: `onStartShouldSetResponder` + `onResponderRelease` z `locationY` (góra = poprawnie, dół = pas); eliminuje problemy z pustymi TouchableOpacity na Expo web
-- Accelerometer tilt: `expo-sensors`, y < -0.3 guard (telefon w pionie), z < -0.65 → correct, z > 0.65 → skip; 600ms startup delay
-- `ResultsView` — konfetti (`ConfettiCannon`) po 400ms gdy accuracy ≥ 70%
+- `src/core/payments/__tests__/purchaseFlow.integration.test.tsx` — 6 testów integracyjnych PaymentsProvider ↔ usePayments ↔ AdsProvider: listener RevenueCat → isPremium, purchase → listener → premium, restore → premium, premium propaguje do AdsProvider → canShowAds=false
+- `src/core/ads/__tests__/adFlow.integration.test.tsx` — 11 testów integracyjnych AdsProvider ↔ useInterstitialAd ↔ useRewardedAd: inicjalizacja SDK, createForAdRequest + load(), blokowanie dla premium, earned_reward callback
+- Fix: `AdsProvider.tsx` — `await import()` → `require()` (ten sam problem co PaymentsProvider: jest-expo module hoist nie obsługuje dynamic imports) — brak zmiany funkcjonalności
+- **Wynik: 142/142 ✅**, tsc 0 błędów

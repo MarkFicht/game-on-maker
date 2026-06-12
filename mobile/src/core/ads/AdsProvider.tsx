@@ -6,7 +6,7 @@ interface AdsContextValue {
   canShowAds: boolean;
 }
 
-const AdsContext = createContext<AdsContextValue>({
+export const AdsContext = createContext<AdsContextValue>({
   adsInitialized: false,
   canShowAds: false,
 });
