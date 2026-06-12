@@ -5,10 +5,10 @@
 ## Aktualny status
 
 **Faza:** 7 — Testy  
-**Ostatnia sesja:** 2026-06-11  
-**Następny krok:** Faza 7 — testy jednostkowe GameEngine + edge case'y usePayments
+**Ostatnia sesja:** 2026-06-12  
+**Następny krok:** Faza 7 — testy integracyjne flow zakupu + flow reklamy; ręczne testy na urządzeniu
 
-> Faza 6 w ukończona Część 3: nowa mechanika odpowiedzi (tap + tilt), full-card flash, rotateY flip, konfetti w ResultsView. WordCard przebudowany na responder system (jeden hit-target na cały card, `locationY` decyduje góra/dół). Działa na web, symulatorze i natywnym.
+> Faza 7 w toku: testy jednostkowe GameEngine (46 testów), utils (16 testów) i edge case'y usePayments (5 testów) — **123/123 ✅**. Przed testami przeprowadzono cleanup kodu: usunięto backward-compat warstwy, martwy game-over, zduplikowane stałe i nieużywane style.
 
 ---
 
@@ -102,19 +102,19 @@
 
 ### Faza 7 — Testy
 
-- [ ] Testy jednostkowe: mechanika gry
-- [ ] Testy jednostkowe: hooki (auth, ads, payments)
+- [x] Testy jednostkowe: mechanika gry (`src/game/__tests__/engine.test.ts` — 46 testów; `utils.test.ts` — 16 testów)
+- [x] Testy jednostkowe: hooki (auth ✅ Faza 2, ads ✅ Faza 4, payments ✅ Faza 5 + edge case'y)
 - [ ] Testy integracyjne: flow zakupu
 - [ ] Testy integracyjne: flow reklamy
 - [ ] Ręczne testy na iOS + Android
 
 **Dług z Fazy 5 — brakujące testy `usePayments`:**
 
-- [ ] `purchase` rzuca błąd (nie `userCancelled`) → Alert "Błąd zakupu" się pojawia
-- [ ] `purchase` z `userCancelled: true` → Alert się NIE pojawia
-- [ ] `isPurchasing` jest `true` podczas zakupu, `false` po zakończeniu
-- [ ] `restore` gdy entitlement aktywny → Alert "Sukces"
-- [ ] `fetchOfferings` gdy API zwraca `null` → `offerings` pozostaje `null`, brak crashu
+- [x] `purchase` rzuca błąd (nie `userCancelled`) → Alert "Błąd zakupu" się pojawia
+- [x] `purchase` z `userCancelled: true` → Alert się NIE pojawia
+- [x] `isPurchasing` jest `true` podczas zakupu, `false` po zakończeniu
+- [x] `restore` gdy entitlement aktywny → Alert "Sukces"
+- [x] `fetchOfferings` gdy API zwraca `null` → `offerings` pozostaje `null`, brak crashu
 
 ### Faza 8 — Publikacja
 
@@ -217,6 +217,23 @@
 - Decks: `SlideCard` — per-karta slide od lewej ze spring bounce, stagger 100ms
 - PageHeader title: `useFocusEffect` zamiast `useEffect` — animacja na każdy powrót (fix dla Home)
 - ResultsView `AnimatedItem`: `friction 8→6`, `translateY 20→28` — wyraźniejsze odbicie
+
+---
+
+### 2026-06-12 — Cleanup kodu + Faza 7: Testy jednostkowe
+
+**Cleanup (bez zmiany funkcjonalności):**
+- Usunięto backward-compat shim-pliki (`src/hooks/useGame.ts`, `src/hooks/useSettings.ts`, `src/core/storage/settingsStore.ts`) i named re-exports w `game/store/settingsStore.ts` — zaktualizowano importy bezpośrednio do `src/game/hooks/`
+- Usunięto martwy placeholder `app/game-over.tsx` + wpis w `_layout.tsx` i `AppRoute`
+- Usunięto zduplikowane stałe: `BTN_INNER = BTN` w PageHeader, `radiusMap` z identycznymi wartościami w Button
+- Usunięto nieużywane `styles.features`/`styles.packages` w store.tsx; scalono `iconCorrect`/`iconSkip` → `iconMark` w ResultsView
+- Zastąpiono ręczne `TLRB:0` spredem `StyleSheet.absoluteFill` w WordCard i DeckCard
+
+**Testy Fazy 7:**
+- `src/game/__tests__/engine.test.ts` — 46 testów GameEngine (stany, timer, markCorrect/Skip, pause/resume, endGame, reset, getStats, updateConfig, singleton)
+- `src/game/__tests__/utils.test.ts` — 16 testów (shuffleArray, generateId, formatTime, calculatePercentage)
+- `src/core/payments/__tests__/usePayments.test.ts` — +5 edge case'y (dług Fazy 5): purchase error/userCancelled, isPurchasing lifecycle, restore sukces, fetchOfferings null
+- **Wynik: 123/123 ✅**
 
 ---
 

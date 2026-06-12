@@ -37,7 +37,6 @@ export default function RootLayout() {
             <Stack.Screen name="index" />
             <Stack.Screen name="decks" />
             <Stack.Screen name="game" />
-            <Stack.Screen name="game-over" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="store" />
           </Stack>

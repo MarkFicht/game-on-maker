@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView, Linking, Animated } from 'react-native';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSettings } from '../src/hooks/useSettings';
+import { useSettings } from '../src/game/hooks/useSettings';
 import { usePayments } from '../src/core/payments/usePayments';
 import { GradientBackground, PageHeader, Button } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';

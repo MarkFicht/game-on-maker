@@ -1,7 +1,7 @@
 import { useRef, useMemo } from 'react';
 import { View, Pressable, Text, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSettings } from '../../hooks/useSettings';
+import { useSettings } from '../../game/hooks/useSettings';
 
 interface MuteButtonProps {
   size?: 'sm' | 'md';

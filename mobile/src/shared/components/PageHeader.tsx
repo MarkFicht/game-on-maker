@@ -17,7 +17,6 @@ interface PageHeaderProps {
 }
 
 const BTN = 52;
-const BTN_INNER = BTN;
 
 function BackChevron() {
   return (
@@ -211,9 +210,9 @@ const styles = StyleSheet.create({
   },
   // Explicit circular inner — clips overlay gradients to circle
   btnInner: {
-    width: BTN_INNER,
-    height: BTN_INNER,
-    borderRadius: BTN_INNER / 2,
+    width: BTN,
+    height: BTN,
+    borderRadius: BTN / 2,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',

@@ -178,7 +178,7 @@ export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: R
                 style={[styles.resultRow, result.wasCorrect ? styles.resultRowCorrect : styles.resultRowSkip]}
               >
                 <View style={styles.iconWrap}>
-                  <Text style={result.wasCorrect ? styles.iconCorrect : styles.iconSkip}>
+                  <Text style={styles.iconMark}>
                     {result.wasCorrect ? '✓' : '✕'}
                   </Text>
                 </View>
@@ -347,13 +347,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconCorrect: {
-    fontSize: 13,
-    color: colors.white,
-    fontWeight: '900',
-    textAlign: 'center',
-  },
-  iconSkip: {
+  iconMark: {
     fontSize: 13,
     color: colors.white,
     fontWeight: '900',

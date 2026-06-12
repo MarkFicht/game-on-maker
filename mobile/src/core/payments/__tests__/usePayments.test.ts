@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react-native';
 import React from 'react';
+import { Alert } from 'react-native';
 import { PaymentsProvider } from '../PaymentsProvider';
 import { usePayments } from '../usePayments';
 
@@ -39,8 +40,16 @@ function wrapper({ children }: { children: React.ReactNode }) {
   return React.createElement(PaymentsProvider, null, children);
 }
 
+const FAKE_PKG = {
+  identifier: '$rc_monthly',
+  product: { title: 'Premium', priceString: '9,99 zł', description: '' },
+};
+
 describe('usePayments', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  });
 
   it('isPremium is false initially', () => {
     const { result } = renderHook(() => usePayments(), { wrapper });
@@ -72,5 +81,71 @@ describe('usePayments', () => {
     const { result } = renderHook(() => usePayments(), { wrapper });
     await act(async () => { await result.current.restore(); });
     expect(Purchases.restorePurchases).toHaveBeenCalledTimes(1);
+  });
+
+  // ── Edge case'y z długu Fazy 5 ───────────────────────────────────────────────
+
+  it('purchase: błąd (nie userCancelled) pokazuje Alert', async () => {
+    const Purchases = jest.requireMock('react-native-purchases').default;
+    Purchases.purchasePackage.mockRejectedValueOnce({ userCancelled: false, message: 'Payment failed' });
+
+    const { result } = renderHook(() => usePayments(), { wrapper });
+    await act(async () => { await result.current.purchase(FAKE_PKG); });
+
+    expect(Alert.alert).toHaveBeenCalledWith('Błąd zakupu', 'Payment failed');
+  });
+
+  it('purchase: userCancelled NIE pokazuje Alert', async () => {
+    const Purchases = jest.requireMock('react-native-purchases').default;
+    Purchases.purchasePackage.mockRejectedValueOnce({ userCancelled: true });
+
+    const { result } = renderHook(() => usePayments(), { wrapper });
+    await act(async () => { await result.current.purchase(FAKE_PKG); });
+
+    expect(Alert.alert).not.toHaveBeenCalled();
+  });
+
+  it('isPurchasing: true podczas zakupu, false po zakończeniu', async () => {
+    let resolvePurchase!: (val: unknown) => void;
+    const Purchases = jest.requireMock('react-native-purchases').default;
+    Purchases.purchasePackage.mockImplementationOnce(
+      () => new Promise(res => { resolvePurchase = res; }),
+    );
+
+    const { result } = renderHook(() => usePayments(), { wrapper });
+
+    let purchasePromise!: Promise<void>;
+    act(() => { purchasePromise = result.current.purchase(FAKE_PKG); });
+
+    expect(result.current.isPurchasing).toBe(true);
+
+    await act(async () => {
+      resolvePurchase({ customerInfo: { entitlements: { active: {} } } });
+      await purchasePromise;
+    });
+
+    expect(result.current.isPurchasing).toBe(false);
+  });
+
+  it('restore: aktywny entitlement → Alert Sukces', async () => {
+    const Purchases = jest.requireMock('react-native-purchases').default;
+    Purchases.restorePurchases.mockResolvedValueOnce({
+      entitlements: { active: { premium: {} } },
+    });
+
+    const { result } = renderHook(() => usePayments(), { wrapper });
+    await act(async () => { await result.current.restore(); });
+
+    expect(Alert.alert).toHaveBeenCalledWith('Sukces', 'Zakupy zostały przywrócone.');
+  });
+
+  it('fetchOfferings: API zwraca null → offerings pozostaje null', async () => {
+    const Purchases = jest.requireMock('react-native-purchases').default;
+    Purchases.getOfferings.mockResolvedValueOnce({ current: null });
+
+    const { result } = renderHook(() => usePayments(), { wrapper });
+    await act(async () => { await result.current.fetchOfferings(); });
+
+    expect(result.current.offerings).toBeNull();
   });
 });

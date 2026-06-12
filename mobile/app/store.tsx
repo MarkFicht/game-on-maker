@@ -300,9 +300,6 @@ const styles = StyleSheet.create({
   },
 
   // Features
-  features: {
-    gap: spacing.sm,
-  },
   featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -339,9 +336,6 @@ const styles = StyleSheet.create({
   },
 
   // Package buttons
-  packages: {
-    gap: spacing.sm,
-  },
   pkgWrapper: {
     borderRadius: borderRadius.lg,
   },

@@ -26,12 +26,6 @@ interface ButtonProps {
   icon?: string;
 }
 
-const radiusMap: Record<Size, number> = {
-  sm: borderRadius.xl,
-  md: borderRadius.xl,
-  lg: borderRadius.xl,
-};
-
 const textSizeMap: Record<Size, number> = {
   sm: 13,
   md: 16,
@@ -138,8 +132,8 @@ export function Button({
   icon,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
-  const radius = radiusMap[size];
-  const innerRadius = Math.max(1, radius - 4);
+  const radius = borderRadius.xl;
+  const innerRadius = radius - 4;
 
   const pressAnim = useRef(new Animated.Value(0)).current;
   const convexOpacity = useMemo(

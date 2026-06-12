@@ -14,8 +14,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { TimerRing, WordCard, ResultsView } from '../src/game/components';
 import { getDeckById } from '../src/game/decks';
-import { useGame } from '../src/hooks/useGame';
-import { useSettings } from '../src/hooks/useSettings';
+import { useGame } from '../src/game/hooks/useGame';
+import { useSettings } from '../src/game/hooks/useSettings';
 import { Button, GradientBackground, MuteButton, PageHeader } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
