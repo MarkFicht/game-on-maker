@@ -1,52 +1,87 @@
-import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useRef, useMemo } from 'react';
+import { View, Pressable, Text, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSettings } from '../../hooks/useSettings';
 
 interface MuteButtonProps {
   size?: 'sm' | 'md';
+  icon?: string;
+  onPress?: () => void;
+  accessibilityLabel?: string;
 }
 
 const SIZES = {
-  md: { outer: 52, icon: 22, bevel: 3 },
-  sm: { outer: 40, icon: 17, bevel: 2 },
+  md: { outer: 52, icon: 22 },
+  sm: { outer: 40, icon: 17 },
 };
 
-export function MuteButton({ size = 'md' }: MuteButtonProps) {
+export function MuteButton({ size = 'md', icon, onPress, accessibilityLabel }: MuteButtonProps) {
   const { settings, updateSettings } = useSettings();
   const isMuted = !settings.soundEnabled;
   const s = SIZES[size];
-  const inner = s.outer - s.bevel * 2;
+
+  const pressAnim = useRef(new Animated.Value(0)).current;
+  const convexOpacity = useMemo(
+    () => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+    [],
+  );
+
+  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+
+  const handlePress = onPress ?? (() => updateSettings({ soundEnabled: !settings.soundEnabled }));
+  const displayIcon = icon ?? (isMuted ? '🔇' : '🔊');
+  const a11yLabel   = accessibilityLabel ?? (isMuted ? 'Włącz dźwięk' : 'Wycisz');
 
   return (
-    // Shadow wrapper — not overflow:hidden so shadow shows on iOS
     <View style={[styles.shadow, { width: s.outer, height: s.outer, borderRadius: s.outer / 2 }]}>
-      {/* Clip wrapper — clips gradient to circle on Android */}
-      <TouchableOpacity
-        onPress={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
+      <Pressable
+        onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
         style={[styles.clip, { width: s.outer, height: s.outer, borderRadius: s.outer / 2 }]}
-        accessibilityLabel={isMuted ? 'Włącz dźwięk' : 'Wycisz'}
+        accessibilityLabel={a11yLabel}
       >
-        {/* Convex bevel: bright top-edge, dark bottom-edge → raised glass look */}
-        <LinearGradient
-          colors={['rgba(255,255,255,0.55)', 'rgba(0,0,0,0.30)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={[styles.bevel, { padding: s.bevel }]}
-        >
-          <View style={[styles.inner, { width: inner, height: inner, borderRadius: inner / 2 }]}>
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity, borderRadius: s.outer / 2 }]}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.35)', 'rgba(0,0,0,0.12)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: s.outer / 2 }]}
+          />
+        </Animated.View>
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim, borderRadius: s.outer / 2 }]}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.22)', 'rgba(255,255,255,0.22)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: s.outer / 2 }]}
+          />
+        </Animated.View>
+        <View style={[styles.inner, { width: s.outer, height: s.outer, borderRadius: s.outer / 2 }]}>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity, borderRadius: s.outer / 2 }]}>
             <LinearGradient
               colors={['rgba(255,255,255,0.24)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.20)']}
               locations={[0, 0.38, 0.62, 1]}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
+              style={[StyleSheet.absoluteFill, { borderRadius: s.outer / 2 }]}
               pointerEvents="none"
             />
-            <Text style={{ fontSize: s.icon, marginBottom: 2 }}>{isMuted ? '🔇' : '🔊'}</Text>
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
+          </Animated.View>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim, borderRadius: s.outer / 2 }]}>
+            <LinearGradient
+              colors={['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.18)']}
+              locations={[0, 0.38, 0.62, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={[StyleSheet.absoluteFill, { borderRadius: s.outer / 2 }]}
+              pointerEvents="none"
+            />
+          </Animated.View>
+          <Text style={{ fontSize: s.icon, marginBottom: 2 }}>{displayIcon}</Text>
+        </View>
+      </Pressable>
     </View>
   );
 }
@@ -61,9 +96,6 @@ const styles = StyleSheet.create({
   },
   clip: {
     overflow: 'hidden',
-  },
-  bevel: {
-    flex: 1,
   },
   inner: {
     alignItems: 'center',

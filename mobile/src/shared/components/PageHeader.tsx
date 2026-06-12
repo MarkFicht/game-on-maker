@@ -1,5 +1,5 @@
-import React, { useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
@@ -17,7 +17,7 @@ interface PageHeaderProps {
 }
 
 const BTN = 52;
-const BTN_INNER = BTN - 6; // 3 px bevel on each side
+const BTN_INNER = BTN;
 
 function BackChevron() {
   return (
@@ -33,37 +33,68 @@ function BackChevron() {
   );
 }
 
-// Identical structure to MuteButton so both buttons look the same
 function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
+  const pressAnim = useRef(new Animated.Value(0)).current;
+  const convexOpacity = useMemo(
+    () => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+    [],
+  );
+
+  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+
   return (
-    // Shadow wrapper — no overflow so shadow shows on iOS
     <View style={styles.btnShadow}>
-      {/* Clip wrapper — clips LinearGradient to circle on Android */}
-      <TouchableOpacity onPress={onPress} style={styles.btnClip} accessibilityRole="button">
-        {/* Convex bevel: bright top-edge (light hits raised surface), dark bottom-edge (shadow) */}
-        <LinearGradient
-          colors={['rgba(255,255,255,0.55)', 'rgba(0,0,0,0.30)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.btnBevel}
-        >
-          {/* Explicit inner circle — mirrors MuteButton's inner View */}
-          <View style={styles.btnInner}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        style={styles.btnClip}
+        accessibilityRole="button"
+      >
+        {/* Convex bevel — fades out on press */}
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity, borderRadius: BTN / 2 }]}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.35)', 'rgba(0,0,0,0.12)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: BTN / 2 }]}
+          />
+        </Animated.View>
+        {/* Concave bevel — fades in on press */}
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim, borderRadius: BTN / 2 }]}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.22)', 'rgba(255,255,255,0.22)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: BTN / 2 }]}
+          />
+        </Animated.View>
+        {/* Inner circle — overlays cross-fade, clips content to circle */}
+        <View style={styles.btnInner}>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity, borderRadius: BTN / 2 }]}>
             <LinearGradient
               colors={['rgba(255,255,255,0.24)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.20)']}
               locations={[0, 0.38, 0.62, 1]}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
+              style={[StyleSheet.absoluteFill, { borderRadius: BTN / 2 }]}
               pointerEvents="none"
             />
-            {label === '←'
-              ? <BackChevron />
-              : <Text style={styles.btnLabel}>{label}</Text>
-            }
-          </View>
-        </LinearGradient>
-      </TouchableOpacity>
+          </Animated.View>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim, borderRadius: BTN / 2 }]}>
+            <LinearGradient
+              colors={['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.18)']}
+              locations={[0, 0.38, 0.62, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={[StyleSheet.absoluteFill, { borderRadius: BTN / 2 }]}
+              pointerEvents="none"
+            />
+          </Animated.View>
+          {label === '←' ? <BackChevron /> : <Text style={styles.btnLabel}>{label}</Text>}
+        </View>
+      </Pressable>
     </View>
   );
 }
@@ -123,7 +154,7 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
                 style={StyleSheet.absoluteFill}
                 pointerEvents="none"
               />
-              <Text style={styles.titleText} numberOfLines={1}>{title}</Text>
+              <Text style={styles.titleText}>{title}</Text>
             </View>
           </LinearGradient>
         </View>
@@ -141,7 +172,7 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
@@ -178,13 +209,7 @@ const styles = StyleSheet.create({
     borderRadius: BTN / 2,
     overflow: 'hidden',
   },
-  btnBevel: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 3,
-  },
-  // Explicit circular inner — identical to MuteButton's inner View
+  // Explicit circular inner — clips overlay gradients to circle
   btnInner: {
     width: BTN_INNER,
     height: BTN_INNER,
@@ -226,5 +251,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.white,
     letterSpacing: -0.3,
+    textAlign: 'center',
   },
 });

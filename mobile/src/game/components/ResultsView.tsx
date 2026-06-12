@@ -8,6 +8,7 @@ import { colors } from '../../shared/theme/colors';
 import { spacing, borderRadius } from '../../shared/theme/spacing';
 import type { GameStats, RoundResult } from '../types';
 
+
 interface ResultsViewProps {
   stats: GameStats;
   results: RoundResult[];
@@ -16,10 +17,13 @@ interface ResultsViewProps {
   onHome: () => void;
 }
 
-function getTitle(correct: number): string {
-  if (correct >= 15) return 'Niesamowite! 🔥';
-  if (correct >= 7) return 'Świetna robota! 💪';
-  return 'Dobra próba! 👍';
+function getTitle(accuracy: number): string {
+  if (accuracy === 100) return 'Perfekcja! 🏆';
+  if (accuracy >= 85)   return 'Świetna robota! 🌟';
+  if (accuracy >= 65)   return 'Dobra próba! 🎉';
+  if (accuracy >= 40)   return 'Całkiem nieźle! 😏';
+  if (accuracy >= 20)   return 'Nie poddawaj się! 💪';
+  return 'Następnym razem! 😬';
 }
 
 function AnimatedItem({ children, delay, style }: { children: React.ReactNode; delay: number; style?: ViewStyle }) {
@@ -110,7 +114,7 @@ export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: R
 
   const rotate = useMemo(() => trophyRotate.interpolate({ inputRange: [-1, 1], outputRange: ['-30deg', '30deg'] }), []);
 
-  const fullTitle = getTitle(stats.correctCount);
+  const fullTitle = getTitle(stats.accuracy);
   const lastSpace = fullTitle.lastIndexOf(' ');
   const titleText = fullTitle.slice(0, lastSpace);
   const titleEmoji = fullTitle.slice(lastSpace + 1);

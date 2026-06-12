@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { GradientBackground, PageHeader } from '../src/shared/components';
 import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
+
 export default function HomeScreen() {
   const { isPremium } = usePaymentsContext();
 
@@ -22,8 +23,10 @@ export default function HomeScreen() {
   const slideUp1    = useRef(new Animated.Value(20)).current;
   const fadeUp2     = useRef(new Animated.Value(0)).current;
   const slideUp2    = useRef(new Animated.Value(20)).current;
-  const playPulse   = useRef(new Animated.Value(1)).current;
-  const glowOpacity = useRef(new Animated.Value(0.5)).current;
+  const playPulse    = useRef(new Animated.Value(1)).current;
+  const glowOpacity  = useRef(new Animated.Value(0.5)).current;
+  const playPressAnim = useRef(new Animated.Value(0)).current;
+  const premPressAnim = useRef(new Animated.Value(0)).current;
 
   // Re-run entrance animation every time the home screen comes into focus
   useFocusEffect(
@@ -79,6 +82,8 @@ export default function HomeScreen() {
   );
 
   const rotate = emojiRotate.interpolate({ inputRange: [-1, 1], outputRange: ['-18deg', '18deg'] });
+  const playConvexOpacity = useMemo(() => playPressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
+  const premConvexOpacity = useMemo(() => premPressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
 
   return (
     <GradientBackground>
@@ -126,69 +131,57 @@ export default function HomeScreen() {
             <Animated.View style={{ transform: [{ scale: playPulse }] }}>
               <Pressable
                 onPress={() => router.push('/decks')}
-                style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+                onPressIn={() => Animated.timing(playPressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start()}
+                onPressOut={() => Animated.timing(playPressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
               >
-                {/* Bevel: top = orange + 40% white (#FBAB73), bottom = orange × 60% (#95450D) */}
-                <LinearGradient
-                  colors={['#FBAB73', '#95450D']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={styles.playBevel}
-                >
-                  <LinearGradient
-                    colors={['#F97316', '#E8650A']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={styles.playInner}
-                  >
-                    <LinearGradient
-                      colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']}
-                      locations={[0, 0.38, 0.62, 1]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 0, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                      pointerEvents="none"
-                    />
+                <View style={styles.playBevel}>
+                  <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl, opacity: playConvexOpacity }]}>
+                    <LinearGradient colors={['#FBAB73', '#95450D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]} />
+                  </Animated.View>
+                  <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl, opacity: playPressAnim }]}>
+                    <LinearGradient colors={['#95450D', '#FBAB73']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]} />
+                  </Animated.View>
+                  <LinearGradient colors={['#F97316', '#E8650A']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.playInner}>
+                    <Animated.View style={[StyleSheet.absoluteFill, { opacity: playConvexOpacity }]}>
+                      <LinearGradient colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                    </Animated.View>
+                    <Animated.View style={[StyleSheet.absoluteFill, { opacity: playPressAnim }]}>
+                      <LinearGradient colors={['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.26)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                    </Animated.View>
                     <View style={styles.playContent}>
                       <Text style={styles.playIcon}>🎮</Text>
                       <Text style={styles.playText}>Zagraj</Text>
                     </View>
                   </LinearGradient>
-                </LinearGradient>
+                </View>
               </Pressable>
             </Animated.View>
 
-            {/* Premium button — solid, fully opaque */}
+            {/* Premium button */}
             <Pressable
               onPress={() => router.push('/store')}
-              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+              onPressIn={() => Animated.timing(premPressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start()}
+              onPressOut={() => Animated.timing(premPressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
             >
-              {/* Bevel: top = color + 40% white, bottom = color × 60% (darker edge) */}
-              <LinearGradient
-                colors={isPremium ? ['#69C0A5', '#035A3F'] : ['#9590EF', '#2F2A89']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.premBevel}
-              >
-                <LinearGradient
-                  colors={isPremium ? ['#059669', '#065F46'] : ['#4F46E5', '#3730A3']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={styles.premInner}
-                >
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.16)']}
-                    locations={[0, 0.38, 0.62, 1]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                    pointerEvents="none"
-                  />
+              <View style={styles.premBevel}>
+                <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg, opacity: premConvexOpacity }]}>
+                  <LinearGradient colors={isPremium ? ['#69C0A5', '#035A3F'] : ['#9590EF', '#2F2A89']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg }]} />
+                </Animated.View>
+                <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg, opacity: premPressAnim }]}>
+                  <LinearGradient colors={isPremium ? ['#035A3F', '#69C0A5'] : ['#2F2A89', '#9590EF']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg }]} />
+                </Animated.View>
+                <LinearGradient colors={isPremium ? ['#059669', '#065F46'] : ['#4F46E5', '#3730A3']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.premInner}>
+                  <Animated.View style={[StyleSheet.absoluteFill, { opacity: premConvexOpacity }]}>
+                    <LinearGradient colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.16)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                  </Animated.View>
+                  <Animated.View style={[StyleSheet.absoluteFill, { opacity: premPressAnim }]}>
+                    <LinearGradient colors={['rgba(0,0,0,0.16)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.18)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                  </Animated.View>
                   <Text style={styles.premText}>
                     {isPremium ? '👑  Masz Premium' : '👑  Zdobądź Premium'}
                   </Text>
                 </LinearGradient>
-              </LinearGradient>
+              </View>
             </Pressable>
 
           </Animated.View>
@@ -277,7 +270,6 @@ const styles = StyleSheet.create({
   // Play button
   playBevel: {
     borderRadius: borderRadius.xl,
-    padding: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.58,
@@ -286,6 +278,7 @@ const styles = StyleSheet.create({
   },
   playInner: {
     borderRadius: borderRadius.xl - 4,
+    margin: 4,
     paddingVertical: spacing.md + 2,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
@@ -309,7 +302,6 @@ const styles = StyleSheet.create({
   // Premium button — solid opaque colors
   premBevel: {
     borderRadius: borderRadius.lg,
-    padding: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.55,
@@ -318,6 +310,7 @@ const styles = StyleSheet.create({
   },
   premInner: {
     borderRadius: borderRadius.lg - 3,
+    margin: 3,
     paddingVertical: spacing.sm + 4,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',

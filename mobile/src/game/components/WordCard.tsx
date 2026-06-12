@@ -88,6 +88,10 @@ export function WordCard({
       if (type === 'correct') onCorrect?.();
       else onSkip?.();
 
+      // Jump to -1 (-90°) while card is invisible at 90° — no visual glitch,
+      // then spring forward to 0°, so the new word enters from the same side it left
+      flipAnim.setValue(-1);
+
       Animated.parallel([
         Animated.spring(flipAnim, { toValue: 0, tension: 90, friction: 9, useNativeDriver: true }),
         Animated.timing(flashAnim, { toValue: 0, duration: 280, useNativeDriver: true }),
@@ -122,8 +126,8 @@ export function WordCard({
   }, [triggerAnswer]);
 
   const rotateY = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '90deg'],
+    inputRange: [-1, 0, 1],
+    outputRange: ['-90deg', '0deg', '90deg'],
   });
 
   if (!word) return null;

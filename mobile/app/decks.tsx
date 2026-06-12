@@ -163,7 +163,7 @@ export default function DecksScreen() {
 
           {!isPremium && (
             <LinearGradient
-              colors={['rgba(79,70,229,0.12)', 'rgba(79,70,229,0.04)']}
+              colors={['rgba(67,56,202,0.60)', 'rgba(49,46,129,0.50)']}
               style={styles.premiumBanner}
             >
               <Text style={styles.bannerEmoji}>👑</Text>
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     marginTop: spacing.sm,
     borderWidth: 1,
-    borderColor: 'rgba(79,70,229,0.25)',
+    borderColor: 'rgba(129,120,255,0.40)',
   },
   bannerEmoji: {
     fontSize: 28,
@@ -251,11 +251,11 @@ const styles = StyleSheet.create({
   },
   bannerSub: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: colors.text,
     marginTop: 2,
     textAlign: 'center',
   },
   bottomSpacer: {
-    height: spacing.xl,
+    height: spacing.md,
   },
 });

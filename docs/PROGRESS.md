@@ -8,7 +8,7 @@
 **Ostatnia sesja:** 2026-06-11  
 **Następny krok:** Faza 7 — testy jednostkowe GameEngine + edge case'y usePayments
 
-> Faza 6 w ukończona (pojedyncze check-boxy zostały). Część 3: nowa mechanika odpowiedzi (tap + tilt), full-card flash, rotateY flip, konfetti w ResultsView. WordCard przebudowany na responder system (jeden hit-target na cały card, `locationY` decyduje góra/dół). Działa na web, symulatorze i natywnym.
+> Faza 6 w ukończona Część 3: nowa mechanika odpowiedzi (tap + tilt), full-card flash, rotateY flip, konfetti w ResultsView. WordCard przebudowany na responder system (jeden hit-target na cały card, `locationY` decyduje góra/dół). Działa na web, symulatorze i natywnym.
 
 ---
 
@@ -99,16 +99,6 @@
 - [x] WordCard — rotateY flip: flash → flip out 160ms → swap word na 90° → flip in spring
 - [x] Konfetti w ResultsView przy accuracy ≥ 70% (`react-native-confetti-cannon`, delay 400ms)
 - [x] WordCard przebudowany: `Animated.View` responder system (jeden hit-target, `locationY` góra/dół) — fix dla Expo web i symulatorów
-
----
-
-### Backlog
-
-_Features:_
-
-- [ ] Onboarding tooltip przy pierwszej wizycie — "góra = dobrze, dół = pas"
-- [ ] Offline indicator — subtelny badge gdy brak sieci
-- [ ] Wibracje — dodatkowe wzorce: `Heavy` dla game over, `Medium` dla last-3s
 
 ### Faza 7 — Testy
 

@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useRef, useMemo } from 'react';
 import {
-  TouchableOpacity,
+  Pressable,
   View,
   Text,
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius } from '../theme';
@@ -37,17 +38,24 @@ const textSizeMap: Record<Size, number> = {
   lg: 18,
 };
 
-// Layer 1: bevel border — tinted from button color, not white/black chrome.
-// Top = button_color + 40% white (light tint), Bottom = button_color × 60% (dark tint).
+// Convex bevel: top = color+light, bottom = color+dark
 const bevelColors: Record<Variant, readonly [string, string]> = {
-  primary:   ['#9590EF', '#2F2A89'],  // indigo #4F46E5: light ↑ darker ↓
-  secondary: ['#6FD5B3', '#0A6F4D'],  // green  #10B981: light ↑ darker ↓
-  danger:    ['#F58F8F', '#8F2929'],  // red    #EF4444: light ↑ darker ↓
+  primary:   ['#9590EF', '#2F2A89'],
+  secondary: ['#6FD5B3', '#0A6F4D'],
+  danger:    ['#F58F8F', '#8F2929'],
   outline:   ['rgba(255,255,255,0.24)', 'rgba(0,0,0,0.22)'],
   ghost:     ['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.06)'],
 };
 
-// Layer 2: actual button face background
+// Concave bevel: reversed — dark on top, light on bottom
+const bevelConcaveColors: Record<Variant, readonly [string, string]> = {
+  primary:   ['#2F2A89', '#9590EF'],
+  secondary: ['#0A6F4D', '#6FD5B3'],
+  danger:    ['#8F2929', '#F58F8F'],
+  outline:   ['rgba(0,0,0,0.22)', 'rgba(255,255,255,0.24)'],
+  ghost:     ['rgba(0,0,0,0.06)', 'rgba(255,255,255,0.10)'],
+};
+
 const innerBg: Record<Variant, string> = {
   primary:   colors.primary,
   secondary: colors.secondary,
@@ -56,12 +64,20 @@ const innerBg: Record<Variant, string> = {
   ghost:     'rgba(255,255,255,0.04)',
 };
 
-// Layer 3: convex depth gradient — bright top, dark bottom, smooth center
+// Convex depth: bright top, dark bottom
 const DEPTH: readonly [string, string, string, string] = [
   'rgba(255,255,255,0.22)',
   'rgba(255,255,255,0)',
   'rgba(0,0,0,0)',
   'rgba(0,0,0,0.18)',
+];
+
+// Concave depth: dark top, bright bottom
+const DEPTH_CONCAVE: readonly [string, string, string, string] = [
+  'rgba(0,0,0,0.18)',
+  'rgba(0,0,0,0)',
+  'rgba(255,255,255,0)',
+  'rgba(255,255,255,0.22)',
 ];
 
 const textColors: Record<Variant, string> = {
@@ -72,8 +88,6 @@ const textColors: Record<Variant, string> = {
   ghost:     colors.primaryLight,
 };
 
-// Shadow sits on the bevel LinearGradient which has a visible bg → iOS shadow works
-// Tight dark shadow → button appears raised/close to screen (not glowing)
 const bevelShadow: Record<Variant, ViewStyle> = {
   primary: {
     shadowColor: '#000',
@@ -125,50 +139,93 @@ export function Button({
 }: ButtonProps) {
   const isDisabled = disabled || loading;
   const radius = radiusMap[size];
+  const innerRadius = Math.max(1, radius - 4);
+
+  const pressAnim = useRef(new Animated.Value(0)).current;
+  const convexOpacity = useMemo(
+    () => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+    [],
+  );
+
+  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
 
   return (
-    <TouchableOpacity
+    <Pressable
       testID={testID}
       onPress={onPress}
+      onPressIn={isDisabled ? undefined : onPressIn}
+      onPressOut={isDisabled ? undefined : onPressOut}
       disabled={isDisabled}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled }}
       style={[isDisabled && styles.disabled, style]}
     >
-      {/* Layer 1: bevel gradient border (3 px "chrome edge") */}
-      <LinearGradient
-        colors={bevelColors[variant]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[styles.bevel, { borderRadius: radius }, bevelShadow[variant]]}
-      >
-        {/* Layer 2: actual button face */}
+      {/* Shadow wrapper — no overflow:hidden so iOS shadow renders */}
+      <View style={[styles.wrapper, { borderRadius: radius }, bevelShadow[variant]]}>
+        {/* Convex bevel — fades out on press */}
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: radius, opacity: convexOpacity }]}>
+          <LinearGradient
+            colors={bevelColors[variant]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
+          />
+        </Animated.View>
+        {/* Concave bevel — fades in on press */}
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: radius, opacity: pressAnim }]}>
+          <LinearGradient
+            colors={bevelConcaveColors[variant]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
+          />
+        </Animated.View>
+        {/* Inner face */}
         <View
           style={[
             styles.inner,
             sizeStyles[size],
-            { backgroundColor: innerBg[variant], borderRadius: Math.max(1, radius - 4) },
+            { backgroundColor: innerBg[variant], borderRadius: innerRadius },
           ]}
         >
-          {/* Layer 3: convex depth overlay */}
-          <LinearGradient
-            colors={DEPTH}
-            locations={[0, 0.38, 0.62, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
+          {/* Convex depth overlay — fades out on press */}
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity }]}>
+            <LinearGradient
+              colors={DEPTH}
+              locations={[0, 0.38, 0.62, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+          </Animated.View>
+          {/* Concave depth overlay — fades in on press */}
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim }]}>
+            <LinearGradient
+              colors={DEPTH_CONCAVE}
+              locations={[0, 0.38, 0.62, 1]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={StyleSheet.absoluteFill}
+              pointerEvents="none"
+            />
+          </Animated.View>
           {loading ? (
             <ActivityIndicator color={textColors[variant]} testID="button-loading-indicator" />
           ) : (
-            <Text style={[styles.buttonText, { fontSize: textSizeMap[size], color: isDisabled ? colors.textDisabled : textColors[variant] }]}>
+            <Text
+              style={[
+                styles.buttonText,
+                { fontSize: textSizeMap[size], color: isDisabled ? colors.textDisabled : textColors[variant] },
+              ]}
+            >
               {icon ? `${icon}  ${label}` : label}
             </Text>
           )}
         </View>
-      </LinearGradient>
-    </TouchableOpacity>
+      </View>
+    </Pressable>
   );
 }
 
@@ -176,10 +233,11 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.5,
   },
-  bevel: {
-    padding: 4,
+  wrapper: {
+    // Shadow host — must not have overflow:hidden
   },
   inner: {
+    margin: 4,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

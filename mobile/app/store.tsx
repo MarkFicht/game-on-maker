@@ -16,6 +16,7 @@ import { usePayments } from '../src/core/payments/usePayments';
 import { GradientBackground, PageHeader, Button } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
+
 const FEATURES = [
   { icon: '🚀', title: 'Brak reklam', sub: 'Graj bez przeszkód' },
   { icon: '✨', title: 'Premium talie', sub: 'Odblokuj wszystkie kategorie' },
@@ -40,43 +41,36 @@ function PackageBtn({
   loading?: boolean;
   onPress: () => void;
 }) {
-  // Best: full indigo tints. Others: subtle semi-transparent indigo glass edge.
-  const bevelColors: readonly [string, string] = isBest
-    ? ['#9590EF', '#2F2A89']
-    : ['rgba(149,144,239,0.30)', 'rgba(47,42,137,0.30)'];
-
+  const bevelTop = isBest ? '#9590EF' : 'rgba(149,144,239,0.30)';
+  const bevelBot = isBest ? '#2F2A89' : 'rgba(47,42,137,0.30)';
   const innerColors: readonly [string, string] = isPurchased
     ? ['#059669', '#065F46']
     : isBest
     ? ['#4F46E5', '#3730A3']
     : ['rgba(30,41,59,0.90)', 'rgba(20,28,48,0.90)'];
 
+  const pressAnim    = useRef(new Animated.Value(0)).current;
+  const convexOpacity = useMemo(() => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
+  const isDisabled   = loading || isPurchased;
+  const onPressIn    = () => { if (!isDisabled) Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start(); };
+  const onPressOut   = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={loading || isPurchased}
-      style={({ pressed }) => ({ opacity: pressed ? 0.86 : 1 })}
-    >
-      <LinearGradient
-        colors={bevelColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[styles.pkgBevel, isBest && styles.pkgBevelBest]}
-      >
-        <LinearGradient
-          colors={innerColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.pkgInner}
-        >
-          <LinearGradient
-            colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.16)']}
-            locations={[0, 0.38, 0.62, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
+    <Pressable onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut} disabled={isDisabled}>
+      <View style={[styles.pkgWrapper, isBest && styles.pkgWrapperBest]}>
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg, opacity: convexOpacity }]}>
+          <LinearGradient colors={[bevelTop, bevelBot]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg }]} />
+        </Animated.View>
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg, opacity: pressAnim }]}>
+          <LinearGradient colors={[bevelBot, bevelTop]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg }]} />
+        </Animated.View>
+        <LinearGradient colors={innerColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.pkgInner}>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity }]}>
+            <LinearGradient colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.16)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          </Animated.View>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim }]}>
+            <LinearGradient colors={['rgba(0,0,0,0.16)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.18)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+          </Animated.View>
           <View style={styles.pkgLeft}>
             <Text style={styles.pkgLabel}>{isPurchased ? `✓ ${label}` : label}</Text>
             <Text style={styles.pkgDesc}>{description}</Text>
@@ -85,7 +79,7 @@ function PackageBtn({
             {isPurchased ? 'Aktywny' : price}
           </Text>
         </LinearGradient>
-      </LinearGradient>
+      </View>
     </Pressable>
   );
 }
@@ -348,11 +342,10 @@ const styles = StyleSheet.create({
   packages: {
     gap: spacing.sm,
   },
-  pkgBevel: {
+  pkgWrapper: {
     borderRadius: borderRadius.lg,
-    padding: 3,
   },
-  pkgBevelBest: {
+  pkgWrapperBest: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.55,
@@ -361,6 +354,7 @@ const styles = StyleSheet.create({
   },
   pkgInner: {
     borderRadius: borderRadius.lg - 3,
+    margin: 3,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     flexDirection: 'row',

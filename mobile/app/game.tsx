@@ -29,7 +29,9 @@ export default function GameScreen() {
 
   const [gamePhase, setGamePhase] = useState<GamePhase>('ready');
   const [countdown, setCountdown] = useState(3);
-  const countdownScale = useRef(new Animated.Value(1)).current;
+  const countdownScale     = useRef(new Animated.Value(1)).current;
+  const startPressAnim     = useRef(new Animated.Value(0)).current;
+  const startConvexOpacity = useMemo(() => startPressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
 
   const { state, currentWord, stats, startGame, pauseGame, resumeGame, markCorrect, markSkipped, endGame, reset, updateConfig } =
     useGame({ roundDuration: settings.roundDuration });
@@ -168,32 +170,26 @@ export default function GameScreen() {
             <View style={{ height: spacing.xl }} />
             <Pressable
               onPress={handleStartCountdown}
-              style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+              onPressIn={() => Animated.timing(startPressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start()}
+              onPressOut={() => Animated.timing(startPressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
             >
-              {/* Bevel: top = orange + 40% white (#FBAB73), bottom = orange × 60% (#95450D) */}
-              <LinearGradient
-                colors={['#FBAB73', '#95450D']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.startBevel}
-              >
-                <LinearGradient
-                  colors={['#F97316', '#E8650A']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={styles.startInner}
-                >
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']}
-                    locations={[0, 0.38, 0.62, 1]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                    pointerEvents="none"
-                  />
+              <View style={styles.startBevel}>
+                <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl, opacity: startConvexOpacity }]}>
+                  <LinearGradient colors={['#FBAB73', '#95450D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]} />
+                </Animated.View>
+                <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl, opacity: startPressAnim }]}>
+                  <LinearGradient colors={['#95450D', '#FBAB73']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]} />
+                </Animated.View>
+                <LinearGradient colors={['#F97316', '#E8650A']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.startInner}>
+                  <Animated.View style={[StyleSheet.absoluteFill, { opacity: startConvexOpacity }]}>
+                    <LinearGradient colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                  </Animated.View>
+                  <Animated.View style={[StyleSheet.absoluteFill, { opacity: startPressAnim }]}>
+                    <LinearGradient colors={['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.26)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+                  </Animated.View>
                   <Text style={styles.startText}>🎮  Start</Text>
                 </LinearGradient>
-              </LinearGradient>
+              </View>
             </Pressable>
           </Animated.View>
         </SafeAreaView>
@@ -334,7 +330,7 @@ export default function GameScreen() {
             </View>
             <View style={styles.hudButtons}>
               <MuteButton size="sm" />
-              <Button label="⏸" onPress={pauseGame} variant="outline" size="sm" />
+              <MuteButton size="sm" icon="⏸️" onPress={pauseGame} accessibilityLabel="Pauza" />
             </View>
           </View>
         </View>
@@ -386,7 +382,6 @@ const styles = StyleSheet.create({
   },
   startBevel: {
     borderRadius: borderRadius.xl,
-    padding: 4,
     minWidth: 200,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
@@ -396,6 +391,7 @@ const styles = StyleSheet.create({
   },
   startInner: {
     borderRadius: borderRadius.xl - 4,
+    margin: 4,
     paddingVertical: spacing.md + 2,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
