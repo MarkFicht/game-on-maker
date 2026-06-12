@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1045622351349",
+    "project_id": "word-rush-mf",
+    "storage_bucket": "word-rush-mf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045622351349:android:69dc6753509e991ed06cbc",
+        "android_client_info": {
+          "package_name": "com.wordrushmf.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFtAUUz1LSXILQjsPT54zl_Z891O8CaOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

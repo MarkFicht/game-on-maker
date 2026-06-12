@@ -34,8 +34,7 @@ mobile/.env.local
 mobile/.env.production
 mobile/.env*.local
 
-# Firebase native config — store in EAS Secrets instead
-mobile/google-services.json
+# Firebase native config (iOS — store in EAS Secrets when building for iOS)
 mobile/GoogleService-Info.plist
 
 # Expo / Metro
