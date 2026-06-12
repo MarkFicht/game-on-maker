@@ -5,6 +5,44 @@ export type EntranceAnim = {
   translateY: Animated.Value;
 };
 
+// ── Sway (continuous oscillation) ────────────────────────────────────────────
+// Full-cycle sequence: 0 → +amp → -amp → 0
+// Loop resets to the initial value (0) which equals the last value — no jump.
+
+// Initialize to -amplitude so loop reset (→ initial value) lands at sequence end — no jump.
+export function makeSwayAnim(amplitude = 10): Animated.Value {
+  return new Animated.Value(-amplitude);
+}
+
+export function startSway(
+  value: Animated.Value,
+  delayMs = 0,
+  amplitude = 10,
+  halfPeriodMs = 1800,
+): void {
+  const run = () =>
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(value, { toValue:  amplitude, duration: halfPeriodMs, useNativeDriver: true }),
+        Animated.timing(value, { toValue: -amplitude, duration: halfPeriodMs, useNativeDriver: true }),
+      ])
+    ).start();
+  if (delayMs > 0) setTimeout(run, delayMs);
+  else run();
+}
+
+// Use as: const rot = useMemo(() => swayInterpolate(value), []);
+// Do NOT call inside JSX — each call creates a new AnimatedInterpolation node.
+export function swayInterpolate(
+  value: Animated.Value,
+  amplitude = 10,
+): Animated.AnimatedInterpolation<string> {
+  return value.interpolate({
+    inputRange:  [-amplitude, amplitude],
+    outputRange: [`-${amplitude}deg`, `${amplitude}deg`],
+  });
+}
+
 export function makeEntranceAnim(): EntranceAnim {
   return {
     opacity: new Animated.Value(0),

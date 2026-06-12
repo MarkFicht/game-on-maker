@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
+import { makeEntranceAnim, startEntranceAll, entranceStyle, makeSwayAnim, startSway, swayInterpolate } from '../src/shared/animation/entrance';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import { colors, spacing, borderRadius } from '../src/shared/theme';
 const FEATURES = [
   { icon: '🚀', title: 'Brak reklam', sub: 'Graj bez przeszkód' },
   { icon: '✨', title: 'Premium talie', sub: 'Odblokuj wszystkie kategorie' },
-  { icon: '🛡', title: 'Wspierasz twórcę', sub: 'Pomóż rozwijać WordRush' },
+  { icon: '❤️', title: 'Wspierasz twórcę', sub: 'Pomóż rozwijać WordRush' },
 ];
 
 // 3D bevel package button
@@ -94,7 +94,8 @@ export default function StoreScreen() {
   const { isPremium, isLoading, offerings, fetchOfferings, purchase, restore, isPurchasing, isRestoring } =
     usePayments();
 
-  const crownRotate = useRef(new Animated.Value(-10)).current;
+  const crownSway = useRef(makeSwayAnim()).current;
+  const crownRotate = useMemo(() => swayInterpolate(crownSway), []);
 
   const anims = useMemo(() => [
     makeEntranceAnim(), // hero
@@ -105,16 +106,9 @@ export default function StoreScreen() {
 
   useEffect(() => {
     fetchOfferings();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(crownRotate, { toValue: 10,  duration: 1800, useNativeDriver: true }),
-        Animated.timing(crownRotate, { toValue: -10, duration: 1800, useNativeDriver: true }),
-      ]),
-    ).start();
+    startSway(crownSway);
     startEntranceAll(anims);
   }, []);
-
-  const rotate = crownRotate.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] });
 
   // ── Already premium ────────────────────────────────────────────────
   if (!isLoading && isPremium) {
@@ -123,7 +117,7 @@ export default function StoreScreen() {
         <SafeAreaView style={styles.safe}>
           <PageHeader title="Premium" showBack />
           <View style={styles.premiumState}>
-            <Animated.Text style={[styles.crownEmoji, { transform: [{ rotate }] }]}>👑</Animated.Text>
+            <Animated.Text style={[styles.crownEmoji, { transform: [{ rotate: crownRotate }] }]}>👑</Animated.Text>
             <Text style={styles.premiumTitle}>Masz Premium!</Text>
             <Text style={styles.premiumSub}>Dziękujemy za wsparcie WordRush 🎉</Text>
             <View style={styles.premiumActions}>
@@ -172,7 +166,7 @@ export default function StoreScreen() {
                 colors={['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)']}
                 style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]}
               />
-              <Animated.Text style={[styles.crownEmoji, { transform: [{ rotate }] }]}>👑</Animated.Text>
+              <Animated.Text style={[styles.crownEmoji, { transform: [{ rotate: crownRotate }] }]}>👑</Animated.Text>
               <Text style={styles.heroTitle}>Odblokuj Premium</Text>
               <Text style={styles.heroSub}>Pełne doświadczenie WordRush</Text>
             </View>
@@ -224,9 +218,9 @@ export default function StoreScreen() {
           {/* Restore */}
           <Animated.View style={entranceStyle(anims[3])}>
           <Button
-            label={isRestoring ? 'Przywracanie…' : '↺  Przywróć zakupy'}
+            label={isRestoring ? 'Przywracanie…' : 'Przywróć zakupy'}
             onPress={restore}
-            variant="outline"
+            variant="primary"
             loading={isRestoring}
             style={styles.restoreBtn}
           />
@@ -414,7 +408,7 @@ const styles = StyleSheet.create({
   footer: {
     textAlign: 'center',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.60)',
+    color: colors.white,
     marginTop: spacing.xs,
   },
 });

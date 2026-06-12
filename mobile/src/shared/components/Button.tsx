@@ -2,15 +2,15 @@ import React from 'react';
 import {
   TouchableOpacity,
   View,
+  Text,
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius } from '../theme';
-import { Typography } from './Typography';
 
-type Variant = 'primary' | 'secondary' | 'outline' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -22,12 +22,19 @@ interface ButtonProps {
   loading?: boolean;
   style?: ViewStyle;
   testID?: string;
+  icon?: string;
 }
 
 const radiusMap: Record<Size, number> = {
-  sm: borderRadius.md,
-  md: borderRadius.md,
-  lg: borderRadius.lg,
+  sm: borderRadius.xl,
+  md: borderRadius.xl,
+  lg: borderRadius.xl,
+};
+
+const textSizeMap: Record<Size, number> = {
+  sm: 13,
+  md: 16,
+  lg: 18,
 };
 
 // Layer 1: bevel border — tinted from button color, not white/black chrome.
@@ -35,6 +42,7 @@ const radiusMap: Record<Size, number> = {
 const bevelColors: Record<Variant, readonly [string, string]> = {
   primary:   ['#9590EF', '#2F2A89'],  // indigo #4F46E5: light ↑ darker ↓
   secondary: ['#6FD5B3', '#0A6F4D'],  // green  #10B981: light ↑ darker ↓
+  danger:    ['#F58F8F', '#8F2929'],  // red    #EF4444: light ↑ darker ↓
   outline:   ['rgba(255,255,255,0.24)', 'rgba(0,0,0,0.22)'],
   ghost:     ['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.06)'],
 };
@@ -43,6 +51,7 @@ const bevelColors: Record<Variant, readonly [string, string]> = {
 const innerBg: Record<Variant, string> = {
   primary:   colors.primary,
   secondary: colors.secondary,
+  danger:    '#EF4444',
   outline:   'rgba(22,36,58,0.72)',
   ghost:     'rgba(255,255,255,0.04)',
 };
@@ -58,6 +67,7 @@ const DEPTH: readonly [string, string, string, string] = [
 const textColors: Record<Variant, string> = {
   primary:   colors.white,
   secondary: colors.white,
+  danger:    colors.white,
   outline:   colors.white,
   ghost:     colors.primaryLight,
 };
@@ -73,6 +83,13 @@ const bevelShadow: Record<Variant, ViewStyle> = {
     elevation: 8,
   },
   secondary: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  danger: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.55,
@@ -104,6 +121,7 @@ export function Button({
   loading = false,
   style,
   testID,
+  icon,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
   const radius = radiusMap[size];
@@ -144,13 +162,9 @@ export function Button({
           {loading ? (
             <ActivityIndicator color={textColors[variant]} testID="button-loading-indicator" />
           ) : (
-            <Typography
-              variant="label"
-              align="center"
-              color={isDisabled ? colors.textDisabled : textColors[variant]}
-            >
-              {label}
-            </Typography>
+            <Text style={[styles.buttonText, { fontSize: textSizeMap[size], color: isDisabled ? colors.textDisabled : textColors[variant] }]}>
+              {icon ? `${icon}  ${label}` : label}
+            </Text>
           )}
         </View>
       </LinearGradient>
@@ -169,5 +183,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  buttonText: {
+    fontWeight: '800',
+    textAlign: 'center',
+    letterSpacing: 0.2,
   },
 });

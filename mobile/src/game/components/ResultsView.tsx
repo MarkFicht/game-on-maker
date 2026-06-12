@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Animated, useWindowDimensions } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Animated, useWindowDimensions, ViewStyle } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../shared/components';
+import { makeSwayAnim, startSway, swayInterpolate } from '../../shared/animation/entrance';
 import { colors } from '../../shared/theme/colors';
 import { spacing, borderRadius } from '../../shared/theme/spacing';
 import type { GameStats, RoundResult } from '../types';
@@ -21,7 +22,7 @@ function getTitle(correct: number): string {
   return 'Dobra próba! 👍';
 }
 
-function AnimatedItem({ children, delay }: { children: React.ReactNode; delay: number }) {
+function AnimatedItem({ children, delay, style }: { children: React.ReactNode; delay: number; style?: ViewStyle }) {
   const anim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(28)).current;
 
@@ -39,7 +40,7 @@ function AnimatedItem({ children, delay }: { children: React.ReactNode; delay: n
   }, []);
 
   return (
-    <Animated.View style={{ opacity: anim, transform: [{ translateY }] }}>
+    <Animated.View style={[{ opacity: anim, transform: [{ translateY }] }, style]}>
       {children}
     </Animated.View>
   );
@@ -58,12 +59,27 @@ function StatCard({ value, label, color }: { value: string | number; label: stri
 
   return (
     <Animated.View style={[styles.statCard, { opacity, transform: [{ scale }] }]}>
+      {/* Bevel gradient: top = 40% white + slate, bottom = 60% slate (same formula as buttons) */}
       <LinearGradient
-        colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.02)']}
+        colors={['#777F8C', '#111926']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg }]}
       />
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      {/* Inner face — inset 3 px to expose bevel border */}
+      <View style={styles.statFace}>
+        {/* Convex depth overlay */}
+        <LinearGradient
+          colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']}
+          locations={[0, 0.38, 0.62, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+        <Text style={[styles.statValue, { color }]}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
+      </View>
     </Animated.View>
   );
 }
@@ -72,6 +88,9 @@ export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: R
   const { width } = useWindowDimensions();
   const trophyScale = useRef(new Animated.Value(0)).current;
   const trophyRotate = useRef(new Animated.Value(-0.5)).current;
+  const titleSway = useRef(makeSwayAnim()).current;
+  // Computed once — never call interpolate() inside JSX (creates new node every render)
+  const emojiRotate = useMemo(() => swayInterpolate(titleSway), []);
   const [fireConfetti, setFireConfetti] = useState(false);
 
   useEffect(() => {
@@ -86,9 +105,15 @@ export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: R
       Animated.spring(trophyScale, { toValue: 1, tension: 60, friction: 5, delay: 100, useNativeDriver: true }),
       Animated.spring(trophyRotate, { toValue: 0, tension: 60, friction: 5, delay: 100, useNativeDriver: true }),
     ]).start();
+    startSway(titleSway);
   }, []);
 
-  const rotate = trophyRotate.interpolate({ inputRange: [-1, 1], outputRange: ['-30deg', '30deg'] });
+  const rotate = useMemo(() => trophyRotate.interpolate({ inputRange: [-1, 1], outputRange: ['-30deg', '30deg'] }), []);
+
+  const fullTitle = getTitle(stats.correctCount);
+  const lastSpace = fullTitle.lastIndexOf(' ');
+  const titleText = fullTitle.slice(0, lastSpace);
+  const titleEmoji = fullTitle.slice(lastSpace + 1);
 
   return (
     <View style={styles.container}>
@@ -118,7 +143,12 @@ export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: R
       </AnimatedItem>
 
       <AnimatedItem delay={150}>
-        <Text style={styles.title}>{getTitle(stats.correctCount)}</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>{titleText} </Text>
+          <Animated.Text style={[styles.titleEmoji, { transform: [{ rotate: emojiRotate }] }]}>
+            {titleEmoji}
+          </Animated.Text>
+        </View>
         {deckName ? <Text style={styles.deckName}>{deckName}</Text> : null}
       </AnimatedItem>
 
@@ -130,33 +160,35 @@ export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: R
       </View>
 
       {/* Word list */}
-      <AnimatedItem delay={500}>
-        <ScrollView style={styles.wordList} showsVerticalScrollIndicator={false}>
-          {results.map((result, i) => (
-            <View key={result.word.id} style={styles.resultRow}>
-              <LinearGradient
-                colors={
-                  result.wasCorrect
-                    ? ['rgba(16,185,129,0.12)', 'rgba(16,185,129,0.04)']
-                    : ['rgba(245,158,11,0.10)', 'rgba(245,158,11,0.03)']
-                }
-                style={StyleSheet.absoluteFill}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              />
-              <Text style={result.wasCorrect ? styles.iconCorrect : styles.iconSkip}>
-                {result.wasCorrect ? '✓' : '✕'}
-              </Text>
-              <Text style={styles.resultWord} numberOfLines={1}>{result.word.text}</Text>
-            </View>
-          ))}
-        </ScrollView>
+      <AnimatedItem delay={500} style={styles.listAnimWrapper}>
+        <View style={styles.listWrapper}>
+          <ScrollView
+            style={styles.wordList}
+            contentContainerStyle={styles.wordListContent}
+            showsVerticalScrollIndicator
+            indicatorStyle="white"
+          >
+            {results.map((result) => (
+              <View
+                key={result.word.id}
+                style={[styles.resultRow, result.wasCorrect ? styles.resultRowCorrect : styles.resultRowSkip]}
+              >
+                <View style={styles.iconWrap}>
+                  <Text style={result.wasCorrect ? styles.iconCorrect : styles.iconSkip}>
+                    {result.wasCorrect ? '✓' : '✕'}
+                  </Text>
+                </View>
+                <Text style={styles.resultWord}>{result.word.text}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
       </AnimatedItem>
 
       {/* Buttons */}
       <AnimatedItem delay={600}>
         <View style={styles.actions}>
-          <Button label="Strona główna" onPress={onHome} variant="outline" style={styles.actionBtn} />
+          <Button label="Strona główna" onPress={onHome} variant="secondary" style={styles.actionBtn} />
           <Button label="Zagraj ponownie" onPress={onPlayAgain} style={styles.actionBtn} />
         </View>
       </AnimatedItem>
@@ -200,20 +232,33 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.white,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.white,
-    textAlign: 'center',
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: spacing.sm,
-    letterSpacing: -0.3,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#F97316',
+    textAlign: 'center',
+    letterSpacing: -0.5,
+    textShadowColor: 'rgba(249,115,22,0.40)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+  },
+  titleEmoji: {
+    fontSize: 30,
   },
   deckName: {
-    fontSize: 13,
-    color: colors.textSecondary,
+    fontSize: 15,
+    color: colors.white,
+    fontWeight: '800',
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 6,
     marginBottom: spacing.md,
+    letterSpacing: 0.2,
   },
   statsRow: {
     flexDirection: 'row',
@@ -223,12 +268,20 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: 'rgba(30,41,59,0.8)',
     borderRadius: borderRadius.lg,
+    padding: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  statFace: {
+    flex: 1,
+    backgroundColor: '#1E293B',
+    borderRadius: borderRadius.lg - 3,
     padding: spacing.md,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
     overflow: 'hidden',
   },
   statValue: {
@@ -244,46 +297,72 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  wordList: {
+  listAnimWrapper: {
+    flex: 1,
     width: '100%',
-    maxHeight: 200,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  listWrapper: {
+    flex: 1,
+    backgroundColor: 'rgba(8,14,36,0.72)',
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.11)',
+    overflow: 'hidden',
+  },
+  wordList: {
+    flex: 1,
+  },
+  wordListContent: {
+    paddingHorizontal: spacing.xs,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    gap: 8,
+    alignItems: 'center',
   },
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingVertical: 7,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    marginBottom: 3,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
+  },
+  resultRowCorrect: {
+    backgroundColor: 'rgba(16,185,129,0.88)',
+    borderColor: 'rgba(16,185,129,1)',
+  },
+  resultRowSkip: {
+    backgroundColor: 'rgba(245,158,11,0.85)',
+    borderColor: 'rgba(245,158,11,1)',
+  },
+  iconWrap: {
+    width: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   iconCorrect: {
-    fontSize: 14,
-    color: colors.success,
-    fontWeight: '800',
-    width: 18,
+    fontSize: 13,
+    color: colors.white,
+    fontWeight: '900',
     textAlign: 'center',
   },
   iconSkip: {
-    fontSize: 14,
-    color: colors.warning,
-    fontWeight: '800',
-    width: 18,
+    fontSize: 13,
+    color: colors.white,
+    fontWeight: '900',
     textAlign: 'center',
   },
   resultWord: {
     fontSize: 14,
-    color: colors.text,
-    flex: 1,
-    fontWeight: '500',
+    color: colors.white,
+    fontWeight: '600',
   },
   actions: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.lg,
     width: '100%',
     paddingBottom: spacing.md,
   },

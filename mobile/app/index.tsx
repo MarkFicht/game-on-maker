@@ -149,7 +149,10 @@ export default function HomeScreen() {
                       style={StyleSheet.absoluteFill}
                       pointerEvents="none"
                     />
-                    <Text style={styles.playText}>🎮  Zagraj</Text>
+                    <View style={styles.playContent}>
+                      <Text style={styles.playIcon}>🎮</Text>
+                      <Text style={styles.playText}>Zagraj</Text>
+                    </View>
                   </LinearGradient>
                 </LinearGradient>
               </Pressable>
@@ -288,8 +291,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
   },
+  playContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  playIcon: {
+    fontSize: 28,
+  },
   playText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.white,
     letterSpacing: 0.3,
@@ -322,6 +333,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingBottom: spacing.lg,
     fontSize: 13,
-    color: 'rgba(255,255,255,0.65)',
+    color: colors.white,
   },
 });

@@ -72,14 +72,37 @@ export default function GameScreen() {
   // Haptic tick on last 5 seconds (respects vibrationEnabled)
   const lastWarningRef = useRef(-1);
   const readyAnim = useMemo(() => makeEntranceAnim(), []);
-  const pauseAnim = useMemo(() => makeEntranceAnim(), []);
+
+  // Pause screen — same multi-value animation as Home
+  const pauseEmojiScale  = useRef(new Animated.Value(0)).current;
+  const pauseEmojiRotate = useRef(new Animated.Value(-0.3)).current;
+  const pauseFade1  = useRef(new Animated.Value(0)).current;
+  const pauseSlide1 = useRef(new Animated.Value(20)).current;
+  const pauseFade2  = useRef(new Animated.Value(0)).current;
+  const pauseSlide2 = useRef(new Animated.Value(20)).current;
+  const pauseEmojiDeg = useMemo(
+    () => pauseEmojiRotate.interpolate({ inputRange: [-1, 1], outputRange: ['-18deg', '18deg'] }),
+    [],
+  );
 
   useEffect(() => {
     if (gamePhase === 'ready') startEntranceAll([readyAnim]);
   }, [gamePhase]);
 
   useEffect(() => {
-    if (state.status === 'paused') startEntranceAll([pauseAnim]);
+    if (state.status !== 'paused') return;
+    pauseEmojiScale.setValue(0);
+    pauseEmojiRotate.setValue(-0.3);
+    pauseFade1.setValue(0);  pauseSlide1.setValue(20);
+    pauseFade2.setValue(0);  pauseSlide2.setValue(20);
+    Animated.parallel([
+      Animated.spring(pauseEmojiScale,  { toValue: 1, tension: 120, friction: 7, useNativeDriver: true }),
+      Animated.spring(pauseEmojiRotate, { toValue: 0, tension: 120, friction: 7, useNativeDriver: true }),
+      Animated.timing(pauseFade1,  { toValue: 1, duration: 260, useNativeDriver: true }),
+      Animated.spring(pauseSlide1, { toValue: 0, tension: 80,  friction: 7, useNativeDriver: true }),
+      Animated.sequence([Animated.delay(90), Animated.timing(pauseFade2,  { toValue: 1, duration: 260, useNativeDriver: true })]),
+      Animated.sequence([Animated.delay(90), Animated.spring(pauseSlide2, { toValue: 0, tension: 80, friction: 7, useNativeDriver: true })]),
+    ]).start();
   }, [state.status]);
   useEffect(() => {
     if (state.status === 'playing' && state.timeRemaining <= 5 && state.timeRemaining > 0) {
@@ -185,14 +208,30 @@ export default function GameScreen() {
         <SafeAreaView style={styles.safe}>
           <PageHeader title={deck.name} onBack={handleCancel} />
           <View style={styles.centeredFull}>
-            <Text style={styles.deckEmoji}>{deck.icon}</Text>
+            <Text style={[styles.deckEmoji, { marginBottom: -10 }]}>{deck.icon}</Text>
             <Animated.Text
               style={[styles.countdownNumber, { transform: [{ scale: countdownScale }] }]}
             >
               {countdown}
             </Animated.Text>
-            <View style={styles.getReadyBadge}>
-              <Text style={styles.getReadyText}>Przygotuj się!</Text>
+            {/* "Przygotuj się!" — same dark badge as PageHeader title */}
+            <View style={styles.getReadyShadow}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.22)', 'rgba(0,0,0,0.30)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.getReadyBevel}
+              >
+                <View style={styles.getReadyInner}>
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0.16)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.14)']}
+                    locations={[0, 0.38, 0.62, 1]}
+                    style={StyleSheet.absoluteFill}
+                    pointerEvents="none"
+                  />
+                  <Text style={styles.getReadyText}>Przygotuj się!</Text>
+                </View>
+              </LinearGradient>
             </View>
           </View>
         </SafeAreaView>
@@ -206,20 +245,24 @@ export default function GameScreen() {
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
           <PageHeader title="Gra wstrzymana" onBack={resumeGame} />
-          <Animated.View style={[styles.centeredFull, entranceStyle(pauseAnim)]}>
-            <Text style={styles.pauseEmoji}>⏸️</Text>
-            <Text style={styles.pauseMeta}>{state.timeRemaining}s pozostało</Text>
-            <View style={styles.pauseActions}>
-              <Button label="Wznów" onPress={resumeGame} size="lg" style={{ marginBottom: spacing.sm }} />
-              <Button label="Zakończ grę" onPress={endGame} variant="outline" />
-              <Button
-                label="Strona główna"
-                onPress={handleHome}
-                variant="ghost"
-                style={{ marginTop: spacing.xs }}
-              />
-            </View>
-          </Animated.View>
+          <View style={styles.centeredFull}>
+            <Animated.Text style={[styles.pauseEmoji, {
+              transform: [{ scale: pauseEmojiScale }, { rotate: pauseEmojiDeg }],
+            }]}>
+              {deck?.icon ?? '⏸️'}
+            </Animated.Text>
+            <Animated.View style={{ opacity: pauseFade1, transform: [{ translateY: pauseSlide1 }] }}>
+              <Text style={styles.pauseMeta}>{state.timeRemaining}s pozostało</Text>
+            </Animated.View>
+            <Animated.View style={[styles.pauseActions, {
+              opacity: pauseFade2,
+              transform: [{ translateY: pauseSlide2 }],
+            }]}>
+              <Button label="Wznów" onPress={resumeGame} size="lg" />
+              <Button label="Zakończ grę" onPress={endGame} variant="danger" />
+              <Button label="Strona główna" onPress={handleHome} variant="secondary" />
+            </Animated.View>
+          </View>
         </SafeAreaView>
       </GradientBackground>
     );
@@ -375,19 +418,32 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 30,
   },
-  getReadyBadge: {
-    backgroundColor: 'rgba(79,70,229,0.45)',
+  getReadyShadow: {
+    marginTop: spacing.md,
     borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm + 2,
-    borderWidth: 1.5,
-    borderColor: 'rgba(120,100,255,0.60)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.42,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  getReadyBevel: {
+    borderRadius: borderRadius.lg,
+    padding: 3,
+  },
+  getReadyInner: {
+    borderRadius: borderRadius.lg - 3,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: 'rgba(8,16,36,0.92)',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   getReadyText: {
-    fontSize: 21,
-    fontWeight: '800',
-    color: '#C4B5FD',
-    letterSpacing: 0.8,
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.white,
+    letterSpacing: -0.3,
   },
 
   // ── Paused ───────────────────────────────────────────────
@@ -401,6 +457,7 @@ const styles = StyleSheet.create({
   pauseActions: {
     width: '100%',
     marginTop: spacing.xl,
+    gap: spacing.md,
   },
 
   // ── Playing ──────────────────────────────────────────────

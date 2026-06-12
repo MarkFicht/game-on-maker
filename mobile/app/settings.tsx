@@ -4,7 +4,7 @@ import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSettings } from '../src/hooks/useSettings';
 import { usePayments } from '../src/core/payments/usePayments';
-import { GradientBackground, PageHeader } from '../src/shared/components';
+import { GradientBackground, PageHeader, Button } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
 const DURATIONS = [30, 60, 90, 120] as const;
@@ -34,36 +34,6 @@ function SettingRow({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-// Reusable link row with 3D bevel
-function LinkRow({ icon, label, url }: { icon: string; label: string; url: string }) {
-  return (
-    <Pressable
-      onPress={() => Linking.openURL(url)}
-      style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
-    >
-      <LinearGradient
-        colors={['rgba(149,144,239,0.25)', 'rgba(47,42,137,0.25)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.linkBevel}
-      >
-        <View style={styles.linkInner}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.10)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.10)']}
-            locations={[0, 0.38, 0.62, 1]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-          <Text style={styles.linkIcon}>{icon}</Text>
-          <Text style={styles.linkLabel}>{label}</Text>
-          <Text style={styles.linkArrow}>↗</Text>
-        </View>
-      </LinearGradient>
-    </Pressable>
-  );
-}
 
 export default function SettingsScreen() {
   const { settings, updateSettings, loading } = useSettings();
@@ -181,32 +151,13 @@ export default function SettingsScreen() {
           {/* Purchases */}
           <Animated.View style={entranceStyle(anims[2])}>
           <GlassCard title="Zakupy" icon="💳">
-            <Pressable
+            <Button
+              label={isRestoring ? 'Przywracanie…' : 'Przywróć zakupy'}
               onPress={restore}
               disabled={isRestoring}
-              style={({ pressed }) => [{ opacity: pressed || isRestoring ? 0.7 : 1 }]}
-            >
-              <LinearGradient
-                colors={['rgba(149,144,239,0.35)', 'rgba(47,42,137,0.35)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.restoreBevel}
-              >
-                <View style={styles.restoreInner}>
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.12)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.12)']}
-                    locations={[0, 0.38, 0.62, 1]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                    pointerEvents="none"
-                  />
-                  <Text style={styles.restoreText}>
-                    {isRestoring ? 'Przywracanie…' : '↺  Przywróć zakupy'}
-                  </Text>
-                </View>
-              </LinearGradient>
-            </Pressable>
+              loading={isRestoring}
+              variant="secondary"
+            />
           </GlassCard>
 
           </Animated.View>
@@ -214,16 +165,15 @@ export default function SettingsScreen() {
           {/* Legal — mirrors web's Settings legal section */}
           <Animated.View style={entranceStyle(anims[3])}>
           <GlassCard title="Prawne" icon="📄">
-            <LinkRow
-              icon="🛡"
+            <Button
               label="Polityka prywatności"
-              url="https://wordrush.app/privacy"
+              onPress={() => Linking.openURL('https://wordrush.app/privacy')}
+              variant="secondary"
             />
-            <View style={styles.rowDivider} />
-            <LinkRow
-              icon="📋"
+            <Button
               label="Regulamin"
-              url="https://wordrush.app/terms"
+              onPress={() => Linking.openURL('https://wordrush.app/terms')}
+              variant="secondary"
             />
           </GlassCard>
 
@@ -266,7 +216,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: -spacing.xs,
   },
   cardIcon: { fontSize: 16 },
   cardTitle: {
@@ -277,7 +226,8 @@ const styles = StyleSheet.create({
   },
   durationLabel: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: colors.white,
+    marginTop: -2,
   },
   durationValue: {
     color: colors.primaryLight,
@@ -319,52 +269,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     marginVertical: -spacing.xs,
   },
-  restoreBevel: {
-    borderRadius: borderRadius.md,
-    padding: 3,
-  },
-  restoreInner: {
-    borderRadius: borderRadius.md - 3,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    backgroundColor: 'rgba(30,41,59,0.60)',
-    overflow: 'hidden',
-  },
-  restoreText: {
-    fontSize: 15,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  // Legal link rows
-  linkBevel: {
-    borderRadius: borderRadius.md,
-    padding: 3,
-  },
-  linkInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    backgroundColor: 'rgba(22,36,58,0.50)',
-    borderRadius: borderRadius.md - 3,
-    gap: spacing.sm,
-    overflow: 'hidden',
-  },
-  linkIcon: { fontSize: 16 },
-  linkLabel: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  linkArrow: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
   version: {
     textAlign: 'center',
     fontSize: 13,
-    color: 'rgba(255,255,255,0.60)',
+    color: colors.white,
     marginTop: spacing.sm,
     lineHeight: 20,
   },
