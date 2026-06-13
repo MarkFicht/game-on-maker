@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import {
   View,
@@ -12,10 +12,12 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { TimerRing, WordCard, ResultsView } from '../src/game/components';
 import { getDeckById } from '../src/game/decks';
 import { useGame } from '../src/game/hooks/useGame';
 import { useSettings } from '../src/game/hooks/useSettings';
+import { useSoundManager } from '../src/game/hooks/useSoundManager';
 import { Button, GradientBackground, MuteButton, PageHeader } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
@@ -36,7 +38,27 @@ export default function GameScreen() {
   const { state, currentWord, stats, startGame, pauseGame, resumeGame, markCorrect, markSkipped, endGame, reset, updateConfig } =
     useGame({ roundDuration: settings.roundDuration });
 
+  const sounds = useSoundManager(settings.soundEnabled);
+
   const deck = deckId ? getDeckById(deckId) : null;
+
+  // Screen rotation — unlock only during active game, portrait everywhere else
+  const isActivelyPlaying = gamePhase === 'playing' && state.status === 'playing';
+  useEffect(() => {
+    if (isActivelyPlaying) {
+      ScreenOrientation.unlockAsync();
+    } else {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    }
+  }, [isActivelyPlaying]);
+  useEffect(() => {
+    return () => { ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP); };
+  }, []);
+
+  // Game-over sound
+  useEffect(() => {
+    if (state.status === 'finished') sounds.playGameOver();
+  }, [state.status]);
 
   useEffect(() => {
     updateConfig({ roundDuration: settings.roundDuration });
@@ -47,6 +69,7 @@ export default function GameScreen() {
     if (!deck || gamePhase !== 'countdown') return;
 
     const tick = () => {
+      sounds.playCountdown();
       Animated.sequence([
         Animated.timing(countdownScale, { toValue: 1.5, duration: 120, useNativeDriver: true }),
         Animated.timing(countdownScale, { toValue: 1, duration: 350, useNativeDriver: true }),
@@ -118,7 +141,13 @@ export default function GameScreen() {
     if (state.status !== 'playing') lastWarningRef.current = -1;
   }, [state.timeRemaining, state.status, settings.vibrationEnabled]);
 
+  const handleAnswerSound = useCallback((type: 'correct' | 'skip') => {
+    if (type === 'correct') sounds.playCorrect();
+    else sounds.playSkip();
+  }, []);
+
   const handleStartCountdown = () => {
+    sounds.playClick();
     setGamePhase('countdown');
     setCountdown(3);
   };
@@ -135,8 +164,7 @@ export default function GameScreen() {
   };
 
   const handleHome = () => {
-    reset();
-    router.push('/');
+    router.replace('/');
   };
 
   if (!deck) {
@@ -300,6 +328,7 @@ export default function GameScreen() {
             deckIcon={deck.icon}
             onCorrect={markCorrect}
             onSkip={markSkipped}
+            onAnswerSound={handleAnswerSound}
             fullscreen
             vibrationEnabled={settings.vibrationEnabled}
           />

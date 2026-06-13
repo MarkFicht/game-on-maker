@@ -19,6 +19,7 @@ interface WordCardProps {
   deckIcon?: string;
   onCorrect?: () => void;
   onSkip?: () => void;
+  onAnswerSound?: (type: 'correct' | 'skip') => void;
   fullscreen?: boolean;
   vibrationEnabled?: boolean;
 }
@@ -28,6 +29,7 @@ export function WordCard({
   deckIcon,
   onCorrect,
   onSkip,
+  onAnswerSound,
   fullscreen,
   vibrationEnabled = true,
 }: WordCardProps) {
@@ -48,8 +50,8 @@ export function WordCard({
   const cardLayoutHeight = useRef(0);
 
   // Stable ref to latest props — avoids stale closures in callbacks
-  const propsRef = useRef({ onCorrect, onSkip, vibrationEnabled });
-  propsRef.current = { onCorrect, onSkip, vibrationEnabled };
+  const propsRef = useRef({ onCorrect, onSkip, onAnswerSound, vibrationEnabled });
+  propsRef.current = { onCorrect, onSkip, onAnswerSound, vibrationEnabled };
 
   // Word appearance: spring in from edge (suppressed during our own flip)
   useEffect(() => {
@@ -70,8 +72,10 @@ export function WordCard({
     if (isAnimating.current) return;
     isAnimating.current = true;
 
-    const { onCorrect, onSkip, vibrationEnabled: vib } = propsRef.current;
+    const { onCorrect, onSkip, onAnswerSound, vibrationEnabled: vib } = propsRef.current;
     const flashAnim = type === 'correct' ? correctFlash : skipFlash;
+
+    onAnswerSound?.(type);
 
     if (vib) {
       Haptics.notificationAsync(

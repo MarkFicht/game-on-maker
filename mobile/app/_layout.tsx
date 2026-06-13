@@ -4,7 +4,6 @@ import { AuthProvider } from '../src/core/auth/AuthProvider';
 import { PaymentsProvider, usePaymentsContext } from '../src/core/payments/PaymentsProvider';
 import { AdsProvider } from '../src/core/ads/AdsProvider';
 import { PageHeader } from '../src/shared/components';
-import { colors } from '../src/shared/theme';
 
 function AdsProviderBridge({ children }: { children: React.ReactNode }) {
   const { isPremium } = usePaymentsContext();
@@ -30,7 +29,7 @@ export default function RootLayout() {
               // A new screen can opt-in with headerShown:true to get PageHeader for free
               headerShown: false,
               contentStyle: { backgroundColor: 'transparent' },
-              animation: 'slide_from_right',
+              animation: 'none',
               gestureEnabled: true,
             }}
           >

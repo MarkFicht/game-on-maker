@@ -51,28 +51,21 @@ function AnimatedItem({ children, delay, style }: { children: React.ReactNode; d
 }
 
 function StatCard({ value, label, color }: { value: string | number; label: string; color: string }) {
-  const scale = useRef(new Animated.Value(0.5)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.88)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scale, { toValue: 1, tension: 80, friction: 6, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-    ]).start();
+    Animated.spring(scale, { toValue: 1, tension: 80, friction: 6, useNativeDriver: true }).start();
   }, []);
 
   return (
-    <Animated.View style={[styles.statCard, { opacity, transform: [{ scale }] }]}>
-      {/* Bevel gradient: top = 40% white + slate, bottom = 60% slate (same formula as buttons) */}
+    <Animated.View style={[styles.statCard, { transform: [{ scale }] }]}>
       <LinearGradient
         colors={['#777F8C', '#111926']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg }]}
       />
-      {/* Inner face — inset 3 px to expose bevel border */}
       <View style={styles.statFace}>
-        {/* Convex depth overlay */}
         <LinearGradient
           colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']}
           locations={[0, 0.38, 0.62, 1]}
@@ -272,6 +265,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
+    minHeight: 84,
     borderRadius: borderRadius.lg,
     padding: 3,
     shadowColor: '#000',
