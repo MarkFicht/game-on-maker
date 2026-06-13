@@ -23,7 +23,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.marekficht.gameonmaker",
+      "package": "com.wordrushmf.game",
       "googleServicesFile": "./google-services.json"
     },
     "web": {
