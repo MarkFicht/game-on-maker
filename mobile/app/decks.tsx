@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, Animated } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';

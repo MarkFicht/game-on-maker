@@ -36,7 +36,6 @@ export function useAdsContext(): AdsContextValue {
 }
 
 async function initializeAds(): Promise<boolean> {
-  // Native modules unavailable on web
   if (Platform.OS === 'web') return false;
 
   try {
@@ -45,14 +44,12 @@ async function initializeAds(): Promise<boolean> {
       import('react-native-google-mobile-ads'),
     ]);
 
-    // iOS: ATT permission must come before consent form
     if (Platform.OS === 'ios') {
       await requestTrackingPermissionsAsync();
     }
 
     const { AdsConsent, default: mobileAds } = mobileAdsModule;
 
-    // GDPR: gather consent (shows form if needed, no-op outside EEA)
     await AdsConsent.gatherConsent();
 
     const { canRequestAds } = await AdsConsent.getConsentInfo();
@@ -61,7 +58,7 @@ async function initializeAds(): Promise<boolean> {
     await mobileAds().initialize();
     return true;
   } catch {
-    // Expo Go or simulator — ads unavailable
+    // Fails gracefully on Expo Go, simulator, or devices with outdated Google Play Services
     return false;
   }
 }

@@ -6,10 +6,10 @@ import {
   ScrollView,
   Pressable,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePayments } from '../src/core/payments/usePayments';
