@@ -20,10 +20,15 @@
 ### Co NIE zostało przetestowane
 - RevenueCat sandbox zakupy
 - Firebase Auth (anonymous login persistence)
-- Firestore (zapis/odczyt danych)
+- Firestore (zapis/odczyt) — **uwaga: kod istnieje ale nigdzie nie jest wywołany, patrz niżej**
 - AdMob na produkcji (tylko TestIds)
-- ATT consent flow (iOS)
-- GDPR/UMP consent flow (Android EU)
+- GDPR/UMP consent flow (Android z EU locale)
+
+### Znane problemy techniczne
+- `async-storage` był w devDependencies → naprawione (przeniesione do dependencies)
+- `src/core/storage/firestore.ts` — kod `savePlayerProgress`, `loadPlayerProgress`, `updateLeaderboard`
+  **nigdy nie jest wywoływany** z żadnego screenu. Wyniki gry nie są nigdzie zapisywane poza sesją.
+  Decyzja: zostawić jako infrastrukturę pod przyszły leaderboard, albo usunąć.
 
 ---
 
@@ -39,31 +44,32 @@ Bez tych punktów Google Play lub App Store odrzuci apkę.
 - [x] Settings linkuje do tych screenów przez `router.push` (bez przeglądarki)
 - [x] Statyczne HTML w `docs/legal/` dla GitHub Pages (wymagany URL przy submicie)
 - [ ] Włączyć GitHub Pages — repo → Settings → Pages → Source: Deploy from branch → main → /docs
-- [ ] Po włączeniu URL-e będą aktywne:
-      Privacy: https://markficht.github.io/game-on-maker/legal/privacy.html
-      Terms:   https://markficht.github.io/game-on-maker/legal/terms.html
+- [ ] Po włączeniu URL-e będą aktywne (użyć przy submicie do sklepów):
+
+  **Privacy Policy URL:**
+  `https://markficht.github.io/game-on-maker/legal/privacy.html`
+
+  **Terms of Service URL:**
+  `https://markficht.github.io/game-on-maker/legal/terms.html`
+
+  **Landing page:**
+  `https://markficht.github.io/game-on-maker/`
+
 - [ ] Wkleić URL privacy do Google Play Console i App Store Connect przy submicie
 
 ### 2. ATT Prompt (iOS)
-Wymagany od iOS 14.5 — bez tego AdMob nie może pokazywać spersonalizowanych reklam i konto AdMob grozi zawieszeniem.
+**Status: Gotowe** — już zaimplementowane w `src/core/ads/AdsProvider.tsx`
 
-- [ ] `npx expo install expo-tracking-transparency`
-- [ ] Wywołać `requestTrackingPermissionsAsync()` w `AdsProvider.tsx` przed `MobileAds().initialize()`
-- [ ] Dodać do `app.json`:
-  ```json
-  "ios": {
-    "infoPlist": {
-      "NSUserTrackingUsageDescription": "WordRush uses this to show relevant ads and support the free version."
-    }
-  }
-  ```
+- [x] `expo-tracking-transparency` w dependencies
+- [x] `requestTrackingPermissionsAsync()` wywołane przed `MobileAds().initialize()`
+- [ ] Sprawdzić `app.json` → `ios.infoPlist.NSUserTrackingUsageDescription` (opis dla użytkownika)
 
 ### 3. GDPR/UMP Consent
-Jeśli masz użytkowników z EU — wymagane przez Google Play Policy i AdMob.
+**Status: Gotowe** — już zaimplementowane w `src/core/ads/AdsProvider.tsx`
 
-- [ ] Sprawdzić `AdsProvider.tsx` — czy Google UMP SDK (`react-native-google-mobile-ads` consent) jest wywołane
-- [ ] Przetestować na urządzeniu z locale EN-GB lub DE
-- [ ] Jeśli UMP nie jest zaimplementowane — dodać `ConsentForm` z `react-native-google-mobile-ads/consent`
+- [x] `AdsConsent.gatherConsent()` wywołane przed inicjalizacją AdMob
+- [x] Sprawdzenie `canRequestAds` przed `mobileAds().initialize()`
+- [ ] Przetestować na urządzeniu z locale EN-GB lub DE (symulacja EU użytkownika)
 
 ### 4. App icon + splash screen
 - [ ] Ikona 1024×1024 PNG (bez przezroczystości — wymóg iOS)
@@ -145,12 +151,12 @@ service cloud.firestore {
 
 ### Sprint 1 — Szybkie wygrane (po store submit)
 
-| Feature | Gdzie | Czas |
+| Feature | Gdzie | Status |
 |---|---|---|
-| "Oceń nas" prompt po 3. grze | `game.tsx` — po `gamesCompleted === 3` | 15 min |
-| Banner w results screen | `ResultsView.tsx` — pod przyciskami | 30 min |
-| Rewarded ad: +30 sekund | `game.tsx` — przycisk w HUD | 2 godz |
-| Firebase Analytics (events) | `src/core/analytics/index.ts` — jest pusty | 2 godz |
+| "Oceń nas" po 3. grze (łącznie, 1x na zawsze) | `app/game.tsx` | ✅ Gotowe |
+| Banner w results screen dla free users | `ResultsView.tsx` | ✅ Gotowe |
+| Rewarded ad: +30 sekund | `game.tsx` — przycisk w HUD | Do zrobienia |
+| Firebase Analytics (events) | `src/core/analytics/index.ts` — jest pusty | Do zrobienia |
 
 ### Sprint 2 — Więcej contentu
 

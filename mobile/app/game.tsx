@@ -18,6 +18,8 @@ import { getDeckById } from '../src/game/decks';
 import { useGame } from '../src/game/hooks/useGame';
 import { useSettings } from '../src/game/hooks/useSettings';
 import { useSoundManager } from '../src/game/hooks/useSoundManager';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as StoreReview from 'expo-store-review';
 import { useInterstitialAd } from '../src/core/ads';
 import { Button, GradientBackground, MuteButton, PageHeader } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
@@ -63,15 +65,32 @@ export default function GameScreen() {
     return () => { ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP); };
   }, []);
 
-  // Game-over sound + interstitial every 2 games
+  // Game-over sound + interstitial every 2 games + review prompt after 3rd game ever
   useEffect(() => {
     if (state.status !== 'finished') return;
     sounds.playGameOver();
     gamesCompleted++;
+
+    // Interstitial every 2 games
     if (gamesCompleted % 2 === 0) {
       const t = setTimeout(() => showAdRef.current(), 1200);
       return () => clearTimeout(t);
     }
+
+    // Review prompt — after 3rd game total, only once ever
+    void (async () => {
+      try {
+        const done = await AsyncStorage.getItem('wordrush_review_done');
+        if (done) return;
+        const raw = await AsyncStorage.getItem('wordrush_games_played');
+        const total = parseInt(raw ?? '0') + 1;
+        await AsyncStorage.setItem('wordrush_games_played', String(total));
+        if (total >= 3 && await StoreReview.isAvailableAsync()) {
+          await StoreReview.requestReview();
+          await AsyncStorage.setItem('wordrush_review_done', '1');
+        }
+      } catch {}
+    })();
   }, [state.status]);
 
   useEffect(() => {

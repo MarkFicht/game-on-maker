@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Animated, useWindowDimensions, View
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../shared/components';
+import { BannerAd } from '../../core/ads/BannerAd';
 import { makeSwayAnim, startSway, swayInterpolate } from '../../shared/animation/entrance';
 import { colors } from '../../shared/theme/colors';
 import { spacing, borderRadius } from '../../shared/theme/spacing';
@@ -189,6 +190,9 @@ export function ResultsView({ stats, results, deckName, onPlayAgain, onHome }: R
           <Button label="Zagraj ponownie" onPress={onPlayAgain} style={styles.actionBtn} />
         </View>
       </AnimatedItem>
+
+      {/* Banner ad — visible only for free users, null for premium */}
+      <BannerAd />
     </View>
   );
 }
