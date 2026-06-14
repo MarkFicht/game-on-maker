@@ -1,4 +1,4 @@
-# WordRush — Roadmapa do store
+# WordRushMF — Roadmapa do store
 
 > Ostatnia aktualizacja: czerwiec 2026
 

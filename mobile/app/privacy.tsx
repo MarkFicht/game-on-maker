@@ -38,13 +38,13 @@ export default function PrivacyScreen() {
           <Text style={styles.updated}>Ostatnia aktualizacja: 14 czerwca 2026</Text>
 
           <P>
-            WordRush jest aplikacją stworzoną przez Marka Fichta. Ta polityka prywatności
+            WordRushMF jest aplikacją stworzoną przez Marka Fichta. Ta polityka prywatności
             wyjaśnia, jakie dane są zbierane, jak są wykorzystywane oraz jakie masz prawa.
           </P>
 
           <Section title="1. Zbierane dane">
             <P>
-              WordRush nie wymaga rejestracji i nie zbiera danych osobowych bezpośrednio.
+              WordRushMF nie wymaga rejestracji i nie zbiera danych osobowych bezpośrednio.
               Poniższe dane mogą być zbierane przez zintegrowane usługi zewnętrzne:
             </P>
             <Li>Identyfikatory urządzenia — używane przez Google AdMob do wyświetlania reklam</Li>
@@ -62,11 +62,11 @@ export default function PrivacyScreen() {
 
           <Section title="3. Reklamy">
             <P>
-              Darmowa wersja WordRush wyświetla reklamy dostarczane przez Google AdMob.
+              Darmowa wersja WordRushMF wyświetla reklamy dostarczane przez Google AdMob.
               Reklamy mogą być spersonalizowane na podstawie ustawień urządzenia i udzielonej zgody.
               Możesz zrezygnować ze spersonalizowanych reklam w ustawieniach systemu
               (iOS: Ustawienia → Prywatność → Śledzenie; Android: Ustawienia → Google → Reklamy).
-              Zakup WordRush Premium trwale usuwa wszystkie reklamy.
+              Zakup WordRushMF Premium trwale usuwa wszystkie reklamy.
             </P>
           </Section>
 
@@ -88,7 +88,7 @@ export default function PrivacyScreen() {
 
           <Section title="6. Prywatność dzieci">
             <P>
-              WordRush nie jest skierowany do dzieci poniżej 13. roku życia. Nie zbieramy
+              WordRushMF nie jest skierowany do dzieci poniżej 13. roku życia. Nie zbieramy
               świadomie danych osobowych od dzieci. Jeśli uważasz, że dziecko podało takie
               dane, skontaktuj się z nami — niezwłocznie je usuniemy.
             </P>

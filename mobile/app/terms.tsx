@@ -38,7 +38,7 @@ export default function TermsScreen() {
           <Text style={styles.updated}>Ostatnia aktualizacja: 14 czerwca 2026</Text>
 
           <P>
-            Niniejszy Regulamin ("Regulamin") określa zasady korzystania z aplikacji WordRush,
+            Niniejszy Regulamin ("Regulamin") określa zasady korzystania z aplikacji WordRushMF,
             stworzonej przez Marka Fichta ("Deweloper"). Pobierając lub używając aplikacji,
             akceptujesz niniejszy Regulamin.
           </P>
@@ -46,7 +46,7 @@ export default function TermsScreen() {
           <Section title="1. Licencja">
             <P>
               Deweloper udziela Ci osobistej, niewyłącznej, niezbywalnej i odwoływalnej licencji
-              na korzystanie z WordRush do celów osobistych, niekomercyjnych, na urządzeniach
+              na korzystanie z WordRushMF do celów osobistych, niekomercyjnych, na urządzeniach
               będących Twoją własnością lub pod Twoją kontrolą — zgodnie z niniejszym Regulaminem
               i zasadami sklepu, z którego pobrano aplikację.
             </P>
@@ -54,7 +54,7 @@ export default function TermsScreen() {
 
           <Section title="2. Zakupy w aplikacji">
             <P>
-              WordRush oferuje jednorazowy zakup Premium, który usuwa reklamy i odblokowuje
+              WordRushMF oferuje jednorazowy zakup Premium, który usuwa reklamy i odblokowuje
               dodatkową zawartość. Wszystkie zakupy są przetwarzane przez App Store lub Google Play
               i podlegają ich regulaminom.
             </P>
@@ -75,7 +75,7 @@ export default function TermsScreen() {
 
           <Section title="4. Wyłączenie gwarancji">
             <P>
-              WordRush jest dostarczany "tak jak jest", bez jakichkolwiek gwarancji, wyraźnych
+              WordRushMF jest dostarczany "tak jak jest", bez jakichkolwiek gwarancji, wyraźnych
               ani dorozumianych. Deweloper nie gwarantuje, że aplikacja będzie działać
               nieprzerwanie, bezbłędnie ani bez wirusów czy innych szkodliwych komponentów.
             </P>
