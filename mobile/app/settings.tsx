@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView, Linking, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView, Animated } from 'react-native';
+import { router } from 'expo-router';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSettings } from '../src/game/hooks/useSettings';
@@ -212,12 +213,12 @@ export default function SettingsScreen() {
           <GlassCard title="Prawne" icon="📄">
             <Button
               label="Polityka prywatności"
-              onPress={() => Linking.openURL('https://wordrush.app/privacy')}
+              onPress={() => router.push('/privacy')}
               variant="secondary"
             />
             <Button
               label="Regulamin"
-              onPress={() => Linking.openURL('https://wordrush.app/terms')}
+              onPress={() => router.push('/terms')}
               variant="secondary"
             />
           </GlassCard>

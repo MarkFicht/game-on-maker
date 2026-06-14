@@ -18,10 +18,14 @@ import { getDeckById } from '../src/game/decks';
 import { useGame } from '../src/game/hooks/useGame';
 import { useSettings } from '../src/game/hooks/useSettings';
 import { useSoundManager } from '../src/game/hooks/useSoundManager';
+import { useInterstitialAd } from '../src/core/ads';
 import { Button, GradientBackground, MuteButton, PageHeader } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
 type GamePhase = 'ready' | 'countdown' | 'playing';
+
+// Persists across component remounts within same app session
+let gamesCompleted = 0;
 
 export default function GameScreen() {
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
@@ -40,6 +44,10 @@ export default function GameScreen() {
 
   const sounds = useSoundManager(settings.soundEnabled);
 
+  const { show: showAd } = useInterstitialAd();
+  const showAdRef = useRef(showAd);
+  showAdRef.current = showAd;
+
   const deck = deckId ? getDeckById(deckId) : null;
 
   // Screen rotation — unlock only during active game, portrait everywhere else
@@ -55,9 +63,15 @@ export default function GameScreen() {
     return () => { ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP); };
   }, []);
 
-  // Game-over sound
+  // Game-over sound + interstitial every 2 games
   useEffect(() => {
-    if (state.status === 'finished') sounds.playGameOver();
+    if (state.status !== 'finished') return;
+    sounds.playGameOver();
+    gamesCompleted++;
+    if (gamesCompleted % 2 === 0) {
+      const t = setTimeout(() => showAdRef.current(), 1200);
+      return () => clearTimeout(t);
+    }
   }, [state.status]);
 
   useEffect(() => {

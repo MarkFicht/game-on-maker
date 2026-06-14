@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordRush</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #080E24;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 400px;
+      background: rgba(30,41,59,0.85);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 40px 32px;
+    }
+    .emoji { font-size: 64px; margin-bottom: 16px; display: block; }
+    h1 { font-size: 32px; font-weight: 800; color: #F97316; letter-spacing: -1px; margin-bottom: 8px; }
+    p { color: rgba(255,255,255,0.6); font-size: 15px; line-height: 1.5; margin-bottom: 32px; }
+    .links { display: flex; flex-direction: column; gap: 10px; }
+    a {
+      display: block;
+      background: rgba(79,70,229,0.2);
+      border: 1px solid rgba(79,70,229,0.4);
+      color: #A5B4FC;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    a:hover { background: rgba(79,70,229,0.35); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="emoji">🎯</span>
+    <h1>WordRush</h1>
+    <p>Party word game — guess the word before time runs out!</p>
+    <div class="links">
+      <a href="legal/privacy.html">Privacy Policy</a>
+      <a href="legal/terms.html">Terms of Service</a>
+    </div>
+  </div>
+</body>
+</html>

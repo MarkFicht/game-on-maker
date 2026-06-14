@@ -17,7 +17,6 @@ export default function RootLayout() {
         <AdsProviderBridge>
           <Stack
             screenOptions={{
-              // Custom header: any screen with headerShown:true gets PageHeader automatically
               header: ({ navigation, back, options }) => (
                 <PageHeader
                   title={options.title ?? 'Dummy'}
@@ -25,8 +24,6 @@ export default function RootLayout() {
                   onBack={() => navigation.goBack()}
                 />
               ),
-              // All current screens manage their own header (headerShown:false)
-              // A new screen can opt-in with headerShown:true to get PageHeader for free
               headerShown: false,
               contentStyle: { backgroundColor: 'transparent' },
               animation: 'none',
@@ -38,6 +35,8 @@ export default function RootLayout() {
             <Stack.Screen name="game" />
             <Stack.Screen name="settings" />
             <Stack.Screen name="store" />
+            <Stack.Screen name="privacy" />
+            <Stack.Screen name="terms" />
           </Stack>
         </AdsProviderBridge>
       </PaymentsProvider>
