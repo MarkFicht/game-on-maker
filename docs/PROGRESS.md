@@ -170,4 +170,4 @@ Game engine 1:1 z web (czysty JS). useGame + useSettings hooki. Komponenty: Time
 Cleanup: usunięto backward-compat shimy, martwy `game-over.tsx`, zduplikowane stałe. Testy: engine (46), utils (16), payments edge cases (5), integracyjne AdMob (11) + RevenueCat (6). **142/142 ✅**, tsc 0 błędów.
 
 ### 2026-06-14–15 — Faza 8: Store prep + poprawki wizualne
-Wszystkie zmiany z checklisty Fazy 8 powyżej. Crash P30 Lite zdiagnozowany (GPS outdated, nie bug kodu). Google Play Console: konto → app → preview APK → formularz finansowy.
+Wszystkie zmiany z checklisty Fazy 8 powyżej. Crash P30 Lite zdiagnozowany (GPS outdated, nie bug kodu). Google Play Console: konto → app → preview APK → formularz finansowy. Stworzono `docs/ROADMAP.md` jako skondensowany plan publikacji.

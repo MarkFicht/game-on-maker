@@ -9,15 +9,14 @@ Freemium — gra darmowa z reklamami, opcja usunięcia reklam i odblokowania dod
 
 ```
 Free tier
-  ├── Pełna gra (wszystkie poziomy)
-  ├── Reklamy banner (dół ekranu)
-  ├── Reklamy interstitial (między poziomami, co 3 levele)
-  └── Reklamy rewarded (opcjonalne — za nagrodę)
+  ├── Pełna gra (wszystkie decki free)
+  ├── Reklamy banner (ekran wyników)
+  ├── Reklamy interstitial (co 2 gry)
+  └── Reklamy rewarded (opcjonalne — za nagrodę) [planowane]
 
-Premium tier (jednorazowy zakup lub subskrypcja)
+Premium tier — jednorazowy zakup premium_lifetime
   ├── Brak reklam
-  ├── [opcjonalnie] dodatkowe skórki / motywy
-  └── [opcjonalnie] ekskluzywne poziomy
+  └── Wszystkie decki odblokowane
 ```
 
 ---
@@ -28,25 +27,14 @@ Premium tier (jednorazowy zakup lub subskrypcja)
 
 | Typ | Kiedy | Konwersja | UX |
 |---|---|---|---|
-| Banner | Cały czas (dół ekranu) | Niska | Nieinwazyjny |
-| Interstitial | Między poziomami (co 3) | Średnia | Inwazyjny — nie przesadzaj |
-| Rewarded | Na żądanie gracza | Najwyższa | Najlepszy UX |
+| Banner | Ekran wyników (ResultsView) | Niska | Nieinwazyjny |
+| Interstitial | Co 2 gry (`gamesCompleted % 2 === 0`) | Średnia | Inwazyjny — nie przesadzaj |
+| Rewarded | Na żądanie gracza [planowane] | Najwyższa | Najlepszy UX |
 
-### Strategia rewarded ads (najważniejsze)
+### Strategia rewarded ads (planowane)
 Gracz sam inicjuje reklamę w zamian za nagrodę:
-- "Obejrzyj reklamę → dostań dodatkowe życie"
 - "Obejrzyj reklamę → kontynuuj po game over"
-- "Obejrzyj reklamę → usuń reklamy na 1 godzinę"
-
-```typescript
-// Logika pokazywania interstitial — nie przesadzaj z częstotliwością
-const AD_FREQUENCY = 3; // co ile poziomów
-
-function shouldShowInterstitial(levelNumber: number): boolean {
-  if (isPremium) return false;
-  return levelNumber % AD_FREQUENCY === 0;
-}
-```
+- "Obejrzyj reklamę → odblokuj talię na 1 godzinę"
 
 ### ID reklam
 
@@ -73,25 +61,14 @@ Rewarded:      ca-app-pub-3940256099942544/5224354917
 
 | ID produktu | Typ | Cena sugerowana | Opis |
 |---|---|---|---|
-| `remove_ads` | One-time purchase | $1.99 | Usuń reklamy na zawsze |
-| `premium_monthly` | Subskrypcja miesięczna | $1.99/mies | Premium (brak reklam + dodatki) |
-| `premium_yearly` | Subskrypcja roczna | $9.99/rok | Premium roczne (~58% taniej) |
-
-**Na start polecam tylko `remove_ads`** — prosta propozycja wartości, łatwa decyzja dla gracza.
+| `premium_lifetime` | One-time purchase | ~$4.99 | Brak reklam + wszystkie talie |
 
 ### Konfiguracja RevenueCat
 
 ```typescript
 // core/payments/paymentsConfig.ts
-export const ENTITLEMENTS = {
-  PREMIUM: 'premium',
-} as const;
-
-export const PRODUCT_IDS = {
-  REMOVE_ADS: 'remove_ads',
-  PREMIUM_MONTHLY: 'premium_monthly',
-  PREMIUM_YEARLY: 'premium_yearly',
-} as const;
+export const ENTITLEMENTS = { PREMIUM: 'premium' } as const;
+export const PRODUCT_IDS = { PREMIUM_LIFETIME: 'premium_lifetime' } as const;
 ```
 
 ```typescript
@@ -104,7 +81,6 @@ export function initializePayments(userId: string) {
     ios: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS!,
     android: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID!,
   })!;
-
   Purchases.configure({ apiKey, appUserID: userId });
 }
 ```
@@ -126,7 +102,7 @@ Game Over Screen
   ├── Wynik + nowy rekord (jeśli)
   ├── [Rewarded Ad Button] "Kontynuuj grę (obejrzyj reklamę)"
   ├── [Primary] "Zagraj ponownie"
-  └── [Secondary, subtelnie] "Usuń reklamy — $1.99"
+  └── [Secondary, subtelnie] "WordRushMF Premium — $4.99"
 ```
 
 ---
