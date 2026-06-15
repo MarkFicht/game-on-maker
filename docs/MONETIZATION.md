@@ -139,3 +139,29 @@ Dla prostej gry bez płatnego marketingu:
 | 100 000 | $2 000–10 000 | $4 000 |
 
 **Wniosek:** Jedna gra to "beer money". Portfolio 5–10 gier = realny dochód pasywny.
+
+---
+
+## 6. Plan: 3-tierowe IAP (po Sprint 2)
+
+**Warunek wejścia:** min. 40 słów per deck + co najmniej 3 nowe premium talie gotowe.
+
+### Produkty (Play Console → Produkty kupowane raz)
+
+| ID | Nazwa | Cena |
+|---|---|---|
+| `remove_ads` | Usuń reklamy | ~$1.49 |
+| `premium_decks` | Wszystkie talie | ~$2.49 |
+| `premium_lifetime` | Premium (obie) | ~$3.49 |
+
+### RevenueCat
+- Zmień 1 entitlement `premium` → 2 entitlements: `no_ads` + `premium_decks`
+- `premium_lifetime` offering kupuje oba naraz
+
+### Kod
+- `isPremium` → dwie flagi: `hasNoAds` (blokuje reklamy) + `hasPremiumDecks` (blokuje talie)
+- Grep `isPremium` w całym `mobile/` i podmień na właściwą flagę zależnie od kontekstu
+
+### Store screen
+- Nowy UI: 3 karty obok siebie (lub lista), środkowa lekko wyróżniona
+- Efekt "decoy pricing": większość wybierze bundle
