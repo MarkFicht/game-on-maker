@@ -20,7 +20,7 @@ import { colors, spacing, borderRadius } from '../src/shared/theme';
 const FEATURES = [
   { icon: '🚀', title: 'Brak reklam', sub: 'Graj bez przeszkód' },
   { icon: '✨', title: 'Premium talie', sub: 'Odblokuj wszystkie kategorie' },
-  { icon: '❤️', title: 'Wspierasz twórcę', sub: 'Pomóż rozwijać WordRush' },
+  { icon: '❤️', title: 'Wspierasz twórcę', sub: 'Pomóż rozwijać WordRushMFMF' },
 ];
 
 // 3D bevel package button
@@ -113,7 +113,7 @@ export default function StoreScreen() {
           <View style={styles.premiumState}>
             <Animated.Text style={[styles.crownEmoji, { transform: [{ rotate: crownRotate }] }]}>👑</Animated.Text>
             <Text style={styles.premiumTitle}>Masz Premium!</Text>
-            <Text style={styles.premiumSub}>Dziękujemy za wsparcie WordRush 🎉</Text>
+            <Text style={styles.premiumSub}>Dziękujemy za wsparcie WordRushMF 🎉</Text>
             <View style={styles.premiumActions}>
               <Button label="🎮  Zagraj" onPress={() => router.push('/decks')} size="lg" />
               <Button
@@ -162,7 +162,7 @@ export default function StoreScreen() {
               />
               <Animated.Text style={[styles.crownEmoji, { transform: [{ rotate: crownRotate }] }]}>👑</Animated.Text>
               <Text style={styles.heroTitle}>Odblokuj Premium</Text>
-              <Text style={styles.heroSub}>Pełne doświadczenie WordRush</Text>
+              <Text style={styles.heroSub}>Pełne doświadczenie WordRushMF</Text>
             </View>
           </Animated.View>
 

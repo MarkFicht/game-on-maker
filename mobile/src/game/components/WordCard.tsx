@@ -85,23 +85,27 @@ export function WordCard({
       );
     }
 
-    Animated.timing(flashAnim, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+    // Flash peaks fast then fades — done exactly when card reaches 90° (t=180ms)
+    // so the new word flips in on a clean black card
+    Animated.sequence([
+      Animated.timing(flashAnim, { toValue: 1, duration: 60,  useNativeDriver: true }),
+      Animated.timing(flashAnim, { toValue: 0, duration: 120, useNativeDriver: true }),
+    ]).start();
 
-    // Flip out (0° → 90°), swap word at midpoint, flip in (90° → 0°)
-    Animated.timing(flipAnim, { toValue: 1, duration: 160, useNativeDriver: true }).start(() => {
+    // Flip out to 90° in 180ms → swap word → spring back with new word on black card
+    Animated.timing(flipAnim, { toValue: 1, duration: 180, useNativeDriver: true }).start(() => {
       if (type === 'correct') onCorrect?.();
       else onSkip?.();
 
-      // Jump to -1 (-90°) while card is invisible at 90° — no visual glitch,
-      // then spring forward to 0°, so the new word enters from the same side it left
       flipAnim.setValue(-1);
 
-      Animated.parallel([
-        Animated.spring(flipAnim, { toValue: 0, tension: 90, friction: 9, useNativeDriver: true }),
-        Animated.timing(flashAnim, { toValue: 0, duration: 280, useNativeDriver: true }),
-      ]).start(() => {
-        isAnimating.current = false;
-      });
+      // Card is at -90° (invisible) — wait one frame for React to render the new word
+      // before starting flip-in, otherwise the old word flickers on the first frames
+      setTimeout(() => {
+        Animated.spring(flipAnim, { toValue: 0, tension: 90, friction: 9, useNativeDriver: true }).start(() => {
+          isAnimating.current = false;
+        });
+      }, 16);
     });
   }, []);
 

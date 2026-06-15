@@ -189,6 +189,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: spacing.xs,
+    paddingTop: 4,
   },
 
   // ── Icon button (⚙️ / ←) ──────────────────────────────────

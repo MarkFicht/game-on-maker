@@ -226,7 +226,7 @@ export default function SettingsScreen() {
 
           </Animated.View>
 
-          <Text style={styles.version}>WordRush v1.0.0{'\n'}Made with ❤️</Text>
+          <Text style={styles.version}>WordRushMF v1.0.0{'\n'}Made with ❤️</Text>
         </ScrollView>
       </SafeAreaView>
     </GradientBackground>

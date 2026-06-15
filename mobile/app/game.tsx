@@ -68,29 +68,31 @@ export default function GameScreen() {
   // Game-over sound + interstitial every 2 games + review prompt after 3rd game ever
   useEffect(() => {
     if (state.status !== 'finished') return;
+    sounds.stopAll();
     sounds.playGameOver();
     gamesCompleted++;
+
+    // Count every game and check review — runs regardless of whether an ad shows
+    void (async () => {
+      try {
+        const raw = await AsyncStorage.getItem('wordrushmf_games_played');
+        const total = parseInt(raw ?? '0') + 1;
+        await AsyncStorage.setItem('wordrushmf_games_played', String(total));
+        if (total >= 3) {
+          const done = await AsyncStorage.getItem('wordrushmf_review_done');
+          if (!done && await StoreReview.isAvailableAsync()) {
+            await StoreReview.requestReview();
+            await AsyncStorage.setItem('wordrushmf_review_done', '1');
+          }
+        }
+      } catch {}
+    })();
 
     // Interstitial every 2 games
     if (gamesCompleted % 2 === 0) {
       const t = setTimeout(() => showAdRef.current(), 1200);
       return () => clearTimeout(t);
     }
-
-    // Review prompt — after 3rd game total, only once ever
-    void (async () => {
-      try {
-        const done = await AsyncStorage.getItem('wordrush_review_done');
-        if (done) return;
-        const raw = await AsyncStorage.getItem('wordrush_games_played');
-        const total = parseInt(raw ?? '0') + 1;
-        await AsyncStorage.setItem('wordrush_games_played', String(total));
-        if (total >= 3 && await StoreReview.isAvailableAsync()) {
-          await StoreReview.requestReview();
-          await AsyncStorage.setItem('wordrush_review_done', '1');
-        }
-      } catch {}
-    })();
   }, [state.status]);
 
   useEffect(() => {
@@ -248,7 +250,10 @@ export default function GameScreen() {
                   <Animated.View style={[StyleSheet.absoluteFill, { opacity: startPressAnim }]}>
                     <LinearGradient colors={['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.26)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
                   </Animated.View>
-                  <Text style={styles.startText}>🎮  Start</Text>
+                  <View style={styles.startContent}>
+                    <Text style={styles.startIcon}>🎮</Text>
+                    <Text style={styles.startText}>Start</Text>
+                  </View>
                 </LinearGradient>
               </View>
             </Pressable>
@@ -459,8 +464,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
   },
+  startContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  startIcon: {
+    fontSize: 28,
+  },
   startText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.white,
     letterSpacing: 0.3,

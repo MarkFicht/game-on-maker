@@ -23,7 +23,7 @@ export function useSoundManager(soundEnabled: boolean) {
       } catch { }
     }
     return () => {
-      Object.values(players.current).forEach(p => { try { p?.remove(); } catch {} });
+      Object.values(players.current).forEach(p => { try { p?.pause(); p?.remove(); } catch {} });
       players.current = {};
     };
   }, []);
@@ -38,11 +38,16 @@ export function useSoundManager(soundEnabled: boolean) {
     } catch { }
   };
 
+  const stopAll = () => {
+    Object.values(players.current).forEach(p => { try { p?.pause(); } catch {} });
+  };
+
   return {
     playCorrect:   () => play('correct'),
     playSkip:      () => play('skip'),
     playCountdown: () => play('countdown'),
     playGameOver:  () => play('gameover'),
     playClick:     () => play('click'),
+    stopAll,
   };
 }

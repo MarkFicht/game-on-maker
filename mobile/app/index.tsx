@@ -90,7 +90,7 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safe}>
 
         {/* Universal transparent header */}
-        <PageHeader title="WordRush" isHome />
+        <PageHeader title="WordRushMF" isHome />
 
         {/* Main content */}
         <View style={styles.main}>
@@ -113,7 +113,7 @@ export default function HomeScreen() {
             <Animated.View
               style={[styles.titleBlock, { opacity: fadeUp1, transform: [{ translateY: slideUp1 }] }]}
             >
-              <Text style={styles.title}>WordRush</Text>
+              <Text style={styles.title}>WordRushMF</Text>
               <Text style={styles.subtitle}>Odgadnij słowo zanim skończy się czas!</Text>
             </Animated.View>
           </View>
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     fontSize: 46,
     fontWeight: '800',
     color: '#F97316',
-    letterSpacing: -1.5,
+    letterSpacing: 1,
     textShadowColor: 'rgba(249,115,22,0.40)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
