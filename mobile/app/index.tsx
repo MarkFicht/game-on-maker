@@ -1,10 +1,11 @@
-import React, { useRef, useCallback, useMemo } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Animated,
   Pressable,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
@@ -24,7 +25,6 @@ export default function HomeScreen() {
   const fadeUp2     = useRef(new Animated.Value(0)).current;
   const slideUp2    = useRef(new Animated.Value(20)).current;
   const playPulse    = useRef(new Animated.Value(1)).current;
-  const glowOpacity  = useRef(new Animated.Value(0.5)).current;
   const playPressAnim = useRef(new Animated.Value(0)).current;
   const premPressAnim = useRef(new Animated.Value(0)).current;
 
@@ -38,9 +38,8 @@ export default function HomeScreen() {
       fadeUp2.setValue(0);
       slideUp2.setValue(20);
       playPulse.setValue(1);
-      glowOpacity.setValue(0.5);
 
-      // Emoji and title appear together — no staggered wait
+      // Logo and subtitle appear together — no staggered wait
       const entrance = Animated.parallel([
         Animated.spring(emojiScale,  { toValue: 1, tension: 120, friction: 7, useNativeDriver: true }),
         Animated.spring(emojiRotate, { toValue: 0, tension: 120, friction: 7, useNativeDriver: true }),
@@ -61,14 +60,8 @@ export default function HomeScreen() {
       entrance.start(() => {
         pulseLoop = Animated.loop(
           Animated.sequence([
-            Animated.parallel([
-              Animated.timing(playPulse,   { toValue: 1.04, duration: 1100, useNativeDriver: true }),
-              Animated.timing(glowOpacity, { toValue: 1.0,  duration: 1100, useNativeDriver: true }),
-            ]),
-            Animated.parallel([
-              Animated.timing(playPulse,   { toValue: 1,    duration: 1100, useNativeDriver: true }),
-              Animated.timing(glowOpacity, { toValue: 0.5,  duration: 1100, useNativeDriver: true }),
-            ]),
+            Animated.timing(playPulse, { toValue: 1.04, duration: 1100, useNativeDriver: true }),
+            Animated.timing(playPulse, { toValue: 1,    duration: 1100, useNativeDriver: true }),
           ]),
         );
         pulseLoop.start();
@@ -95,25 +88,17 @@ export default function HomeScreen() {
         {/* Main content */}
         <View style={styles.main}>
 
-          {/* Emoji + glow */}
-          <View style={styles.emojiSection}>
-            <View style={styles.emojiWrapper}>
-              {/*
-                Small glow behind the icon — smaller than emoji so the hard edge
-                is hidden under the icon itself. Shadow does the soft fade outward.
-              */}
-              <Animated.View style={[styles.emojiGlow, { opacity: glowOpacity }]} />
-              <Animated.Text
-                style={[styles.emoji, { transform: [{ scale: emojiScale }, { rotate }] }]}
-              >
-                🎯
-              </Animated.Text>
-            </View>
+          {/* Logo */}
+          <View style={styles.logoSection}>
+            <Animated.Image
+              source={require('../assets/logo/logo_home.png')}
+              style={[styles.logo, { transform: [{ scale: emojiScale }, { rotate }] }]}
+              resizeMode="contain"
+            />
 
             <Animated.View
               style={[styles.titleBlock, { opacity: fadeUp1, transform: [{ translateY: slideUp1 }] }]}
             >
-              <Text style={styles.title}>WordRushMF</Text>
               <Text style={styles.subtitle}>Odgadnij słowo zanim skończy się czas!</Text>
             </Animated.View>
           </View>
@@ -194,12 +179,6 @@ export default function HomeScreen() {
   );
 }
 
-// ── Geometry ─────────────────────────────────────────────────────────────────
-const WRAPPER   = 148;
-const GLOW_SIZE = 68;                           // smaller → hard edge hidden under emoji
-const GLOW_POS  = (WRAPPER - GLOW_SIZE) / 2;   // 40 — centered
-const GLOW_Y    = GLOW_POS + 6;                 // shift 6 px down: "under" the icon
-
 const styles = StyleSheet.create({
   safe: { flex: 1 },
 
@@ -208,52 +187,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
+    paddingBottom: 48,
     gap: spacing.xl,
   },
 
-  emojiSection: {
+  logoSection: {
     alignItems: 'center',
     gap: spacing.md,
   },
-  emojiWrapper: {
-    width: WRAPPER,
-    height: WRAPPER,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emojiGlow: {
-    position: 'absolute',
-    top: GLOW_Y,
-    left: GLOW_POS,
-    width: GLOW_SIZE,
-    height: GLOW_SIZE,
-    borderRadius: GLOW_SIZE / 2,
-    backgroundColor: 'rgba(249,115,22,0.10)',  // very faint — shadow does the work
-    shadowColor: '#F97316',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.90,
-    shadowRadius: 24,
-    elevation: 0,
-  },
-  emoji: {
-    fontSize: 90,
-    lineHeight: 100,
-    textShadowColor: 'rgba(249,115,22,0.60)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
+  logo: {
+    width: 190,
+    height: 190,
   },
   titleBlock: {
     alignItems: 'center',
-    gap: spacing.xs,
-  },
-  title: {
-    fontSize: 46,
-    fontWeight: '800',
-    color: '#F97316',
-    letterSpacing: 1,
-    textShadowColor: 'rgba(249,115,22,0.40)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
   },
   subtitle: {
     fontSize: 15,
