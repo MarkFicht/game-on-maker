@@ -52,8 +52,8 @@ function PackageBtn({
   const pressAnim    = useRef(new Animated.Value(0)).current;
   const convexOpacity = useMemo(() => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
   const isDisabled   = loading || isPurchased;
-  const onPressIn    = () => { if (!isDisabled) Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start(); };
-  const onPressOut   = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+  const onPressIn    = () => { if (!isDisabled) Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start(); };
+  const onPressOut   = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   return (
     <Pressable onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut} disabled={isDisabled}>

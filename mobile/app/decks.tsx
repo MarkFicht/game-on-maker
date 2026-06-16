@@ -13,17 +13,17 @@ import type { Deck } from '../src/game/types';
 
 function SlideCard({ delay, children }: { delay: number; children: React.ReactNode }) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(-28)).current;
+  const translateX = useRef(new Animated.Value(-55)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.sequence([
         Animated.delay(delay),
-        Animated.timing(opacity, { toValue: 1, duration: 240, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
       ]),
       Animated.sequence([
-        Animated.delay(delay),
-        Animated.spring(translateX, { toValue: 0, tension: 80, friction: 7, useNativeDriver: true }),
+        Animated.delay(delay + 100),
+        Animated.spring(translateX, { toValue: 0, tension: 50, friction: 5, useNativeDriver: true }),
       ]),
     ]).start();
   }, []);
@@ -136,7 +136,7 @@ export default function DecksScreen() {
           <Animated.View style={entranceStyle(anims[1])}>
           <SectionTitle icon="🆓">Darmowe talie</SectionTitle>
           {freeDecks.map((deck, i) => (
-            <SlideCard key={deck.id} delay={90 + i * 100}>
+            <SlideCard key={deck.id} delay={90 + i * 130}>
               <DeckCard deck={deck} onSelect={handleSelect} />
             </SlideCard>
           ))}
@@ -154,7 +154,7 @@ export default function DecksScreen() {
             )}
           </View>
           {premiumDecks.map((deck, i) => (
-            <SlideCard key={deck.id} delay={180 + i * 100}>
+            <SlideCard key={deck.id} delay={180 + i * 140}>
               <DeckCard
                 deck={deck}
                 onSelect={handleSelect}

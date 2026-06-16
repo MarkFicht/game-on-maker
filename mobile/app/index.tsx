@@ -41,17 +41,17 @@ export default function HomeScreen() {
 
       // Logo and subtitle appear together — no staggered wait
       const entrance = Animated.parallel([
-        Animated.spring(emojiScale,  { toValue: 1, tension: 120, friction: 7, useNativeDriver: true }),
-        Animated.spring(emojiRotate, { toValue: 0, tension: 120, friction: 7, useNativeDriver: true }),
-        Animated.timing(fadeUp1,  { toValue: 1, duration: 260, useNativeDriver: true }),
-        Animated.spring(slideUp1, { toValue: 0, tension: 80, friction: 7, useNativeDriver: true }),
+        Animated.spring(emojiScale,  { toValue: 1, tension: 70, friction: 7, useNativeDriver: true }),
+        Animated.spring(emojiRotate, { toValue: 0, tension: 70, friction: 7, useNativeDriver: true }),
+        Animated.timing(fadeUp1,  { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.spring(slideUp1, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true }),
         Animated.sequence([
-          Animated.delay(90),
-          Animated.timing(fadeUp2,  { toValue: 1, duration: 260, useNativeDriver: true }),
+          Animated.delay(130),
+          Animated.timing(fadeUp2,  { toValue: 1, duration: 400, useNativeDriver: true }),
         ]),
         Animated.sequence([
-          Animated.delay(90),
-          Animated.spring(slideUp2, { toValue: 0, tension: 80, friction: 7, useNativeDriver: true }),
+          Animated.delay(130),
+          Animated.spring(slideUp2, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true }),
         ]),
       ]);
 
@@ -116,8 +116,8 @@ export default function HomeScreen() {
             <Animated.View style={{ transform: [{ scale: playPulse }] }}>
               <Pressable
                 onPress={() => router.push('/decks')}
-                onPressIn={() => Animated.timing(playPressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start()}
-                onPressOut={() => Animated.timing(playPressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
+                onPressIn={() => Animated.timing(playPressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
+                onPressOut={() => Animated.timing(playPressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start()}
               >
                 <View style={styles.playBevel}>
                   <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl, opacity: playConvexOpacity }]}>
@@ -145,8 +145,8 @@ export default function HomeScreen() {
             {/* Premium button */}
             <Pressable
               onPress={() => router.push('/store')}
-              onPressIn={() => Animated.timing(premPressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start()}
-              onPressOut={() => Animated.timing(premPressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
+              onPressIn={() => Animated.timing(premPressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
+              onPressOut={() => Animated.timing(premPressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start()}
             >
               <View style={styles.premBevel}>
                 <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg, opacity: premConvexOpacity }]}>

@@ -37,7 +37,7 @@ function CustomSwitch({ value, onValueChange }: { value: boolean; onValueChange:
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.spring(anim, { toValue: value ? 1 : 0, tension: 150, friction: 10, useNativeDriver: true }).start();
+    Animated.spring(anim, { toValue: value ? 1 : 0, tension: 90, friction: 10, useNativeDriver: true }).start();
   }, [value]);
 
   const thumbX   = useMemo(() => anim.interpolate({ inputRange: [0, 1], outputRange: [0, SW_TRAVEL] }), []);
@@ -80,8 +80,8 @@ function CustomSwitch({ value, onValueChange }: { value: boolean; onValueChange:
 function DurationBtn({ duration, isActive, onPress }: { duration: number; isActive: boolean; onPress: () => void }) {
   const pressAnim    = useRef(new Animated.Value(0)).current;
   const convexOpacity = useMemo(() => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
-  const onPressIn    = () => Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
-  const onPressOut   = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+  const onPressIn    = () => Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  const onPressOut   = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   return (
     <Pressable onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut} style={styles.durationBtn}>

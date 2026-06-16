@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useState, useRef, useMemo } from 'react';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import {
   View,
@@ -107,8 +107,8 @@ export default function GameScreen() {
     const tick = () => {
       sounds.playCountdown();
       Animated.sequence([
-        Animated.timing(countdownScale, { toValue: 1.5, duration: 120, useNativeDriver: true }),
-        Animated.timing(countdownScale, { toValue: 1, duration: 350, useNativeDriver: true }),
+        Animated.timing(countdownScale, { toValue: 1.5, duration: 180, useNativeDriver: true }),
+        Animated.timing(countdownScale, { toValue: 1, duration: 500, useNativeDriver: true }),
       ]).start();
     };
 
@@ -146,7 +146,7 @@ export default function GameScreen() {
     [],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (gamePhase === 'ready') startEntranceAll([readyAnim]);
   }, [gamePhase]);
 
@@ -157,12 +157,12 @@ export default function GameScreen() {
     pauseFade1.setValue(0);  pauseSlide1.setValue(20);
     pauseFade2.setValue(0);  pauseSlide2.setValue(20);
     Animated.parallel([
-      Animated.spring(pauseEmojiScale,  { toValue: 1, tension: 120, friction: 7, useNativeDriver: true }),
-      Animated.spring(pauseEmojiRotate, { toValue: 0, tension: 120, friction: 7, useNativeDriver: true }),
-      Animated.timing(pauseFade1,  { toValue: 1, duration: 260, useNativeDriver: true }),
-      Animated.spring(pauseSlide1, { toValue: 0, tension: 80,  friction: 7, useNativeDriver: true }),
-      Animated.sequence([Animated.delay(90), Animated.timing(pauseFade2,  { toValue: 1, duration: 260, useNativeDriver: true })]),
-      Animated.sequence([Animated.delay(90), Animated.spring(pauseSlide2, { toValue: 0, tension: 80, friction: 7, useNativeDriver: true })]),
+      Animated.spring(pauseEmojiScale,  { toValue: 1, tension: 70, friction: 7, useNativeDriver: true }),
+      Animated.spring(pauseEmojiRotate, { toValue: 0, tension: 70, friction: 7, useNativeDriver: true }),
+      Animated.timing(pauseFade1,  { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.spring(pauseSlide1, { toValue: 0, tension: 50,  friction: 7, useNativeDriver: true }),
+      Animated.sequence([Animated.delay(130), Animated.timing(pauseFade2,  { toValue: 1, duration: 400, useNativeDriver: true })]),
+      Animated.sequence([Animated.delay(130), Animated.spring(pauseSlide2, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true })]),
     ]).start();
   }, [state.status]);
   useEffect(() => {
@@ -229,15 +229,15 @@ export default function GameScreen() {
           <PageHeader title={deck.name} onBack={handleCancel} />
           <Animated.View style={[styles.centeredFull, entranceStyle(readyAnim)]}>
             {deck.image
-              ? <Image source={deck.image} style={styles.deckImage} />
+              ? <Image source={deck.image} style={[styles.deckImage, { marginBottom: -10 }]} />
               : <Text style={styles.deckEmoji}>{deck.icon}</Text>}
             <Text style={styles.deckName}>{deck.name}</Text>
             <Text style={styles.deckMeta}>{deck.words.length} słów · {deck.difficulty}</Text>
             <View style={{ height: spacing.xl }} />
             <Pressable
               onPress={handleStartCountdown}
-              onPressIn={() => Animated.timing(startPressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start()}
-              onPressOut={() => Animated.timing(startPressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start()}
+              onPressIn={() => Animated.timing(startPressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
+              onPressOut={() => Animated.timing(startPressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start()}
             >
               <View style={styles.startBevel}>
                 <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl, opacity: startConvexOpacity }]}>
@@ -274,7 +274,7 @@ export default function GameScreen() {
           <PageHeader title={deck.name} onBack={handleCancel} />
           <View style={styles.centeredFull}>
             {deck.image
-              ? <Image source={deck.image} style={[styles.deckImage, { marginBottom: -10 }]} />
+              ? <Image source={deck.image} style={[styles.deckImage, { marginBottom: -38, marginTop: -20 }]} />
               : <Text style={[styles.deckEmoji, { marginBottom: -10 }]}>{deck.icon}</Text>}
             <Animated.Text
               style={[styles.countdownNumber, { transform: [{ scale: countdownScale }] }]}

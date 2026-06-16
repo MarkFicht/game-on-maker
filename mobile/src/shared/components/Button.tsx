@@ -141,8 +141,8 @@ export function Button({
     [],
   );
 
-  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
-  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   return (
     <Pressable

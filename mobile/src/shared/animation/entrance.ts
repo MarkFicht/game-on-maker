@@ -51,10 +51,10 @@ export function makeEntranceAnim(): EntranceAnim {
 }
 
 function makeOne(anim: EntranceAnim, delay: number): Animated.CompositeAnimation {
-  const fade = Animated.timing(anim.opacity, { toValue: 1, duration: 260, useNativeDriver: true });
+  const fade = Animated.timing(anim.opacity, { toValue: 1, duration: 400, useNativeDriver: true });
   const slide = Animated.spring(anim.translateY, {
     toValue: 0,
-    tension: 80,
+    tension: 50,
     friction: 8,
     useNativeDriver: true,
   });
@@ -65,7 +65,7 @@ function makeOne(anim: EntranceAnim, delay: number): Animated.CompositeAnimation
   ]);
 }
 
-export function startEntranceAll(anims: EntranceAnim[], delayBetween = 75): void {
+export function startEntranceAll(anims: EntranceAnim[], delayBetween = 110): void {
   anims.forEach(a => {
     a.opacity.setValue(0);
     a.translateY.setValue(24);

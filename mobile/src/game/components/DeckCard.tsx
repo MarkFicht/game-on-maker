@@ -49,7 +49,7 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
   const [bevelTop, bevelBot] = computeBevel(tintColor);
 
   const handlePressIn = () =>
-    Animated.spring(pressAnim, { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }).start();
+    Animated.spring(pressAnim, { toValue: 1, tension: 120, friction: 8, useNativeDriver: true }).start();
   const handlePressOut = () =>
     Animated.spring(pressAnim, { toValue: 0, tension: 200, friction: 8, useNativeDriver: true }).start();
 

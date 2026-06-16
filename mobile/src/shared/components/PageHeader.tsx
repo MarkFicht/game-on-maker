@@ -39,8 +39,8 @@ function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
     [],
   );
 
-  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
-  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   return (
     <View style={styles.btnShadow}>
@@ -109,8 +109,8 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
       titleOpacity.setValue(0);
       titleSlide.setValue(-12);
       titleAnim.current = Animated.parallel([
-        Animated.timing(titleOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-        Animated.spring(titleSlide, { toValue: 0, tension: 100, friction: 9, useNativeDriver: true }),
+        Animated.timing(titleOpacity, { toValue: 1, duration: 340, useNativeDriver: true }),
+        Animated.spring(titleSlide, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
       ]);
       titleAnim.current.start();
       return () => { titleAnim.current?.stop(); };

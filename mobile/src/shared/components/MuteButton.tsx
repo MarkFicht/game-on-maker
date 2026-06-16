@@ -26,8 +26,8 @@ export function MuteButton({ size = 'md', icon, onPress, accessibilityLabel }: M
     [],
   );
 
-  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
-  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start();
+  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   const handlePress = onPress ?? (() => updateSettings({ soundEnabled: !settings.soundEnabled }));
   const displayIcon = icon ?? (isMuted ? '🔇' : '🔊');
