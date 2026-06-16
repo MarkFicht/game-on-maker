@@ -16,6 +16,7 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "permissions": ["com.android.vending.BILLING"],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

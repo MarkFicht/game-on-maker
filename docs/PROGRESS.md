@@ -113,10 +113,11 @@
 - [ ] Produkcyjny build + submit
 
 **RevenueCat + AdMob:**
-- [ ] RevenueCat: konto usługi Google → JSON → wgrany do RevenueCat; produkt + entitlement `premium` + offering
-- [ ] `.env` → `EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID` + `_IOS`
+- [x] RevenueCat: produkt `premium_lifetime` + entitlement `premium` + offering `default` skonfigurowane
+- [x] `.env` → `EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=goog_xxx`
+- [ ] RevenueCat: service account JSON (zablokowane — Play Console "Dostęp do API" niedostępne dopóki app nie w produkcji)
 - [ ] AdMob: prawdziwe App ID → `app.json`; Interstitial + Banner Ad Units → `.env`
-- [ ] Testowe zakupy na sandbox (emulator lub fizyczne urządzenie)
+- [ ] Testowe zakupy na sandbox (fizyczne urządzenie z kontem na liście License Testers)
 
 **Testy przed submitem:**
 - [ ] Zakup premium sandbox → talie odblokowane + brak reklam
@@ -171,3 +172,6 @@ Cleanup: usunięto backward-compat shimy, martwy `game-over.tsx`, zduplikowane s
 
 ### 2026-06-14–15 — Faza 8: Store prep + poprawki wizualne
 Wszystkie zmiany z checklisty Fazy 8 powyżej. Crash P30 Lite zdiagnozowany (GPS outdated, nie bug kodu). Google Play Console: konto → app → preview APK → formularz finansowy. Stworzono `docs/ROADMAP.md` jako skondensowany plan publikacji.
+
+### 2026-06-16 — Faza 8: Grafiki, ikony, IAP + RevenueCat
+Logo `logo_home.png` wstawiony na home screen (zastąpił emoji 🎯). Przygotowano grafiki: `logo_app_512.png` (512×512, ikona Play Store), `android-icon-monochrome.png` (432×432), `feature_graphic_1024x500.png`, `favicon_48.png`. Dodano `react-native-purchases` BILLING permission do `app.json` + profil `preview-store` (AAB) do `eas.json`. Wgrano AAB do Internal Testing — odblokował się IAP. Stworzono produkt `premium_lifetime` w Play Console. RevenueCat: produkt + entitlement `premium` + offering `default` skonfigurowane, klucz API wpisany do `.env`. Service account JSON zablokowany (Play Console "Dostęp do API" niedostępne przed publikacją produkcyjną). Stworzono `docs/PAYMENTS_SETUP.md` jako przewodnik krok po kroku.
