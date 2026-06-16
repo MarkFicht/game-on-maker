@@ -3,6 +3,7 @@ import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Animated,
   Pressable,
@@ -227,7 +228,9 @@ export default function GameScreen() {
         <SafeAreaView style={styles.safe}>
           <PageHeader title={deck.name} onBack={handleCancel} />
           <Animated.View style={[styles.centeredFull, entranceStyle(readyAnim)]}>
-            <Text style={styles.deckEmoji}>{deck.icon}</Text>
+            {deck.image
+              ? <Image source={deck.image} style={styles.deckImage} />
+              : <Text style={styles.deckEmoji}>{deck.icon}</Text>}
             <Text style={styles.deckName}>{deck.name}</Text>
             <Text style={styles.deckMeta}>{deck.words.length} słów · {deck.difficulty}</Text>
             <View style={{ height: spacing.xl }} />
@@ -270,7 +273,9 @@ export default function GameScreen() {
         <SafeAreaView style={styles.safe}>
           <PageHeader title={deck.name} onBack={handleCancel} />
           <View style={styles.centeredFull}>
-            <Text style={[styles.deckEmoji, { marginBottom: -10 }]}>{deck.icon}</Text>
+            {deck.image
+              ? <Image source={deck.image} style={[styles.deckImage, { marginBottom: -10 }]} />
+              : <Text style={[styles.deckEmoji, { marginBottom: -10 }]}>{deck.icon}</Text>}
             <Animated.Text
               style={[styles.countdownNumber, { transform: [{ scale: countdownScale }] }]}
             >
@@ -308,11 +313,16 @@ export default function GameScreen() {
         <SafeAreaView style={styles.safe}>
           <PageHeader title="Gra wstrzymana" onBack={resumeGame} />
           <View style={styles.centeredFull}>
-            <Animated.Text style={[styles.pauseEmoji, {
-              transform: [{ scale: pauseEmojiScale }, { rotate: pauseEmojiDeg }],
-            }]}>
-              {deck?.icon ?? '⏸️'}
-            </Animated.Text>
+            {deck?.image ? (
+              <Animated.Image
+                source={deck.image}
+                style={[styles.pauseImage, { transform: [{ scale: pauseEmojiScale }, { rotate: pauseEmojiDeg }] }]}
+              />
+            ) : (
+              <Animated.Text style={[styles.pauseEmoji, { transform: [{ scale: pauseEmojiScale }, { rotate: pauseEmojiDeg }] }]}>
+                {deck?.icon ?? '⏸️'}
+              </Animated.Text>
+            )}
             <Animated.View style={{ opacity: pauseFade1, transform: [{ translateY: pauseSlide1 }] }}>
               <Text style={styles.pauseMeta}>{state.timeRemaining}s pozostało</Text>
             </Animated.View>
@@ -363,7 +373,7 @@ export default function GameScreen() {
           {/* Word card — fills the padded container */}
           <WordCard
             word={currentWord}
-            deckIcon={deck.icon}
+            deckImage={deck.image}
             onCorrect={markCorrect}
             onSkip={markSkipped}
             onAnswerSound={handleAnswerSound}
@@ -435,6 +445,11 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(79,70,229,0.4)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,
+  },
+  deckImage: {
+    width: 230,
+    height: 230,
+    marginBottom: spacing.sm,
   },
   deckName: {
     fontSize: 30,
@@ -520,6 +535,11 @@ const styles = StyleSheet.create({
   // ── Paused ───────────────────────────────────────────────
   pauseEmoji: {
     fontSize: 56,
+  },
+  pauseImage: {
+    width: 190,
+    height: 190,
+    marginBottom: spacing.sm,
   },
   pauseMeta: {
     fontSize: 15,

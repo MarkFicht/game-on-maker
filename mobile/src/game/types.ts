@@ -11,6 +11,7 @@ export interface Deck {
   words: Word[];
   isPremium: boolean;
   icon: string;
+  image?: number;
   color: string;
   difficulty?: 'easy' | 'medium' | 'hard';
 }

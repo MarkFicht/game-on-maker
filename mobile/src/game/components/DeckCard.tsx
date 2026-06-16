@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
+import { View, Text, Image, Pressable, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../shared/theme/colors';
 import { spacing, borderRadius } from '../../shared/theme/spacing';
@@ -102,7 +102,11 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
           )}
 
           <View style={[styles.content, isLocked && styles.contentLocked]}>
-            <Text style={styles.icon}>{deck.icon}</Text>
+            {deck.image ? (
+              <Image source={deck.image} style={styles.deckImage} />
+            ) : (
+              <Text style={styles.icon}>{deck.icon}</Text>
+            )}
             <View style={styles.info}>
               <View style={styles.titleRow}>
                 <Text style={styles.name} numberOfLines={1}>{deck.name}</Text>
@@ -150,7 +154,10 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(30,41,59,0.95)',
     borderRadius: borderRadius.lg - 3,
-    padding: spacing.md,
+    paddingTop: 4,
+    paddingBottom: 0,
+    paddingRight: spacing.md,
+    paddingLeft: 4,
     overflow: 'hidden',
   },
   lockOverlay: {
@@ -172,7 +179,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: spacing.md,
   },
   contentLocked: {
@@ -180,6 +187,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 36,
+  },
+  deckImage: {
+    width: 100,
+    height: 100,
+    marginBottom: -2,
   },
   info: {
     flex: 1,

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import {
   Animated,
+  Image,
   StyleSheet,
   Text,
   View,
@@ -16,7 +17,7 @@ import type { Word } from '../types';
 
 interface WordCardProps {
   word: Word | null;
-  deckIcon?: string;
+  deckImage?: number;
   onCorrect?: () => void;
   onSkip?: () => void;
   onAnswerSound?: (type: 'correct' | 'skip') => void;
@@ -26,7 +27,7 @@ interface WordCardProps {
 
 export function WordCard({
   word,
-  deckIcon,
+  deckImage,
   onCorrect,
   onSkip,
   onAnswerSound,
@@ -206,8 +207,8 @@ export function WordCard({
 
       {/* Word + deck icon overlay */}
       <View style={styles.wordOverlay} pointerEvents="none">
-        {deckIcon ? (
-          <Text style={[styles.deckIcon, { fontSize: isLandscape ? 20 : 26 }]}>{deckIcon}</Text>
+        {deckImage ? (
+          <Image source={deckImage} style={[styles.deckImage, isLandscape && styles.deckImageLandscape]} />
         ) : null}
         <Text
           style={[styles.wordText, { fontSize: wordFontSize }]}
@@ -284,10 +285,16 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     opacity: 0.5,
   },
-  deckIcon: {
+  deckImage: {
     position: 'absolute',
     top: spacing.md,
     left: spacing.md,
+    width: 48,
+    height: 48,
+  },
+  deckImageLandscape: {
+    width: 34,
+    height: 34,
   },
   wordText: {
     fontWeight: '800',
