@@ -42,7 +42,7 @@ export function WordCard({
   const wordFontSize = isLandscape ? 34 : 54;
   const iconSize = isLandscape ? 22 : 30;
 
-  const flipAnim = useRef(new Animated.Value(0)).current;
+  const flipAnim = useRef(new Animated.Value(1)).current;
   const correctFlash = useRef(new Animated.Value(0)).current;
   const skipFlash = useRef(new Animated.Value(0)).current;
   const isAnimating = useRef(false);
