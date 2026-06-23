@@ -23,6 +23,7 @@ interface WordCardProps {
   onAnswerSound?: (type: 'correct' | 'skip') => void;
   fullscreen?: boolean;
   vibrationEnabled?: boolean;
+  disabled?: boolean;
 }
 
 export function WordCard({
@@ -33,6 +34,7 @@ export function WordCard({
   onAnswerSound,
   fullscreen,
   vibrationEnabled = true,
+  disabled = false,
 }: WordCardProps) {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
@@ -51,8 +53,8 @@ export function WordCard({
   const cardLayoutHeight = useRef(0);
 
   // Stable ref to latest props — avoids stale closures in callbacks
-  const propsRef = useRef({ onCorrect, onSkip, onAnswerSound, vibrationEnabled });
-  propsRef.current = { onCorrect, onSkip, onAnswerSound, vibrationEnabled };
+  const propsRef = useRef({ onCorrect, onSkip, onAnswerSound, vibrationEnabled, disabled });
+  propsRef.current = { onCorrect, onSkip, onAnswerSound, vibrationEnabled, disabled };
 
   // Word appearance: spring in from edge (suppressed during our own flip)
   useEffect(() => {
@@ -71,9 +73,9 @@ export function WordCard({
   // Full answer sequence: flash card → flip out → swap word → flip in
   const triggerAnswer = useCallback((type: 'correct' | 'skip') => {
     if (isAnimating.current) return;
+    const { onCorrect, onSkip, onAnswerSound, vibrationEnabled: vib, disabled: dis } = propsRef.current;
+    if (dis) return;
     isAnimating.current = true;
-
-    const { onCorrect, onSkip, onAnswerSound, vibrationEnabled: vib } = propsRef.current;
     const flashAnim = type === 'correct' ? correctFlash : skipFlash;
 
     onAnswerSound?.(type);

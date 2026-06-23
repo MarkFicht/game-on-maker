@@ -189,6 +189,7 @@ export default function GameScreen() {
   };
 
   const handleCancel = () => {
+    setGamePhase('ready');
     reset();
     router.back();
   };
@@ -200,6 +201,8 @@ export default function GameScreen() {
   };
 
   const handleHome = () => {
+    setGamePhase('ready');
+    reset();
     router.replace('/');
   };
 
@@ -377,6 +380,7 @@ export default function GameScreen() {
             onCorrect={markCorrect}
             onSkip={markSkipped}
             onAnswerSound={handleAnswerSound}
+            disabled={state.status !== 'playing'}
             fullscreen
             vibrationEnabled={settings.vibrationEnabled}
           />
