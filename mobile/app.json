@@ -16,9 +16,7 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "permissions": [
-        "com.android.vending.BILLING"
-      ],
+      "permissions": ["com.android.vending.BILLING"],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -38,7 +36,7 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "androidAppId": "ca-app-pub-3065180504928244~8476416077",
           "iosAppId": "ca-app-pub-3940256099942544~1458002511",
           "delay_app_measurement_init": true,
           "userTrackingUsageDescription": "Ta aplikacja korzysta z danych reklamowych, aby wyświetlać dopasowane reklamy."

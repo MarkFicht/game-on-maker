@@ -117,8 +117,8 @@
 **RevenueCat + AdMob:**
 - [x] RevenueCat: produkt `premium_lifetime` + entitlement `premium` + offering `default` skonfigurowane
 - [x] `.env` → `EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=goog_xxx`
-- [ ] RevenueCat: service account JSON (zablokowane — Play Console "Dostęp do API" niedostępne dopóki app nie w produkcji)
-- [ ] AdMob: prawdziwe App ID → `app.json`; Interstitial + Banner Ad Units → `.env`
+- [x] RevenueCat: service account JSON — `revenuecat@plated-client-491815-q9.iam.gserviceaccount.com` dodane jako użytkownik w Play Console (Użytkownicy i uprawnienia, uprawnienie Finanse) + JSON wgrany w RevenueCat (Service Account Credentials). Nie był potrzebny żaden "Dostęp do API" ani produkcyjne wydanie — wcześniejsza notatka o blokadzie była błędna/nieaktualna.
+- [x] AdMob: prawdziwe App ID → `app.json`; Interstitial + Banner Ad Units → `.env` (Rewarded ID pozostaje `TODO_FILL_LATER` — niewpięty w UI, "planowane")
 - [ ] Testowe zakupy na sandbox (fizyczne urządzenie z kontem na liście License Testers)
 
 **Testy przed submitem:**
@@ -184,3 +184,8 @@ Logo `logo_home.png` wstawiony na home screen (zastąpił emoji 🎯). Przygotow
 **Custom `AppSplashScreen`** (`src/shared/components/AppSplashScreen.tsx`) zamiast pustego natywnego ekranu ładowania: to samo tło co w apce, duże logo (270px) przyciemnione i odkrywane animowaną maską od lewej do prawej, pasek skanujący podświetlający dokładnie kontur logo, licznik % postępu. `AppReadyContext` (`src/core/AppReadyContext.ts`) + `SplashGate` w `_layout.tsx` gateują entrance-animację Home (`useFocusEffect`) tak, by odpaliła się dopiero po zniknięciu splasha.
 
 Maskowanie paska skanującego do okrągłego konturu logo (kwadratowy canvas, przezroczyste narożniki) przeszło przez kilka iteracji: zwykły `overflow:hidden` + gradient fade nie nadążał za krzywizną koła → `@react-native-masked-view/masked-view` (jego web shim ignoruje `children` i renderuje tylko `maskElement` — niedziałające na webie) → finalnie `react-native-svg`: `<Mask maskType="alpha">` na native, a na web całe `<Svg>` maskowane przez CSS `mask-image` (bo `<Mask>` w `react-native-svg` zawsze forwarduje `maskType` do realnego DOM `<mask>`, niezależnie co się przekaże — trzeba całkowicie ominąć ten element na webie). Dodatkowo `expo-asset` (`Asset.fromModule(...).downloadAsync()`) do preloadu `bg`+`logo` przed startem animacji — `Image.resolveAssetSource`/`prefetch` nie wystarczają, bo `react-native-web` nie implementuje `resolveAssetSource`.
+
+### 2026-06-25 — Faza 8: AdMob prawdziwe ID + odblokowanie RevenueCat service account
+**AdMob:** utworzona aplikacja Android w AdMob Console → App ID `ca-app-pub-3065180504928244~8476416077` wpisany w `app.json` (`androidAppId`). Utworzone Ad Units Interstitial (`.../6756140291`) i Banner (`.../3938405265`) → `.env`. Rewarded Ad Unit pominięty (niewpięty w UI). Kod już wcześniej miał poprawny fallback (`__DEV__` → zawsze TestIds, produkcja → `env.admob.*`), więc realne ID działają tylko w production build.
+
+**RevenueCat service account JSON — odblokowane:** poprzednia notatka "zablokowane, Play Console Dostęp do API niedostępne przed produkcją" była błędna/nieaktualna. Strona "Dostęp do API" w Ustawieniach **już nie istnieje** w Play Console — Google przeniosło to wprost do **Konto dewelopera → Użytkownicy i uprawnienia → Zaprosić nowych użytkowników** (poziom konta, nie wewnątrz aplikacji), gdzie dodaje się e-mail konta usługi z uprawnieniem **Finanse**. Nie wymaga to opublikowanej wersji produkcyjnej. Service account `revenuecat@plated-client-491815-q9.iam.gserviceaccount.com` był już dodany jako aktywny użytkownik z uprawnieniem Finanse, a JSON klucza już wgrany w RevenueCat (Service Account Credentials) — temat faktycznie zamknięty. Zaktualizowano `PAYMENTS_SETUP.md` i `ROADMAP.md`, żeby nie odtwarzać tej (błędnej) blokady w kolejnych sesjach.

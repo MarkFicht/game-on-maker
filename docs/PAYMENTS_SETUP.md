@@ -36,11 +36,15 @@ Zapisz → zmień status na **Aktywny**.
 
 ## 3. Google Play Console — nadaj uprawnienia kontu usługi
 
-**Play Console → Użytkownicy i uprawnienia → Zaprosić nowych użytkowników**
+> Uwaga: nie ma już osobnej strony "Dostęp do API" w Ustawieniach (Google to przeniosło/usunęło). Konto usługi dodaje się wprost jako użytkownik konta dewelopera — nie wymaga to opublikowanej aplikacji produkcyjnej.
+
+**Play Console → (poziom konta, nie wewnątrz aplikacji) → Konto dewelopera → Użytkownicy i uprawnienia → Zaprosić nowych użytkowników**
 
 - Email: adres konta usługi (`revenuecat@plated-client-491815-q9.iam.gserviceaccount.com`)
 - Uprawnienia: zaznacz **Finanse** (Wyświetlaj dane finansowe, zamówienia...)
 - Kliknij Zastosuj → Zaproś użytkownika
+
+Status: ✅ zrobione — konto widoczne na liście jako "Aktywne", uprawnienie Finanse przyznane.
 
 ---
 
@@ -75,13 +79,9 @@ Klucz znajdziesz w RevenueCat → Project Settings → API Keys → Public app-s
 
 ---
 
-## 5b. Znane ograniczenie — service account JSON
+## 5b. Service account JSON — status
 
-"Dostęp do API" w Play Console jest niedostępny dla kont bez opublikowanej aplikacji produkcyjnej. Pomiń ten krok teraz — RevenueCat działa w trybie sandbox bez niego. Wróć do tego po pierwszej publikacji:
-
-1. Play Console → Konfiguracja → Dostęp do API → Połącz z Google Cloud
-2. Nadaj kontu usługi `revenuecat@plated-client-491815-q9.iam.gserviceaccount.com` dostęp
-3. Wgraj JSON w RevenueCat → Apps → WordRushMF → Service Account Credentials
+✅ Zrobione (2026-06-25). Wcześniejsza notatka o blokadzie ("Dostęp do API niedostępne dopóki app nie w produkcji") była błędna — ta strona w Ustawieniach już nie istnieje, a dodanie konta usługi jako użytkownika konta (krok 3 powyżej) nie wymaga produkcyjnego wydania. JSON wgrany w RevenueCat → Apps → WordRushMF → Service Account Credentials.
 
 ---
 

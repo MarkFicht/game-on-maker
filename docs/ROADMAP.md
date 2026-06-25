@@ -8,7 +8,7 @@
 
 **Google Play Console** → jesteś w formularzu **"Utwórz domyślną stronę aplikacji"**.
 
-Zrobione: konto ✅ → aplikacja `com.wordrushmf.game` ✅ → preview APK wgrany ✅ → formularz finansowy ✅
+Zrobione: konto ✅ → aplikacja `com.wordrushmf.game` ✅ → preview APK wgrany ✅ → formularz finansowy ✅ → RevenueCat (produkt+JSON) ✅ → AdMob (App ID + Interstitial/Banner) ✅
 
 ---
 
@@ -40,15 +40,19 @@ Play Console → Zarabianie → Produkty kupowane raz → Utwórz
 
 ### 3. RevenueCat
 ```
-[ ] Play Console → Konfiguracja → Dostęp do API → konto usługi → pobierz JSON → wgraj do RevenueCat
-[ ] RevenueCat: dodaj produkt premium_lifetime → entitlement "premium" → offering
-[ ] .env → EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID="appl_xxx"
+[x] Konto usługi dodane jako użytkownik konta dewelopera (Konto dewelopera → Użytkownicy i uprawnienia →
+    Zaprosić użytkowników, uprawnienie Finanse) — UWAGA: strona "Dostęp do API" w Ustawieniach już nie
+    istnieje, to nie wymaga produkcyjnego wydania
+[x] JSON klucza wgrany w RevenueCat → Apps → WordRushMF → Service Account Credentials
+[x] RevenueCat: produkt premium_lifetime → entitlement "premium" → offering "default"
+[x] .env → EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID
 ```
 
 ### 4. Prawdziwe IDs AdMob
 ```
-[ ] admob.google.com → utwórz aplikację → skopiuj App ID → app.json
-[ ] Utwórz Interstitial + Banner Ad Units → .env
+[x] admob.google.com → aplikacja WordRushMF → App ID → app.json (androidAppId)
+[x] Interstitial + Banner Ad Units → .env
+[ ] Rewarded Ad Unit — pomiń, niewpięty w UI (status "planowane" w MONETIZATION.md)
 ```
 
 ### 5. Content rating + produkcyjny build
