@@ -5,7 +5,7 @@
 ## Aktualny status
 
 **Faza:** 8 — Publikacja (w toku)
-**Ostatnia sesja:** 2026-06-15
+**Ostatnia sesja:** 2026-06-25
 **Następny krok:** Dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty)
 
 ---
@@ -101,6 +101,8 @@
 - [x] PageHeader title badge — `paddingTop: 4` (label niżej, buttony bez zmian)
 - [x] Home title letter spacing: `1` (było `-1.5`)
 - [x] Start button — emoji 🎮 rozdzielony od tekstu `fontSize: 28` (jak `playIcon` na Home)
+- [x] Fix: dźwięk correct/skip odtwarzał się przy wyborze talii z ekranu decks po zakończonej grze — `disabled` prop na `WordCard` + `setGamePhase('ready')`+`reset()` w `handleCancel`/`handleHome` przed nawigacją
+- [x] Custom `AppSplashScreen` — animowany loading screen zamiast natywnego: to samo tło co w apce, duże logo odkrywane lewo→prawo + pasek skanujący maskowany do konturu logo (`react-native-svg` na native, CSS `mask-image` na web), % progresu, preload `bg`+`logo` przez `expo-asset` przed startem animacji; `AppReadyContext` synchronizuje entrance-animację Home z końcem splasha
 
 **Google Play Console:**
 - [x] Konto dewelopera założone i zweryfikowane
@@ -175,3 +177,10 @@ Wszystkie zmiany z checklisty Fazy 8 powyżej. Crash P30 Lite zdiagnozowany (GPS
 
 ### 2026-06-16 — Faza 8: Grafiki, ikony, IAP + RevenueCat
 Logo `logo_home.png` wstawiony na home screen (zastąpił emoji 🎯). Przygotowano grafiki: `logo_app_512.png` (512×512, ikona Play Store), `android-icon-monochrome.png` (432×432), `feature_graphic_1024x500.png`, `favicon_48.png`. Dodano `react-native-purchases` BILLING permission do `app.json` + profil `preview-store` (AAB) do `eas.json`. Wgrano AAB do Internal Testing — odblokował się IAP. Stworzono produkt `premium_lifetime` w Play Console. RevenueCat: produkt + entitlement `premium` + offering `default` skonfigurowane, klucz API wpisany do `.env`. Service account JSON zablokowany (Play Console "Dostęp do API" niedostępne przed publikacją produkcyjną). Stworzono `docs/PAYMENTS_SETUP.md` jako przewodnik krok po kroku.
+
+### 2026-06-25 — Faza 8: Custom splash screen + sound bug fix
+**Fix:** dźwięk correct/skip odtwarzał się przy wybraniu talii z ekranu decks po zakończonej grze (race condition — `WordCard` nie był jeszcze odmontowany w momencie nawigacji). Naprawione trzema zmianami: `disabled` prop na `WordCard` sprawdzany w `triggerAnswer` przed ustawieniem `isAnimating.current`, `setGamePhase('ready')` w `handleCancel` (odmontowuje `WordCard` przed `router.back()`), `reset()` w `handleHome` przed `router.replace('/')`.
+
+**Custom `AppSplashScreen`** (`src/shared/components/AppSplashScreen.tsx`) zamiast pustego natywnego ekranu ładowania: to samo tło co w apce, duże logo (270px) przyciemnione i odkrywane animowaną maską od lewej do prawej, pasek skanujący podświetlający dokładnie kontur logo, licznik % postępu. `AppReadyContext` (`src/core/AppReadyContext.ts`) + `SplashGate` w `_layout.tsx` gateują entrance-animację Home (`useFocusEffect`) tak, by odpaliła się dopiero po zniknięciu splasha.
+
+Maskowanie paska skanującego do okrągłego konturu logo (kwadratowy canvas, przezroczyste narożniki) przeszło przez kilka iteracji: zwykły `overflow:hidden` + gradient fade nie nadążał za krzywizną koła → `@react-native-masked-view/masked-view` (jego web shim ignoruje `children` i renderuje tylko `maskElement` — niedziałające na webie) → finalnie `react-native-svg`: `<Mask maskType="alpha">` na native, a na web całe `<Svg>` maskowane przez CSS `mask-image` (bo `<Mask>` w `react-native-svg` zawsze forwarduje `maskType` do realnego DOM `<mask>`, niezależnie co się przekaże — trzeba całkowicie ominąć ten element na webie). Dodatkowo `expo-asset` (`Asset.fromModule(...).downloadAsync()`) do preloadu `bg`+`logo` przed startem animacji — `Image.resolveAssetSource`/`prefetch` nie wystarczają, bo `react-native-web` nie implementuje `resolveAssetSource`.
