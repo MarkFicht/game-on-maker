@@ -12,11 +12,13 @@ import { router, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GradientBackground, PageHeader } from '../src/shared/components';
 import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
+import { useAppReady } from '../src/core/AppReadyContext';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
 
 export default function HomeScreen() {
   const { isPremium } = usePaymentsContext();
+  const appReady = useAppReady();
 
   const emojiScale  = useRef(new Animated.Value(0)).current;
   const emojiRotate = useRef(new Animated.Value(-0.3)).current;
@@ -28,9 +30,14 @@ export default function HomeScreen() {
   const playPressAnim = useRef(new Animated.Value(0)).current;
   const premPressAnim = useRef(new Animated.Value(0)).current;
 
-  // Re-run entrance animation every time the home screen comes into focus
+  // Re-run entrance animation every time the home screen comes into focus.
+  // Guarded by appReady so the animation fires only after the splash has
+  // faded out — otherwise it would play hidden underneath the splash and
+  // the home screen would appear unanimated.
   useFocusEffect(
     useCallback(() => {
+      if (!appReady) return;
+
       emojiScale.setValue(0);
       emojiRotate.setValue(-0.3);
       fadeUp1.setValue(0);
@@ -71,7 +78,7 @@ export default function HomeScreen() {
         entrance.stop();
         pulseLoop?.stop();
       };
-    }, [])
+    }, [appReady])
   );
 
   const rotate = emojiRotate.interpolate({ inputRange: [-1, 1], outputRange: ['-18deg', '18deg'] });
