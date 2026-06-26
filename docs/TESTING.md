@@ -239,6 +239,18 @@ describe('Firestore Security Rules', () => {
 
 ---
 
+## 4b. Testowanie na żywo na urządzeniu (dev client, bez kabla)
+
+Cloud build (`eas build`) jest potrzebny tylko gdy zmienia się coś natywnego (plugin w `app.json`, nowa natywna zależność, ikona). Dla zmian JS/TS/assets — szybsza pętla:
+
+1. Jednorazowo: `eas build --platform android --profile development` (profil już w `eas.json`, wymaga `expo-dev-client`).
+2. Zainstaluj APK na telefonie (link z buildu, bez Play Console).
+3. `npx expo start --dev-client` — domyślnie LAN, telefon i komputer muszą być w tej samej sieci WiFi.
+4. **Hotspot telefonu (np. iPhone Personal Hotspot) izoluje podłączone urządzenia od siebie** — LAN nie zadziała mimo wspólnej sieci, mimo że oba urządzenia widać w tej samej podsieci. Użyj `npx expo start --dev-client --tunnel` (wymaga `@expo/ngrok` jako devDependency — już zainstalowane).
+5. Jeśli LAN nie łączy mimo zwykłego routera ("host unreachable"): sprawdź czy Windows nie reklamuje złego adaptera sieciowego (np. Hyper-V `vEthernet`, jeśli masz WSL/Docker) — wymuś prawdziwe IP karty WiFi: `$env:REACT_NATIVE_PACKAGER_HOSTNAME = "<IP karty WiFi>"` przed `expo start`.
+
+---
+
 ## 5. Ręczne testy przed publikacją
 
 ### iOS (TestFlight)

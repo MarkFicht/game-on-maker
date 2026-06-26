@@ -7,15 +7,20 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Asset } from 'expo-asset';
 import Svg, { Defs, Mask, Image as SvgImage, Rect, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useScreenDimensions } from '../hooks/useScreenDimensions';
 
 const LOGO      = require('../../../assets/logo/logo_home.png');
 const BG        = require('../../../assets/bg.jpg');
 const LOGO_SIZE = 270;
+// Matches app.json's expo-splash-screen `imageWidth` — the native Android
+// splash settles its icon at this size, so we start from the same scale and
+// grow into LOGO_SIZE instead of popping to full size, continuing the
+// motion instead of looking like a second, disconnected loading screen.
+const NATIVE_SPLASH_ICON_WIDTH = 170;
 const SCAN_W    = 22;
 const BG_OVERLAY = ['rgba(8,12,22,0.38)', 'rgba(12,18,36,0.34)', 'rgba(18,10,32,0.40)'] as const;
 const FALLBACK_BG = '#0d1220';
@@ -27,7 +32,7 @@ interface AppSplashScreenProps {
 }
 
 export function AppSplashScreen({ isAuthReady, onDone }: AppSplashScreenProps) {
-  const { width, height } = useWindowDimensions();
+  const { width, height } = useScreenDimensions();
 
   const phase1DoneRef    = useRef(false);
   const phase2StartedRef = useRef(false);
@@ -38,6 +43,7 @@ export function AppSplashScreen({ isAuthReady, onDone }: AppSplashScreenProps) {
 
   const progress      = useRef(new Animated.Value(0)).current;
   const screenOpacity = useRef(new Animated.Value(1)).current;
+  const logoScale     = useRef(new Animated.Value(NATIVE_SPLASH_ICON_WIDTH / LOGO_SIZE)).current;
   const [percent, setPercent] = useState(0);
   const [scanX, setScanX] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
@@ -107,6 +113,15 @@ export function AppSplashScreen({ isAuthReady, onDone }: AppSplashScreenProps) {
       setScanX(value * LOGO_SIZE);
     });
 
+    // Continues the native splash's icon-zoom motion instead of popping to
+    // full size — runs alongside, not instead of, the reveal sweep below.
+    Animated.timing(logoScale, {
+      toValue: 1,
+      duration: 320,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+
     Animated.timing(progress, {
       toValue: 0.85,
       duration: 2200,
@@ -153,7 +168,7 @@ export function AppSplashScreen({ isAuthReady, onDone }: AppSplashScreenProps) {
          *     whole <Svg> via CSS mask-image instead (see webMaskStyle) to
          *     avoid a console warning from react-native-svg's <Mask> on web.
          */}
-        <View style={styles.logoOuter}>
+        <Animated.View style={[styles.logoOuter, { transform: [{ scale: logoScale }] }]}>
 
           {/* A — dim base, always fully visible */}
           <Image
@@ -195,7 +210,7 @@ export function AppSplashScreen({ isAuthReady, onDone }: AppSplashScreenProps) {
             <Rect x={scanX} y={0} width={2} height={LOGO_SIZE} fill="#ffffff" fillOpacity={0.95} mask={IS_WEB ? undefined : 'url(#logoMask)'} />
           </Svg>
 
-        </View>
+        </Animated.View>
 
         <Text style={styles.percentText}>{percent}%</Text>
       </View>

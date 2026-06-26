@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { AuthProvider, useAuthContext } from '../src/core/auth/AuthProvider';
 import { PaymentsProvider, usePaymentsContext } from '../src/core/payments/PaymentsProvider';
@@ -36,36 +37,42 @@ function SplashGate({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <PaymentsProvider>
-        <AdsProviderBridge>
-          <SplashGate>
-            <Stack
-              screenOptions={{
-                header: ({ navigation, back, options }) => (
-                  <PageHeader
-                    title={options.title ?? 'Dummy'}
-                    showBack={back != null}
-                    onBack={() => navigation.goBack()}
-                  />
-                ),
-                headerShown: false,
-                contentStyle: { backgroundColor: 'transparent' },
-                animation: 'none',
-                gestureEnabled: true,
-              }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="decks" />
-              <Stack.Screen name="game" />
-              <Stack.Screen name="settings" />
-              <Stack.Screen name="store" />
-              <Stack.Screen name="privacy" />
-              <Stack.Screen name="terms" />
-            </Stack>
-          </SplashGate>
-        </AdsProviderBridge>
-      </PaymentsProvider>
-    </AuthProvider>
+    // initialMetrics lets every screen render with correct insets on its very
+    // first frame — without it, a freshly-mounted screen briefly has zero/stale
+    // insets until they're measured, which shows up as the header/buttons
+    // "jumping" into their real position right after navigating to a new route.
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <AuthProvider>
+        <PaymentsProvider>
+          <AdsProviderBridge>
+            <SplashGate>
+              <Stack
+                screenOptions={{
+                  header: ({ navigation, back, options }) => (
+                    <PageHeader
+                      title={options.title ?? 'Dummy'}
+                      showBack={back != null}
+                      onBack={() => navigation.goBack()}
+                    />
+                  ),
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                  animation: 'none',
+                  gestureEnabled: true,
+                }}
+              >
+                <Stack.Screen name="index" />
+                <Stack.Screen name="decks" />
+                <Stack.Screen name="game" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="store" />
+                <Stack.Screen name="privacy" />
+                <Stack.Screen name="terms" />
+              </Stack>
+            </SplashGate>
+          </AdsProviderBridge>
+        </PaymentsProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

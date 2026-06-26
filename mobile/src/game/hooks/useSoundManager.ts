@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { createAudioPlayer, AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, preload, AudioPlayer } from 'expo-audio';
 
 type SoundKey = 'correct' | 'skip' | 'countdown' | 'gameover' | 'click';
 
@@ -10,6 +10,17 @@ const SOURCES: Record<SoundKey, number> = {
   gameover:  require('../../../assets/sounds/gameover.wav'),
   click:     require('../../../assets/sounds/click.wav'),
 };
+
+// Module scope, before any player is created — without this, the first
+// play() of a freshly-created player can be silent or delayed (cold-start
+// buffering), even after awaiting seekTo(). See expo-audio docs: preload().
+// Wrapped defensively — expo-audio's web shim doesn't reliably return a real
+// Promise here, so calling .catch() on its result directly can throw.
+for (const source of Object.values(SOURCES)) {
+  try {
+    Promise.resolve(preload(source)).catch(() => {});
+  } catch {}
+}
 
 export function useSoundManager(soundEnabled: boolean) {
   const players = useRef<Partial<Record<SoundKey, AudioPlayer>>>({});
@@ -32,9 +43,11 @@ export function useSoundManager(soundEnabled: boolean) {
     if (!enabledRef.current) return;
     const player = players.current[key];
     if (!player) return;
-    // seekTo() is async — play() must wait for it or the very first call on a
-    // freshly-created player can race the seek and produce no sound at all.
-    player.seekTo(0).then(() => player.play()).catch(() => {});
+    try {
+      // seekTo() is async — play() must wait for it or the very first call on
+      // a freshly-created player can race the seek and produce no sound at all.
+      Promise.resolve(player.seekTo(0)).then(() => player.play()).catch(() => {});
+    } catch {}
   };
 
   const stopAll = () => {

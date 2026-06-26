@@ -6,7 +6,7 @@
 
 **Faza:** 8 — Publikacja (w toku)
 **Ostatnia sesja:** 2026-06-26
-**Następny krok:** Zbudować versionCode 5 (poprawki z tej sesji), przetestować na P30 Lite, potem dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty)
+**Następny krok:** Przetestować rundę 2 poprawek (SafeAreaProvider, audio preload, splash transition) przez dev client + WiFi tunnel, potem dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty)
 
 ---
 
@@ -225,3 +225,19 @@ Build z fixem `env.ts` (versionCode 4) zainstalowany i **crash zniknął** — p
 - **Animacja tytułu `PageHeader`** spowolniona/wygładzona na życzenie (slide -12→-18, opacity 340→520ms, spring tension 60→38) — jeden komponent, efekt na każdym ekranie.
 
 **Dziura w testach znaleziona przy okazji:** `expo-audio` i `@react-native-async-storage/async-storage` nigdy nie miały mocków w Jest — nic wcześniej nie importowało ich transitywnie w testach (np. `Button.test.tsx` był czysto prezentacyjny). Moment, gdy `Button.tsx` zaczął zależeć od `useSettings`/`clickSound`, to ujawnił. Dodano `__mocks__/expo-audio.js` + `jest.mock('@react-native-async-storage/async-storage', ...)` w `jest.setup.js` (oficjalny mock z pakietu). 139/139 ✅, `tsc` 0 błędów.
+
+### 2026-06-26 — Faza 8: Runda 2 poprawek po realnym teście + setup dev clienta przez WiFi
+Po zbudowaniu versionCode 5 i teście na P30 Lite, kolejna porcja błędów drugiego planu — kilka z nich okazało się, że runda 1 nie wystarczyła:
+
+- **Skip wciąż bez dźwięku/wibracji od razu (tylko od 2. razu)** — `await seekTo()` z rundy 1 nie wystarczył. Znaleziono oficjalne `preload()` z `expo-audio` (preload źródła **przed** `createAudioPlayer`, inaczej pierwsze odtworzenie może być ciche/spóźnione nawet po załadowaniu). Wpięte w `useSoundManager.ts` na poziomie modułu.
+- **Szary pasek na ekranie ładowania nadal widoczny** — `AppSplashScreen.tsx` miał **własną kopię** tego samego kodu (`useWindowDimensions`) co `GradientBackground`, fix z rundy 1 objął tylko jeden plik. Przeniesiono do współdzielonego `shared/hooks/useScreenDimensions.ts` (`Dimensions.get('screen')`), używają go oba komponenty.
+- **Migotanie tła w title badge `PageHeader`** — efekt spowolnienia opacity z rundy 1 (520ms = dłużej widać kolorowe `bg.jpg` przeświecające przez póloprzezroczysty badge). Opacity wraca do 220ms (szybko solidne), slide zostaje wolny (spring tension 38→32, friction 10→11) — efekt "ładnego zjazdu" zostaje, bez prześwitu.
+- **Przeskok `PageHeader`/przycisków po nawigacji** — nowa hipoteza: apka **nie miała `SafeAreaProvider`** w drzewie wcale. Świeżo zamontowany ekran ma chwilę zerowe/nieaktualne insets, zanim się zmierzą — stąd skok pozycji tylko przy nawigacji na nowy ekran (nie przy "zagraj jeszcze raz" w tym samym ekranie). Dodano `SafeAreaProvider` z `initialMetrics={initialWindowMetrics}` w `_layout.tsx`.
+- **Poświata na ikonach w rogach — wciąż niezweryfikowane** — fix z rundy 1 (`backgroundColor: transparent`) nie pomógł. Dodatkowo zmniejszono `elevation` 5→2 na `PageHeader`/`MuteButton` (Android honoruje tylko `elevation`, nie `shadowColor`/`Offset`/`Opacity`/`Radius` — to iOS-only).
+- **Custom splash "wygląda jak atrapa" po natywnym** — na życzenie: logo w `AppSplashScreen` startuje w skali natywnej ikony (170/270 ≈ 0.63) i rośnie do pełnego rozmiaru w 320ms, kontynuując ruch zamiast zaczynać drugą, odłączoną animację.
+
+**Crash na `npm run web`** po tych zmianach: `Cannot read properties of undefined (reading 'catch')` w `useSoundManager.ts` — `expo-audio`'s `preload()` na web nie zwraca prawdziwego `Promise`. Fix: `Promise.resolve(preload(source)).catch(...)` + `try/catch`, też w `play()` dla konsystencji.
+
+**Setup dev clienta do testowania bez cloud builda:** zainstalowano `expo-dev-client`, zbudowano profil `development` (już istniał w `eas.json` z poprzedniej sesji, brakował tylko pakietu). Odkryto że **hotspot iPhone'a izoluje podłączone urządzenia od siebie** — LAN mode (`npx expo start --dev-client`) dawał "host unreachable" mimo wspólnej sieci z telefonem. Fix: `--tunnel` (przez serwery Expo, wymaga `@expo/ngrok` — doinstalowane). Po drodze też zdiagnozowano (ale nie był to finalny problem) konflikt adapterów sieciowych Windows — Hyper-V `vEthernet` vs prawdziwe WiFi, fix przez `$env:REACT_NATIVE_PACKAGER_HOSTNAME`. Procedura opisana w `docs/TESTING.md` sekcja "4b".
+
+`tsc` 0 błędów, 139/139 testów. **Nie zbudowano jeszcze versionCode 6** — runda 2 ma być testowana przez dev client/tunnel, nie kolejny cloud build, żeby przyspieszyć iterację.

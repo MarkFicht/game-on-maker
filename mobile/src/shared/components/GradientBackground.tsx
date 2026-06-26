@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, StatusBar, Image, Dimensions, ScaledSize } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, StatusBar, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useScreenDimensions } from '../hooks/useScreenDimensions';
 
 const bgImage = require('../../../assets/bg.jpg');
 
@@ -10,18 +11,6 @@ const BG_OVERLAY = ['rgba(8,12,22,0.38)', 'rgba(12,18,36,0.34)', 'rgba(18,10,32,
 interface GradientBackgroundProps {
   children: React.ReactNode;
   overlayColors?: readonly [string, string, ...string[]];
-}
-
-// 'screen' (not 'window') = the full physical display. On Android, 'window'
-// can exclude the system navigation bar, leaving a gap at the bottom of a
-// pixel-sized full-bleed background — 'screen' always covers edge to edge.
-function useScreenDimensions(): ScaledSize {
-  const [dims, setDims] = useState(() => Dimensions.get('screen'));
-  useEffect(() => {
-    const sub = Dimensions.addEventListener('change', ({ screen }) => setDims(screen));
-    return () => sub.remove();
-  }, []);
-  return dims;
 }
 
 export function GradientBackground({ children, overlayColors = BG_OVERLAY }: GradientBackgroundProps) {

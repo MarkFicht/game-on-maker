@@ -7,4 +7,8 @@ function createAudioPlayer() {
   };
 }
 
-module.exports = { createAudioPlayer };
+function preload() {
+  return Promise.resolve();
+}
+
+module.exports = { createAudioPlayer, preload };

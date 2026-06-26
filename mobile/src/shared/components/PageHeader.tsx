@@ -115,8 +115,10 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
       titleOpacity.setValue(0);
       titleSlide.setValue(-18);
       titleAnim.current = Animated.parallel([
-        Animated.timing(titleOpacity, { toValue: 1, duration: 520, useNativeDriver: true }),
-        Animated.spring(titleSlide, { toValue: 0, tension: 38, friction: 10, useNativeDriver: true }),
+        // Fast opacity so the (mostly-opaque) badge covers the busy page
+        // background quickly — only the slide should read as "slow".
+        Animated.timing(titleOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.spring(titleSlide, { toValue: 0, tension: 32, friction: 11, useNativeDriver: true }),
       ]);
       titleAnim.current.start();
       return () => { titleAnim.current?.stop(); };
@@ -203,16 +205,16 @@ const styles = StyleSheet.create({
     width: BTN,
     height: BTN,
     borderRadius: BTN / 2,
-    // Android needs an actual (even fully transparent) background drawable
-    // to clip the elevation shadow to this borderRadius — without it, the
-    // shadow falls back to the square view bounds and shows as a halo/ring
-    // around the circular button.
     backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.40,
     shadowRadius: 6,
-    elevation: 5,
+    // Android only honors `elevation` (shadowColor/Offset/Opacity/Radius are
+    // iOS-only) and renders it as its own fixed Material shadow shape —
+    // toned down from 5 since it was showing as a halo/ring around the
+    // circular button on Android.
+    elevation: 2,
   },
   btnClip: {
     width: BTN,

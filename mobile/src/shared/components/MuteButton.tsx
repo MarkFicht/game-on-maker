@@ -92,15 +92,14 @@ export function MuteButton({ size = 'md', icon, onPress, accessibilityLabel }: M
 
 const styles = StyleSheet.create({
   shadow: {
-    // Android needs an actual (even fully transparent) background drawable to
-    // clip the elevation shadow to the circular borderRadius — without it, the
-    // shadow falls back to the square view bounds and shows as a halo/ring.
     backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.40,
     shadowRadius: 6,
-    elevation: 5,
+    // Android only honors `elevation` and renders its own fixed Material
+    // shadow shape — toned down from 5, was showing as a halo/ring on Android.
+    elevation: 2,
   },
   clip: {
     overflow: 'hidden',
