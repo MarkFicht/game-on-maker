@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius } from '../theme';
+import { useSettings } from '../../game/hooks/useSettings';
+import { playClickSound } from '../sound/clickSound';
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
@@ -134,6 +136,7 @@ export function Button({
   const isDisabled = disabled || loading;
   const radius = borderRadius.xl;
   const innerRadius = radius - 4;
+  const { settings } = useSettings();
 
   const pressAnim = useRef(new Animated.Value(0)).current;
   const convexOpacity = useMemo(
@@ -141,7 +144,10 @@ export function Button({
     [],
   );
 
-  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  const onPressIn = () => {
+    if (settings.soundEnabled) playClickSound();
+    Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  };
   const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   return (

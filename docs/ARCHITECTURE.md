@@ -218,6 +218,16 @@ EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=
 EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=
 ```
 
+> ⚠️ **`.env` lokalny ≠ `.env` w EAS Build.** `.env` jest w `.gitignore` (poprawnie — nie commitujemy kluczy), ale to znaczy, że cloud build EAS nigdy go nie zobaczy. Bez dodatkowego kroku każdy build z `eas build` ma te zmienne jako `undefined` → `validateEnv()` (`config/env.ts`) rzuca błąd przy starcie → **apka crashuje na każdym urządzeniu, natychmiast po starcie** (objaw: krótki natywny splash, potem zamknięcie/zminimalizowanie). Tak wyglądał ten błąd w praktyce — wcześniej mylnie zdiagnozowany jako problem sprzętowy (stary GPS na Huawei).
+>
+> **Dla każdej nowej gry z tego boilerplate'u, jednorazowo:**
+> 1. W `eas.json` każdy profil w `build` musi mieć pole `"environment"` (`"development"` / `"preview"` / `"production"`) — bez tego EAS nie wie, których zmiennych użyć, nawet jeśli istnieją.
+> 2. Wgraj lokalny `.env` do każdego środowiska: `eas env:push --environment production --path .env` (powtórz dla `preview` i `development`).
+> 3. Po zmianie wartości w `.env` — **trzeba wgrać ponownie** (`eas env:push ... --force`), inaczej EAS Build używa starych wartości.
+> 4. Sprawdź zawartość: `eas env:list --environment production`.
+>
+> ⚠️ **Druga pułapka, niezależna od powyższej:** Expo inline'uje `EXPO_PUBLIC_*` do bundla **tylko** przy statycznym dot-notation dostępie (`process.env.EXPO_PUBLIC_X`). `process.env[someVariable]` (dynamiczny dostęp przez zmienną, np. w pętli po liście nazw) **nie jest** wykrywany przez babel-inliner i w standalone buildzie zawsze zwróci `undefined` — mimo że w `expo start` (Metro dev server) działa, bo dev server podaje żywy `process.env`. To dokładnie ten bug spowodował crash apki na starcie 2026-06-25/26 (patrz log sesji) — `config/env.ts` iterował po tablicy nazw zmiennych i robił `process.env[key]`. **Każda zmienna musi być referencjonowana osobno, statycznie**, np. `process.env.EXPO_PUBLIC_FIREBASE_API_KEY` — nie przez tablicę/pętlę.
+
 ---
 
 ## Konwencje nazewnictwa

@@ -13,11 +13,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { GradientBackground, PageHeader } from '../src/shared/components';
 import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
 import { useAppReady } from '../src/core/AppReadyContext';
+import { useSettings } from '../src/game/hooks/useSettings';
+import { playClickSound } from '../src/shared/sound/clickSound';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
 
 export default function HomeScreen() {
   const { isPremium } = usePaymentsContext();
+  const { settings } = useSettings();
   const appReady = useAppReady();
 
   const emojiScale  = useRef(new Animated.Value(0)).current;
@@ -123,7 +126,10 @@ export default function HomeScreen() {
             <Animated.View style={{ transform: [{ scale: playPulse }] }}>
               <Pressable
                 onPress={() => router.push('/decks')}
-                onPressIn={() => Animated.timing(playPressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
+                onPressIn={() => {
+                  if (settings.soundEnabled) playClickSound();
+                  Animated.timing(playPressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+                }}
                 onPressOut={() => Animated.timing(playPressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start()}
               >
                 <View style={styles.playBevel}>
@@ -152,7 +158,10 @@ export default function HomeScreen() {
             {/* Premium button */}
             <Pressable
               onPress={() => router.push('/store')}
-              onPressIn={() => Animated.timing(premPressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
+              onPressIn={() => {
+                if (settings.soundEnabled) playClickSound();
+                Animated.timing(premPressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+              }}
               onPressOut={() => Animated.timing(premPressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start()}
             >
               <View style={styles.premBevel}>

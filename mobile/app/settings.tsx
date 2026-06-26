@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSettings } from '../src/game/hooks/useSettings';
 import { usePayments } from '../src/core/payments/usePayments';
 import { GradientBackground, PageHeader, Button } from '../src/shared/components';
+import { playClickSound } from '../src/shared/sound/clickSound';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
 const DURATIONS = [30, 60, 90, 120] as const;
@@ -34,6 +35,7 @@ const SW_MARGIN  = 4;
 const SW_TRAVEL  = SW_TRACK_W - SW_THUMB - SW_MARGIN * 2;
 
 function CustomSwitch({ value, onValueChange }: { value: boolean; onValueChange: (v: boolean) => void }) {
+  const { settings } = useSettings();
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
@@ -44,8 +46,13 @@ function CustomSwitch({ value, onValueChange }: { value: boolean; onValueChange:
   const onAlpha  = anim;
   const offAlpha = useMemo(() => anim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
 
+  const handlePress = () => {
+    if (settings.soundEnabled) playClickSound();
+    onValueChange(!value);
+  };
+
   return (
-    <Pressable onPress={() => onValueChange(!value)} style={styles.switchWrap}>
+    <Pressable onPress={handlePress} style={styles.switchWrap}>
       {/* OFF */}
       <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2, opacity: offAlpha }]}>
         <LinearGradient colors={['rgba(51,65,85,0.95)', 'rgba(15,23,42,0.95)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2 }]} />
@@ -78,9 +85,13 @@ function CustomSwitch({ value, onValueChange }: { value: boolean; onValueChange:
 }
 
 function DurationBtn({ duration, isActive, onPress }: { duration: number; isActive: boolean; onPress: () => void }) {
+  const { settings } = useSettings();
   const pressAnim    = useRef(new Animated.Value(0)).current;
   const convexOpacity = useMemo(() => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
-  const onPressIn    = () => Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  const onPressIn    = () => {
+    if (settings.soundEnabled) playClickSound();
+    Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  };
   const onPressOut   = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   return (

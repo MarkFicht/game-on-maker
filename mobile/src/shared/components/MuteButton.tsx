@@ -2,6 +2,7 @@ import { useRef, useMemo } from 'react';
 import { View, Pressable, Text, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSettings } from '../../game/hooks/useSettings';
+import { playClickSound } from '../sound/clickSound';
 
 interface MuteButtonProps {
   size?: 'sm' | 'md';
@@ -26,7 +27,10 @@ export function MuteButton({ size = 'md', icon, onPress, accessibilityLabel }: M
     [],
   );
 
-  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  const onPressIn = () => {
+    if (settings.soundEnabled) playClickSound();
+    Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  };
   const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   const handlePress = onPress ?? (() => updateSettings({ soundEnabled: !settings.soundEnabled }));
@@ -88,6 +92,10 @@ export function MuteButton({ size = 'md', icon, onPress, accessibilityLabel }: M
 
 const styles = StyleSheet.create({
   shadow: {
+    // Android needs an actual (even fully transparent) background drawable to
+    // clip the elevation shadow to the circular borderRadius — without it, the
+    // shadow falls back to the square view bounds and shows as a halo/ring.
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.40,

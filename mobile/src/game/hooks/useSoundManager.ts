@@ -32,10 +32,9 @@ export function useSoundManager(soundEnabled: boolean) {
     if (!enabledRef.current) return;
     const player = players.current[key];
     if (!player) return;
-    try {
-      player.seekTo(0);
-      player.play();
-    } catch { }
+    // seekTo() is async — play() must wait for it or the very first call on a
+    // freshly-created player can race the seek and produce no sound at all.
+    player.seekTo(0).then(() => player.play()).catch(() => {});
   };
 
   const stopAll = () => {

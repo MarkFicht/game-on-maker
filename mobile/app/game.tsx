@@ -210,6 +210,7 @@ export default function GameScreen() {
     return (
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
+          <PageHeader title="Talia" onBack={() => router.back()} />
           <View style={styles.centered}>
             <Text style={styles.errorText}>Nie znaleziono talii</Text>
             <Button

@@ -3,6 +3,8 @@ import { View, Text, Image, Pressable, StyleSheet, Animated } from 'react-native
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../shared/theme/colors';
 import { spacing, borderRadius } from '../../shared/theme/spacing';
+import { useSettings } from '../hooks/useSettings';
+import { playClickSound } from '../../shared/sound/clickSound';
 import type { Deck } from '../types';
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -42,14 +44,17 @@ interface DeckCardProps {
 }
 
 export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordCount = true }: DeckCardProps) {
+  const { settings } = useSettings();
   const pressAnim = useRef(new Animated.Value(0)).current;
   const tintColor = deck.color ?? colors.primary;
   const tintHigh = hexToRgba(tintColor, 0.18);
   const tintLow = hexToRgba(tintColor, 0.04);
   const [bevelTop, bevelBot] = computeBevel(tintColor);
 
-  const handlePressIn = () =>
+  const handlePressIn = () => {
+    if (settings.soundEnabled) playClickSound();
     Animated.spring(pressAnim, { toValue: 1, tension: 120, friction: 8, useNativeDriver: true }).start();
+  };
   const handlePressOut = () =>
     Animated.spring(pressAnim, { toValue: 0, tension: 200, friction: 8, useNativeDriver: true }).start();
 

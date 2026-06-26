@@ -16,7 +16,10 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "permissions": ["com.android.vending.BILLING"],
+      "versionCode": 5,
+      "permissions": [
+        "com.android.vending.BILLING"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -56,7 +59,16 @@
       ],
       "expo-apple-authentication",
       "expo-router",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo/logo_home.png",
+          "imageWidth": 170,
+          "resizeMode": "contain",
+          "backgroundColor": "#0d1220"
+        }
+      ]
     ],
     "extra": {
       "eas": {

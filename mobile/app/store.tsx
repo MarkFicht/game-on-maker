@@ -14,6 +14,8 @@ import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePayments } from '../src/core/payments/usePayments';
 import { GradientBackground, PageHeader, Button } from '../src/shared/components';
+import { useSettings } from '../src/game/hooks/useSettings';
+import { playClickSound } from '../src/shared/sound/clickSound';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
 
@@ -49,10 +51,15 @@ function PackageBtn({
     ? ['#4F46E5', '#3730A3']
     : ['rgba(30,41,59,0.90)', 'rgba(20,28,48,0.90)'];
 
+  const { settings } = useSettings();
   const pressAnim    = useRef(new Animated.Value(0)).current;
   const convexOpacity = useMemo(() => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
   const isDisabled   = loading || isPurchased;
-  const onPressIn    = () => { if (!isDisabled) Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start(); };
+  const onPressIn    = () => {
+    if (isDisabled) return;
+    if (settings.soundEnabled) playClickSound();
+    Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  };
   const onPressOut   = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   return (

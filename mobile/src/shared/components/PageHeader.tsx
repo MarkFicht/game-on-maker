@@ -5,6 +5,8 @@ import Svg, { Path } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import { MuteButton } from './MuteButton';
 import { colors, spacing, borderRadius } from '../theme';
+import { useSettings } from '../../game/hooks/useSettings';
+import { playClickSound } from '../sound/clickSound';
 
 interface PageHeaderProps {
   title?: string;
@@ -33,13 +35,17 @@ function BackChevron() {
 }
 
 function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
+  const { settings } = useSettings();
   const pressAnim = useRef(new Animated.Value(0)).current;
   const convexOpacity = useMemo(
     () => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
     [],
   );
 
-  const onPressIn  = () => Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  const onPressIn = () => {
+    if (settings.soundEnabled) playClickSound();
+    Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  };
   const onPressOut = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
 
   return (
@@ -100,17 +106,17 @@ function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
 
 export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, onBack }: PageHeaderProps) {
   const titleOpacity = useRef(new Animated.Value(0)).current;
-  const titleSlide   = useRef(new Animated.Value(-12)).current;
+  const titleSlide   = useRef(new Animated.Value(-18)).current;
   const titleAnim    = useRef<Animated.CompositeAnimation | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       titleAnim.current?.stop();
       titleOpacity.setValue(0);
-      titleSlide.setValue(-12);
+      titleSlide.setValue(-18);
       titleAnim.current = Animated.parallel([
-        Animated.timing(titleOpacity, { toValue: 1, duration: 340, useNativeDriver: true }),
-        Animated.spring(titleSlide, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
+        Animated.timing(titleOpacity, { toValue: 1, duration: 520, useNativeDriver: true }),
+        Animated.spring(titleSlide, { toValue: 0, tension: 38, friction: 10, useNativeDriver: true }),
       ]);
       titleAnim.current.start();
       return () => { titleAnim.current?.stop(); };
@@ -197,6 +203,11 @@ const styles = StyleSheet.create({
     width: BTN,
     height: BTN,
     borderRadius: BTN / 2,
+    // Android needs an actual (even fully transparent) background drawable
+    // to clip the elevation shadow to this borderRadius — without it, the
+    // shadow falls back to the square view bounds and shows as a halo/ring
+    // around the circular button.
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.40,

@@ -5,8 +5,8 @@
 ## Aktualny status
 
 **Faza:** 8 — Publikacja (w toku)
-**Ostatnia sesja:** 2026-06-25
-**Następny krok:** Dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty)
+**Ostatnia sesja:** 2026-06-26
+**Następny krok:** Zbudować versionCode 5 (poprawki z tej sesji), przetestować na P30 Lite, potem dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty)
 
 ---
 
@@ -103,6 +103,14 @@
 - [x] Start button — emoji 🎮 rozdzielony od tekstu `fontSize: 28` (jak `playIcon` na Home)
 - [x] Fix: dźwięk correct/skip odtwarzał się przy wyborze talii z ekranu decks po zakończonej grze — `disabled` prop na `WordCard` + `setGamePhase('ready')`+`reset()` w `handleCancel`/`handleHome` przed nawigacją
 - [x] Custom `AppSplashScreen` — animowany loading screen zamiast natywnego: to samo tło co w apce, duże logo odkrywane lewo→prawo + pasek skanujący maskowany do konturu logo (`react-native-svg` na native, CSS `mask-image` na web), % progresu, preload `bg`+`logo` przez `expo-asset` przed startem animacji; `AppReadyContext` synchronizuje entrance-animację Home z końcem splasha
+- [x] Fix: dźwięk skip nie odtwarzał się przy pierwszym użyciu w grze — `seekTo()` w `expo-audio` jest async, `play()` był wywoływany bez czekania na nią (race na świeżo utworzonym playerze). `useSoundManager.ts` teraz czeka na `seekTo()` przed `play()`
+- [x] Dźwięk kliknięcia na "zwykłych" przyciskach — nowy `shared/sound/clickSound.ts` (lekki, jeden współdzielony player), wpięty w `Button`, `PageHeader`, `MuteButton`, `DeckCard`, Home (Zagraj/Premium), Store (`PackageBtn`), Settings (`CustomSwitch`, `DurationBtn`)
+- [x] Fix: szary pasek na dole ekranu na Androidzie — `GradientBackground` liczył tło z `useWindowDimensions()` ('window', może wykluczać pasek nawigacji systemowej); zmienione na `Dimensions.get('screen')` (pełny fizyczny ekran)
+- [x] Fix: "button w buttonie" / halo na okrągłych ikonach `PageHeader`/`MuteButton` — Android renderuje cień (`elevation`) jako kwadratowy halo gdy `View` nie ma `backgroundColor`; dodano `backgroundColor: 'transparent'` na widokach z cieniem
+- [x] Natywny splash icon — `imageWidth` 270→170 w `expo-splash-screen` (Android 12+ wymusza własną maskę/zoom-animację na ikonie splasha niezależnie od konfiguracji; mniejszy `imageWidth` daje marginesu na maskowanie, nie da się tego całkiem wyłączyć)
+- [x] `PageHeader` — animacja tytułu spowolniona i wygładzona (slide -12→-18, opacity 340→520ms, spring tension 60→38) — dotyczy każdego ekranu, bo to jeden współdzielony komponent
+- [x] Fix: `PageHeader` znikał na chwilę przy przejściu Decks→Game (przeskok górnych przycisków) — early-return `if (!deck)` w `game.tsx` nie renderował `PageHeader` wcale; dodany
+- [x] Jest: dodano brakujące mocki `expo-audio` (`__mocks__/expo-audio.js`) i `@react-native-async-storage/async-storage` (`jest.setup.js`) — nikt wcześniej nie testował komponentów zależnych od dźwięku/ustawień, więc dziura była niewidoczna do teraz
 
 **Google Play Console:**
 - [x] Konto dewelopera założone i zweryfikowane
@@ -135,7 +143,7 @@
 
 | Problem | Notatka |
 |---|---|
-| Crash na Huawei P30 Lite | GPS v22.5 za stary (wymaga v25.24) → WebView GPU crash (SIGSEGV CrGpuMain) przy AdMob. NIE bug kodu — aktualizacja GPS na telefonie rozwiązuje. Na produkcji nie wystąpi. |
+| ~~Crash na Huawei P30 Lite — stary GPS~~ | **OBALONE 2026-06-25.** Logcat pokazał prawdziwą przyczynę: `Missing required env var: EXPO_PUBLIC_FIREBASE_API_KEY` — EAS Build nigdy nie miał dostępu do `.env` (gitignored, brak `environment` w `eas.json`, brak EAS env vars). Dotyczyło **każdego** urządzenia, nie tylko P30 Lite. Naprawione (patrz log sesji 2026-06-25) — jeśli crash wróci na innym urządzeniu, to **nie** jest ten sam bug, sprawdzić logcat od nowa. |
 | Firestore nigdy nie wywoływany | `savePlayerProgress`/`loadPlayerProgress` istnieją ale żaden screen ich nie wywołuje. Decyzja: zostawić pod przyszły leaderboard albo usunąć. |
 | Firebase Analytics | `src/core/analytics/index.ts` jest pusty — placeholder, niezaimplementowane |
 | Decks mają ~15 słów | Za mało dla party game — minimum 40 per deck (Sprint 2) |
@@ -189,3 +197,31 @@ Maskowanie paska skanującego do okrągłego konturu logo (kwadratowy canvas, pr
 **AdMob:** utworzona aplikacja Android w AdMob Console → App ID `ca-app-pub-3065180504928244~8476416077` wpisany w `app.json` (`androidAppId`). Utworzone Ad Units Interstitial (`.../6756140291`) i Banner (`.../3938405265`) → `.env`. Rewarded Ad Unit pominięty (niewpięty w UI). Kod już wcześniej miał poprawny fallback (`__DEV__` → zawsze TestIds, produkcja → `env.admob.*`), więc realne ID działają tylko w production build.
 
 **RevenueCat service account JSON — odblokowane:** poprzednia notatka "zablokowane, Play Console Dostęp do API niedostępne przed produkcją" była błędna/nieaktualna. Strona "Dostęp do API" w Ustawieniach **już nie istnieje** w Play Console — Google przeniosło to wprost do **Konto dewelopera → Użytkownicy i uprawnienia → Zaprosić nowych użytkowników** (poziom konta, nie wewnątrz aplikacji), gdzie dodaje się e-mail konta usługi z uprawnieniem **Finanse**. Nie wymaga to opublikowanej wersji produkcyjnej. Service account `revenuecat@plated-client-491815-q9.iam.gserviceaccount.com` był już dodany jako aktywny użytkownik z uprawnieniem Finanse, a JSON klucza już wgrany w RevenueCat (Service Account Credentials) — temat faktycznie zamknięty. Zaktualizowano `PAYMENTS_SETUP.md` i `ROADMAP.md`, żeby nie odtwarzać tej (błędnej) blokady w kolejnych sesjach.
+
+### 2026-06-25 — Faza 8: Znaleziono i naprawiono prawdziwą przyczynę crasha "P30 Lite" — EAS Build nie miał env vars
+Podczas testu sandbox zakupów apka crashowała na starcie (krótki natywny splash → zamknięcie). `adb logcat` (USB debugging, tryb "Przesyłanie plików" żeby adb widział urządzenie) pokazał: `JavascriptException: Error: Missing required env var: EXPO_PUBLIC_FIREBASE_API_KEY` z `config/env.ts` → `validateEnv()`.
+
+**Przyczyna:** `mobile/.env` jest w `.gitignore` (poprawnie), ale `eas.json` nie miał pola `"environment"` na żadnym profilu i żadne zmienne nie były wgrane do EAS Environment Variables (`eas env:list` pokazywało puste dla `development`/`preview`/`production`). Cloud build EAS klonuje repo z gita — bez `.env` i bez EAS env vars, `EXPO_PUBLIC_*` wpada jako `undefined` w skompilowanym bundlu → crash na starcie, na **każdym** urządzeniu, nie tylko Huawei P30 Lite. Wcześniejsza diagnoza "stary GPS" była błędnym zgadywaniem bez logów — obalona, patrz tabela "Znane problemy".
+
+**Fix:** `eas.json` — dodano `"environment": "development"/"preview"/"production"` do odpowiednich profili. `eas env:push --environment <env> --path .env` (development, preview, production) — wgrane wszystkie zmienne z lokalnego `.env`. Zweryfikowane przez `eas env:list`. Dodano ostrzeżenie do `ARCHITECTURE.md` (sekcja "Zmienne środowiskowe"), żeby przyszłe gry z tego boilerplate'u nie powtórzyły tego błędu.
+
+**Wymaga nowego builda** (`eas build --profile preview-store`) żeby przetestować fix na urządzeniu — aktualnie zainstalowany Internal Testing AAB (z 6.06.2026) nadal będzie crashował, bo zmienne wpisuje się w bundle w momencie budowania, nie przy starcie apki.
+
+**Dopisek — fix env vars był niewystarczający, prawdziwy bug znaleziony po kolejnym buildzie:** zbudowano `preview-store` (versionCode 1 → konflikt z istniejącym Internal Testing release → versionCode 2/3 z włączonym `autoIncrement` na profilu, build `da31da5f`), wgrano do Play Console, zainstalowano na P30 Lite (`adb shell dumpsys package` potwierdził versionCode=3) — **apka nadal crashowała z tym samym błędem `Missing required env var`**. Nowy `adb logcat` pokazał identyczny stack trace mimo że build log jasno potwierdzał "Environment variables ... loaded from the 'preview' environment on EAS".
+
+Prawdziwa przyczyna: `config/env.ts` czytał zmienne przez **dynamiczny dostęp** `process.env[key]` (`key` jako zmienna z pętli po `REQUIRED_VARS`/`OPTIONAL_VARS`). Expo/babel inline'uje `EXPO_PUBLIC_*` do bundla **tylko** dla statycznego `process.env.NAZWA` (dot notation) — potwierdzone w docs.expo.dev/guides/environment-variables. Dynamiczny dostęp przez zmienną nigdy nie zostaje zainline'owany, więc w standalone buildzie (bez Metro dev server) zawsze daje `undefined` — działało tylko przypadkiem w `expo start` dev mode. Dlatego wszystkie wcześniejsze sesje (Faza 2+) widziały działający Firebase Auth — testowano tylko przez dev server, nigdy przez prawdziwy build, aż do teraz.
+
+**Fix:** przepisano `mobile/src/config/env.ts` — każda zmienna referencjonowana statycznie (`process.env.EXPO_PUBLIC_FIREBASE_API_KEY` itd.), bez pętli/tablicy nazw. `tsc` 0 błędów, 138/139 testów (1 flaky timeout, niezależny od zmiany, przechodzi w izolacji). Dodano ostrzeżenie do `ARCHITECTURE.md`. **Kolejny build wymagany** żeby faktycznie to zweryfikować na urządzeniu.
+
+### 2026-06-26 — Faza 8: env.ts fix zweryfikowany + runda poprawek dźwięku/UI po pierwszym ręcznym teście na P30 Lite
+Build z fixem `env.ts` (versionCode 4) zainstalowany i **crash zniknął** — pierwszy działający build na fizycznym urządzeniu w tej fazie. Ręczny test na P30 Lite ujawnił kilka błędów drugiego planu, wszystkie naprawione bez nowego builda pomiędzy (jeden build zbiera wszystko):
+
+- **Dźwięk skip nie grał przy pierwszym użyciu** — `seekTo()` w `expo-audio` jest async, kod wywoływał `play()` bez czekania na nią; pierwsze wywołanie na świeżo utworzonym playerze mogło przegrać wyścig z ładowaniem. Naprawione w `useSoundManager.ts` (`seekTo().then(play)`).
+- **Brak dźwięku kliknięcia na "zwykłych" przyciskach** — `useSoundManager`'s `playClick` istniał, ale nieużywany generycznie. Nowy lekki singleton `shared/sound/clickSound.ts`, wpięty w `Button`, `PageHeader`, `MuteButton`, `DeckCard`, a po doprecyzowaniu przez użytkownika — też Home (Zagraj/Premium), Store (`PackageBtn`), Settings (`CustomSwitch`, `DurationBtn`), bo to wszystko custom `Pressable`, nie `Button.tsx`.
+- **Szary pasek na dole ekranu** — `GradientBackground` liczył tło z `useWindowDimensions()` ('window', może wykluczać Android nav bar pod edge-to-edge); zmienione na `Dimensions.get('screen')`.
+- **"Button w buttonie" na okrągłych ikonach** (`PageHeader`/`MuteButton`) — Android renderuje `elevation`-shadow jako kwadratowy halo gdy `View` nie ma `backgroundColor` (outline provider nie ma z czego wyliczyć zaokrąglonego kształtu). Fix: `backgroundColor: 'transparent'` na widokach z cieniem. Nie zweryfikowane wizualnie (best-effort bez screenshotu).
+- **"Brzydkie kółko" na natywnym splashu** — Android 12+ zawsze nakłada własną maskę+zoom-animację na ikonę splasha, nie da się tego wyłączyć. `logo_home.png` jest już okrągłym badge wypełnionym do krawędzi (brak marginesu) — zmniejszono `imageWidth` 270→170 w `expo-splash-screen`, żeby dać systemowej masce zapas. Nie zweryfikowane wizualnie.
+- **`PageHeader` znikał na chwilę przy przejściu Decks→Game** — early-return `if (!deck)` w `game.tsx` (gdy `deckId` z routingu jeszcze się nie rozwiązał) nie renderował `PageHeader` wcale → header + przyciski wyskakiwały dopiero gdy `deck` się ustalił. Dodany `PageHeader` też do tej ścieżki.
+- **Animacja tytułu `PageHeader`** spowolniona/wygładzona na życzenie (slide -12→-18, opacity 340→520ms, spring tension 60→38) — jeden komponent, efekt na każdym ekranie.
+
+**Dziura w testach znaleziona przy okazji:** `expo-audio` i `@react-native-async-storage/async-storage` nigdy nie miały mocków w Jest — nic wcześniej nie importowało ich transitywnie w testach (np. `Button.test.tsx` był czysto prezentacyjny). Moment, gdy `Button.tsx` zaczął zależeć od `useSettings`/`clickSound`, to ujawnił. Dodano `__mocks__/expo-audio.js` + `jest.mock('@react-native-async-storage/async-storage', ...)` w `jest.setup.js` (oficjalny mock z pakietu). 139/139 ✅, `tsc` 0 błędów.
