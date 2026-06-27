@@ -5,8 +5,8 @@
 ## Aktualny status
 
 **Faza:** 8 — Publikacja (w toku)
-**Ostatnia sesja:** 2026-06-26
-**Następny krok:** Przetestować rundę 2 poprawek (SafeAreaProvider, audio preload, splash transition) przez dev client + WiFi tunnel, potem dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty)
+**Ostatnia sesja:** 2026-06-27
+**Następny krok:** Dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty, opis), potem produkt `premium_lifetime` + content rating + testy sandbox przed submitem
 
 ---
 
@@ -100,7 +100,7 @@
 - [x] WordCard flip fix — 16ms `setTimeout` przy -90° żeby React zdążył wyrenderować nowe słowo
 - [x] PageHeader title badge — `paddingTop: 4` (label niżej, buttony bez zmian)
 - [x] Home title letter spacing: `1` (było `-1.5`)
-- [x] Start button — emoji 🎮 rozdzielony od tekstu `fontSize: 28` (jak `playIcon` na Home)
+- [x] ~~Start button — emoji 🎮 rozdzielony od tekstu `fontSize: 28` (jak `playIcon` na Home)~~ — zastąpione 2026-06-27 przez wspólny `Button` (zobacz log sesji), emoji teraz w jednym `Text` z labelem jak w resztcie apki
 - [x] Fix: dźwięk correct/skip odtwarzał się przy wyborze talii z ekranu decks po zakończonej grze — `disabled` prop na `WordCard` + `setGamePhase('ready')`+`reset()` w `handleCancel`/`handleHome` przed nawigacją
 - [x] Custom `AppSplashScreen` — animowany loading screen zamiast natywnego: to samo tło co w apce, duże logo odkrywane lewo→prawo + pasek skanujący maskowany do konturu logo (`react-native-svg` na native, CSS `mask-image` na web), % progresu, preload `bg`+`logo` przez `expo-asset` przed startem animacji; `AppReadyContext` synchronizuje entrance-animację Home z końcem splasha
 - [x] Fix: dźwięk skip nie odtwarzał się przy pierwszym użyciu w grze — `seekTo()` w `expo-audio` jest async, `play()` był wywoływany bez czekania na nią (race na świeżo utworzonym playerze). `useSoundManager.ts` teraz czeka na `seekTo()` przed `play()`
@@ -111,6 +111,9 @@
 - [x] `PageHeader` — animacja tytułu spowolniona i wygładzona (slide -12→-18, opacity 340→520ms, spring tension 60→38) — dotyczy każdego ekranu, bo to jeden współdzielony komponent
 - [x] Fix: `PageHeader` znikał na chwilę przy przejściu Decks→Game (przeskok górnych przycisków) — early-return `if (!deck)` w `game.tsx` nie renderował `PageHeader` wcale; dodany
 - [x] Jest: dodano brakujące mocki `expo-audio` (`__mocks__/expo-audio.js`) i `@react-native-async-storage/async-storage` (`jest.setup.js`) — nikt wcześniej nie testował komponentów zależnych od dźwięku/ustawień, więc dziura była niewidoczna do teraz
+- [x] **Architektura `PageHeader`** — przerobiony na "SPA-style": renderowany raz w `_layout.tsx` (`PersistentPageHeader`), nigdy się nie odmontowuje przy nawigacji. Ekrany deklarują wygląd headera przez `useHeaderConfig({...})` (`HeaderConfig.tsx`, kontekst rozdzielony na value/setter, żeby wołanie settera nie re-renderowało ekranu który je wywołał). Header animuje tytuł tylko gdy faktycznie się zmienia (exit→swap→enter), niezależnie od cyklu życia ekranu — naprawiło realny "przeskok" headera przy nawigacji
+- [x] **System gradient→obrazek** (`scripts/generate-gradients.js`, `pngjs`) — żywe `LinearGradient` zamienione na pre-renderowane PNG wszędzie gdzie kolory są statyczne: `DurationBtn`/`CustomSwitch` (Settings), cały `Button.tsx` (wszystkie warianty + nowy `accent`), title badge w `PageHeader`, "Przygotuj się!" w `game.tsx`, 3 karty statystyk w `ResultsView`. Zmierzony efekt na Settings: mount ~1.2–1.8s → ~712ms. Źródło 1024×96 (nie kwadrat!) — `resizeMode="stretch"` na Androidzie psuje obraz przy dużym współczynniku rozciągania w jednej osi (sprawdzone na żywo, dwie różne awarie: zbyt mała szerokość → widoczny szew na szerokich przyciskach, zbyt mała wysokość → "ucięty" dół); gęstość pikseli telefonu mnoży wymiary dp, więc nawet "mały" element potrzebuje dużego źródła
+- [x] Home (Zagraj/Premium) i Game (Start) — własne, ręcznie pisane przyciski zastąpione wspólnym `Button` (nowy wariant `accent` na pomarańczowy CTA) — jeden komponent przycisku w całej apce, automatyczny zysk z optymalizacji obrazków powyżej
 
 **Google Play Console:**
 - [x] Konto dewelopera założone i zweryfikowane
@@ -239,5 +242,25 @@ Po zbudowaniu versionCode 5 i teście na P30 Lite, kolejna porcja błędów drug
 **Crash na `npm run web`** po tych zmianach: `Cannot read properties of undefined (reading 'catch')` w `useSoundManager.ts` — `expo-audio`'s `preload()` na web nie zwraca prawdziwego `Promise`. Fix: `Promise.resolve(preload(source)).catch(...)` + `try/catch`, też w `play()` dla konsystencji.
 
 **Setup dev clienta do testowania bez cloud builda:** zainstalowano `expo-dev-client`, zbudowano profil `development` (już istniał w `eas.json` z poprzedniej sesji, brakował tylko pakietu). Odkryto że **hotspot iPhone'a izoluje podłączone urządzenia od siebie** — LAN mode (`npx expo start --dev-client`) dawał "host unreachable" mimo wspólnej sieci z telefonem. Fix: `--tunnel` (przez serwery Expo, wymaga `@expo/ngrok` — doinstalowane). Po drodze też zdiagnozowano (ale nie był to finalny problem) konflikt adapterów sieciowych Windows — Hyper-V `vEthernet` vs prawdziwe WiFi, fix przez `$env:REACT_NATIVE_PACKAGER_HOSTNAME`. Procedura opisana w `docs/TESTING.md` sekcja "4b".
+
+### 2026-06-27 — Faza 8: Architektura `PageHeader` (SPA-style) + optymalizacja wydajności Settings
+Użytkownik zgłosił realny, mierzalny problem: przejście Home→Settings "myśli" sekundę, a `PageHeader` na chwilę pokazywał stary tytuł po nawigacji. Kilka rund zgadywania (SafeAreaProvider, deferred audio init, ThemeProvider) nie pomogły — dopiero architektoniczne spojrzenie ujawniło prawdziwą przyczynę: `PageHeader` był renderowany per-ekran (`<PageHeader title="..." />` w JSX każdego screena), więc **odmontowywał się i montował na nowo przy każdej nawigacji** — to jest, co dawało "skok".
+
+**Fix — `PageHeader` jako SPA:** `PersistentPageHeader` renderowany raz w `app/_layout.tsx`, absolutnie pozycjonowany nad `Stack`. `HeaderConfig.tsx` — kontekst React rozdzielony na **dwa** konteksty (value + setter): jeden combined kontekst re-renderowałby ekran wołający własny setter na każdej nawigacji (zmierzone, realna zwłoka). Ekrany wołają `useHeaderConfig({title, isHome, showBack, onBack, visible})` w `useFocusEffect`; `PageHeader` sam animuje tytuł (exit→swap→enter, 150ms fade-up + 220ms fade-in/spring) tylko gdy `title` faktycznie się zmienia — nie ma już pojęcia cyklu życia ekranu. Potwierdzone przez użytkownika: "świetnie! jest to coś innego i faktycznie nie skacze".
+
+**Optymalizacja Settings (mierzona, nie zgadywana):** tymczasowe `console.log('[PERF]')` + `adb logcat` zamiast zgadywania. Settings miał ~10+ jednocześnie aktywnych `LinearGradient` (DurationBtn ×4, CustomSwitch ×2, GlassCard sheen ×4) — kosztowne na słabszym GPU (Huawei P30 Lite / Kirin 710F liczy shader gradientu per-piksel, per-frame). Fixy: usunięcie sheen gradientu z `GlassCard` (niewidoczny efekt, ×4 koszt), **`scripts/generate-gradients.js`** (`pngjs`) — piecze statyczne kolory gradientów w PNG raz, offline; `DurationBtn`/`CustomSwitch` renderują `<Image resizeMode="stretch">` zamiast liczyć gradient na żywo (bitmapa to dla GPU prosty blit, nie program-shader). Zmierzony efekt: mount Settings ~1.2–1.8s → ~712ms (~45%).
+
+Po drodze: poprawiono migotanie OFF/ON w `CustomSwitch` (świeżo montowany obrazek potrzebuje klatki na dekodowanie — fix: oba stany zawsze zamontowane, nie warunkowo) i wycentrowanie kółka switcha (poprawka border-box: `borderWidth` zjada przestrzeń dostępną dla potomków `position:absolute`).
+
+### 2026-06-27 — Faza 8: System gradient→obrazek rozszerzony na cały `Button.tsx` + konsolidacja custom przycisków
+Na życzenie użytkownika ("buttony co sa w CAŁEJ APCE") ta sama technika zastosowana do współdzielonego `Button.tsx` (primary/secondary/danger/outline/ghost + nowy `accent` pomarańczowy) — wszystkie warstwy bevel/depth zawsze zamontowane (bez warunkowego montowania, lekcja z `CustomSwitch` powyżej: świeży mount = ryzyko migotania). Dodatkowo, na wyraźne życzenie ("to przecież miałby być dokładnie ten sam button co wszędzie w apce"), Home (Zagraj/Premium) i Game (Start) — wcześniej osobne, ręcznie pisane komponenty z duplikowaną logiką bevel/depth — zastąpione wspólnym `Button`. Efekt: jeden punkt prawdy dla wyglądu przycisku w całej apce, automatyczny zysk z optymalizacji obrazków, mniej kodu do utrzymania.
+
+Też skonwertowane: title badge w `PageHeader`, "Przygotuj się!" w `game.tsx` (dzielą ten sam bevel obrazek, różny depth overlay), 3 karty statystyk w `ResultsView` (Dobrze/Pominięte/Celność).
+
+**Dwie rundy fixów rozmiaru źródła** po realnym teście na urządzeniu — `resizeMode="stretch"` na Androidzie psuje obraz przy dużym współczynniku rozciągania w jednej osi, niezależnie od tego, która to oś:
+1. Szerokość 64px → widoczny szew na pełnoszerokim `Button` (rozciąganie ×5.5 w poziomie). Fix: szerokość źródła 1024px.
+2. Wysokość 64px → przyciski "ucięte od dołu". Przyczyna: gęstość pikseli telefonu (~2.75x) mnoży wymiary dp do fizycznych pikseli **przed** rozciąganiem, więc nawet "niska" oś potrzebuje dużego źródła. Finalnie: 96px wysokości (po doprecyzowaniu przez użytkownika z 256→128→96).
+
+Cały folder `assets/gradients/` (30 obrazków, 1024×96) waży **132KB** — rozciągnięty kompresuje się świetnie (jednolite kolory per-wiersz). `tsc` 0 błędów, 139/139 testów, potwierdzone wizualnie przez użytkownika na urządzeniu (Home, Settings, Store).
 
 `tsc` 0 błędów, 139/139 testów. **Nie zbudowano jeszcze versionCode 6** — runda 2 ma być testowana przez dev client/tunnel, nie kolejny cloud build, żeby przyspieszyć iterację.

@@ -1,17 +1,23 @@
-// One-off generator: bakes the fixed (non-dynamic) LinearGradient color
-// stops used on Settings (DurationBtn / CustomSwitch) into small PNGs.
-// Re-run with `node scripts/generate-gradients.js` whenever those color
-// stops change in app/settings.tsx — the images are NOT auto-synced.
+// One-off generator: bakes fixed (non-dynamic) LinearGradient color stops —
+// from Settings (DurationBtn / CustomSwitch) and the shared Button component
+// — into small PNGs. Re-run with `node scripts/generate-gradients.js`
+// whenever those color stops change in app/settings.tsx or
+// src/shared/components/Button.tsx — the images are NOT auto-synced.
 const fs = require('fs');
 const path = require('path');
 const { PNG } = require('pngjs');
 
 const OUT_DIR = path.join(__dirname, '..', 'assets', 'gradients');
-// A near-square source avoids resizeMode="stretch" distorting/mis-rendering
-// on Android — an earlier 8×120 (1:15) source stretched into a wide, short
-// target rendered as a narrow rounded blob instead of filling the box.
-const WIDTH = 64;
-const HEIGHT = 64;
+// resizeMode="stretch" on Android mis-renders when one axis needs a large
+// magnification factor — an 8×120 (1:15) source stretched into a wide,
+// short target rendered as a narrow rounded blob; a 64×64 source stretched
+// into a full-width Button showed a visible seam. Dp values also get
+// multiplied by the device's pixel ratio (e.g. ~2.75x) before this stretch
+// happens, so even the "short" axis (button height) was undersized once
+// it actually hit physical pixels — same fix, both axes generously sized.
+// Cheap to generate — solid-color rows compress to a few KB regardless.
+const WIDTH = 1024;
+const HEIGHT = 96;
 
 function parseColor(c) {
   const hex = c.match(/^#([0-9a-f]{6})$/i);
@@ -126,3 +132,55 @@ generateComposite('switch_thumb_combined', [
   { colors: ['#34D399', '#059669'] },
   { colors: ['rgba(255,255,255,0.55)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.20)'], locations: [0, 0.4, 0.6, 1] },
 ]);
+
+// ── Shared Button component (src/shared/components/Button.tsx) ──────────
+// Must mirror bevelColors / bevelConcaveColors / DEPTH / DEPTH_CONCAVE exactly.
+generateVerticalGradient('button_primary_convex', ['#9590EF', '#2F2A89']);
+generateVerticalGradient('button_primary_concave', ['#2F2A89', '#9590EF']);
+generateVerticalGradient('button_secondary_convex', ['#6FD5B3', '#0A6F4D']);
+generateVerticalGradient('button_secondary_concave', ['#0A6F4D', '#6FD5B3']);
+generateVerticalGradient('button_danger_convex', ['#F58F8F', '#8F2929']);
+generateVerticalGradient('button_danger_concave', ['#8F2929', '#F58F8F']);
+generateVerticalGradient('button_outline_convex', ['rgba(255,255,255,0.24)', 'rgba(0,0,0,0.22)']);
+generateVerticalGradient('button_outline_concave', ['rgba(0,0,0,0.22)', 'rgba(255,255,255,0.24)']);
+generateVerticalGradient('button_ghost_convex', ['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.06)']);
+generateVerticalGradient('button_ghost_concave', ['rgba(0,0,0,0.06)', 'rgba(255,255,255,0.10)']);
+generateVerticalGradient(
+  'button_depth_convex',
+  ['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)'],
+  [0, 0.38, 0.62, 1],
+);
+generateVerticalGradient(
+  'button_depth_concave',
+  ['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.22)'],
+  [0, 0.38, 0.62, 1],
+);
+// 'accent' (orange) — used by the Zagraj (Home) / Start (Game) CTA, which
+// used to be its own hand-rolled component; reuses button_depth_convex/
+// concave above like every other variant.
+generateVerticalGradient('button_accent_convex', ['#FBAB73', '#95450D']);
+generateVerticalGradient('button_accent_concave', ['#95450D', '#FBAB73']);
+
+// ── Dark "badge" gradient (PageHeader title / game.tsx "Przygotuj się!") ──
+// Both share the exact same bevel colors; only the inner depth overlay's
+// alpha differs between the two call sites.
+generateVerticalGradient('badge_bevel', ['rgba(255,255,255,0.22)', 'rgba(0,0,0,0.30)']);
+generateVerticalGradient(
+  'badge_depth_title',
+  ['rgba(255,255,255,0.20)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.24)'],
+  [0, 0.38, 0.62, 1],
+);
+generateVerticalGradient(
+  'badge_depth_getready',
+  ['rgba(255,255,255,0.16)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.14)'],
+  [0, 0.38, 0.62, 1],
+);
+
+// ── ResultsView.tsx stat cards (Dobrze / Pominięte / Celność) — static,
+// no press state, so just one bevel + one depth image each, always rendered.
+generateVerticalGradient('statcard_bevel', ['#777F8C', '#111926']);
+generateVerticalGradient(
+  'statcard_depth',
+  ['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)'],
+  [0, 0.38, 0.62, 1],
+);

@@ -1,8 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Animated, useWindowDimensions, ViewStyle } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Animated, useWindowDimensions, ViewStyle, Image } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Button } from '../../shared/components';
+
+// Pre-baked PNGs — see scripts/generate-gradients.js. Static (no press
+// state), so just two always-rendered images per card.
+const STATCARD_BEVEL_IMG = require('../../../assets/gradients/statcard_bevel.png');
+const STATCARD_DEPTH_IMG = require('../../../assets/gradients/statcard_depth.png');
+const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
 import { BannerAd } from '../../core/ads/BannerAd';
 import { makeSwayAnim, startSway, swayInterpolate } from '../../shared/animation/entrance';
 import { colors } from '../../shared/theme/colors';
@@ -60,21 +66,11 @@ function StatCard({ value, label, color }: { value: string | number; label: stri
 
   return (
     <Animated.View style={[styles.statCard, { transform: [{ scale }] }]}>
-      <LinearGradient
-        colors={['#777F8C', '#111926']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg }]}
-      />
+      <View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg, overflow: 'hidden' }]}>
+        <Image source={STATCARD_BEVEL_IMG} resizeMode="stretch" style={IMAGE_FILL} />
+      </View>
       <View style={styles.statFace}>
-        <LinearGradient
-          colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']}
-          locations={[0, 0.38, 0.62, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
+        <Image source={STATCARD_DEPTH_IMG} resizeMode="stretch" style={IMAGE_FILL} />
         <Text style={[styles.statValue, { color }]}>{value}</Text>
         <Text style={styles.statLabel}>{label}</Text>
       </View>
@@ -268,6 +264,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   statCard: {
+    // No overflow:hidden — would clip the iOS shadow below, which renders
+    // outside this view's own bounds. statCardBevel (a separate, clipped
+    // child) hosts the bevel image instead.
     flex: 1,
     minHeight: 84,
     borderRadius: borderRadius.lg,

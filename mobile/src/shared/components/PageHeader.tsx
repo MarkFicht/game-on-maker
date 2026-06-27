@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Animated, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { router } from 'expo-router';
@@ -8,6 +8,12 @@ import { colors, spacing, borderRadius } from '../theme';
 import { useSettings } from '../../game/hooks/useSettings';
 import { playClickSound } from '../sound/clickSound';
 import { usePersistentHeaderConfig } from './HeaderConfig';
+
+// Pre-baked PNGs — see scripts/generate-gradients.js. The title badge has
+// no press state, so these are just two always-rendered static images.
+const BADGE_BEVEL_IMG = require('../../../assets/gradients/badge_bevel.png');
+const BADGE_DEPTH_TITLE_IMG = require('../../../assets/gradients/badge_depth_title.png');
+const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
 
 interface PageHeaderProps {
   title?: string;
@@ -170,24 +176,13 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
         <Animated.View style={{ opacity: titleOpacity, transform: [{ translateY: titleSlide }] }}>
         <View style={styles.titleShadow}>
           {/* Title badge: subtle glass bevel — neutral light/shadow, no color accent */}
-          <LinearGradient
-            colors={['rgba(255,255,255,0.22)', 'rgba(0,0,0,0.30)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.titleBevel}
-          >
+          <View style={styles.titleBevel}>
+            <Image source={BADGE_BEVEL_IMG} resizeMode="stretch" style={IMAGE_FILL} />
             <View style={styles.titleInner}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.20)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.24)']}
-                locations={[0, 0.38, 0.62, 1]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={StyleSheet.absoluteFill}
-                pointerEvents="none"
-              />
+              <Image source={BADGE_DEPTH_TITLE_IMG} resizeMode="stretch" style={IMAGE_FILL} />
               <Text style={styles.titleText}>{displayTitle}</Text>
             </View>
-          </LinearGradient>
+          </View>
         </View>
         </Animated.View>
       </View>
@@ -294,6 +289,7 @@ const styles = StyleSheet.create({
   titleBevel: {
     borderRadius: borderRadius.lg,
     padding: 3, // thicker "chrome edge"
+    overflow: 'hidden',
   },
   titleInner: {
     borderRadius: borderRadius.lg - 3,

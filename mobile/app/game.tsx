@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState, useRef, useMemo } from 'react';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import {
   View,
@@ -6,12 +6,10 @@ import {
   Image,
   StyleSheet,
   Animated,
-  Pressable,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { TimerRing, WordCard, ResultsView } from '../src/game/components';
@@ -25,6 +23,12 @@ import { useInterstitialAd } from '../src/core/ads';
 import { Button, GradientBackground, MuteButton, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import type { HeaderConfig } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
+
+// Pre-baked PNGs — see scripts/generate-gradients.js. Same bevel as
+// PageHeader's title badge; only the inner depth overlay differs.
+const BADGE_BEVEL_IMG = require('../assets/gradients/badge_bevel.png');
+const BADGE_DEPTH_GETREADY_IMG = require('../assets/gradients/badge_depth_getready.png');
+const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
 
 type GamePhase = 'ready' | 'countdown' | 'playing';
 
@@ -40,8 +44,6 @@ export default function GameScreen() {
   const [gamePhase, setGamePhase] = useState<GamePhase>('ready');
   const [countdown, setCountdown] = useState(3);
   const countdownScale     = useRef(new Animated.Value(1)).current;
-  const startPressAnim     = useRef(new Animated.Value(0)).current;
-  const startConvexOpacity = useMemo(() => startPressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
 
   const { state, currentWord, stats, startGame, pauseGame, resumeGame, markCorrect, markSkipped, endGame, reset, updateConfig } =
     useGame({ roundDuration: settings.roundDuration });
@@ -184,7 +186,6 @@ export default function GameScreen() {
   }, []);
 
   const handleStartCountdown = () => {
-    sounds.playClick();
     setGamePhase('countdown');
     setCountdown(3);
   };
@@ -248,32 +249,7 @@ export default function GameScreen() {
             <Text style={styles.deckName}>{deck.name}</Text>
             <Text style={styles.deckMeta}>{deck.words.length} słów · {deck.difficulty}</Text>
             <View style={{ height: spacing.xl }} />
-            <Pressable
-              onPress={handleStartCountdown}
-              onPressIn={() => Animated.timing(startPressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start()}
-              onPressOut={() => Animated.timing(startPressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start()}
-            >
-              <View style={styles.startBevel}>
-                <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl, opacity: startConvexOpacity }]}>
-                  <LinearGradient colors={['#FBAB73', '#95450D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]} />
-                </Animated.View>
-                <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl, opacity: startPressAnim }]}>
-                  <LinearGradient colors={['#95450D', '#FBAB73']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.xl }]} />
-                </Animated.View>
-                <LinearGradient colors={['#F97316', '#E8650A']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.startInner}>
-                  <Animated.View style={[StyleSheet.absoluteFill, { opacity: startConvexOpacity }]}>
-                    <LinearGradient colors={['rgba(255,255,255,0.26)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
-                  </Animated.View>
-                  <Animated.View style={[StyleSheet.absoluteFill, { opacity: startPressAnim }]}>
-                    <LinearGradient colors={['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.26)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
-                  </Animated.View>
-                  <View style={styles.startContent}>
-                    <Text style={styles.startIcon}>🎮</Text>
-                    <Text style={styles.startText}>Start</Text>
-                  </View>
-                </LinearGradient>
-              </View>
-            </Pressable>
+            <Button label="🎮  Start" variant="accent" size="lg" onPress={handleStartCountdown} style={styles.startBtn} />
           </Animated.View>
         </SafeAreaView>
       </GradientBackground>
@@ -297,22 +273,13 @@ export default function GameScreen() {
             </Animated.Text>
             {/* "Przygotuj się!" — same dark badge as PageHeader title */}
             <View style={styles.getReadyShadow}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.22)', 'rgba(0,0,0,0.30)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.getReadyBevel}
-              >
+              <View style={styles.getReadyBevel}>
+                <Image source={BADGE_BEVEL_IMG} resizeMode="stretch" style={IMAGE_FILL} />
                 <View style={styles.getReadyInner}>
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.16)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.14)']}
-                    locations={[0, 0.38, 0.62, 1]}
-                    style={StyleSheet.absoluteFill}
-                    pointerEvents="none"
-                  />
+                  <Image source={BADGE_DEPTH_GETREADY_IMG} resizeMode="stretch" style={IMAGE_FILL} />
                   <Text style={styles.getReadyText}>Przygotuj się!</Text>
                 </View>
-              </LinearGradient>
+              </View>
             </View>
           </View>
         </SafeAreaView>
@@ -477,37 +444,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
   },
-  startBevel: {
-    borderRadius: borderRadius.xl,
+  startBtn: {
     minWidth: 200,
-    backgroundColor: 'transparent',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.58,
-    shadowRadius: 10,
-    elevation: 12,
-  },
-  startInner: {
-    borderRadius: borderRadius.xl - 4,
-    margin: 4,
-    paddingVertical: spacing.md + 2,
-    paddingHorizontal: spacing.xl,
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  startContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  startIcon: {
-    fontSize: 28,
-  },
-  startText: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.white,
-    letterSpacing: 0.3,
   },
 
   // ── Countdown ────────────────────────────────────────────
@@ -533,6 +471,7 @@ const styles = StyleSheet.create({
   getReadyBevel: {
     borderRadius: borderRadius.lg,
     padding: 3,
+    overflow: 'hidden',
   },
   getReadyInner: {
     borderRadius: borderRadius.lg - 3,

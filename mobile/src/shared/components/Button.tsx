@@ -7,14 +7,37 @@ import {
   StyleSheet,
   ViewStyle,
   Animated,
+  Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, borderRadius } from '../theme';
 import { useSettings } from '../../game/hooks/useSettings';
 import { playClickSound } from '../sound/clickSound';
 
-type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'accent';
 type Size = 'sm' | 'md' | 'lg';
+
+// Pre-baked PNGs for the (non-dynamic) gradients below — see
+// scripts/generate-gradients.js. A bitmap blit is cheaper for the GPU than
+// computing a gradient shader, and this is the most-instantiated component
+// in the app. Always mounted (never conditionally), same as the live
+// gradients they replace — conditionally mounting these caused a one-frame
+// decode flicker the first time a freshly-mounted image appeared (see
+// CustomSwitch's OFF/ON history in app/settings.tsx).
+const BEVEL_IMG: Record<Variant, { convex: number; concave: number }> = {
+  primary:   { convex: require('../../../assets/gradients/button_primary_convex.png'), concave: require('../../../assets/gradients/button_primary_concave.png') },
+  secondary: { convex: require('../../../assets/gradients/button_secondary_convex.png'), concave: require('../../../assets/gradients/button_secondary_concave.png') },
+  danger:    { convex: require('../../../assets/gradients/button_danger_convex.png'), concave: require('../../../assets/gradients/button_danger_concave.png') },
+  outline:   { convex: require('../../../assets/gradients/button_outline_convex.png'), concave: require('../../../assets/gradients/button_outline_concave.png') },
+  ghost:     { convex: require('../../../assets/gradients/button_ghost_convex.png'), concave: require('../../../assets/gradients/button_ghost_concave.png') },
+  accent:    { convex: require('../../../assets/gradients/button_accent_convex.png'), concave: require('../../../assets/gradients/button_accent_concave.png') },
+};
+const DEPTH_IMG = require('../../../assets/gradients/button_depth_convex.png');
+const DEPTH_CONCAVE_IMG = require('../../../assets/gradients/button_depth_concave.png');
+// Like StyleSheet.absoluteFill, but overshoots every edge by 1px — Image's
+// own borderRadius clipping anti-aliases very slightly differently from
+// LinearGradient's, leaving a hairline gap at rounded corners otherwise.
+// The parent's overflow:hidden / clip crops this overscan away.
+const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
 
 interface ButtonProps {
   label: string;
@@ -34,47 +57,14 @@ const textSizeMap: Record<Size, number> = {
   lg: 18,
 };
 
-// Convex bevel: top = color+light, bottom = color+dark
-const bevelColors: Record<Variant, readonly [string, string]> = {
-  primary:   ['#9590EF', '#2F2A89'],
-  secondary: ['#6FD5B3', '#0A6F4D'],
-  danger:    ['#F58F8F', '#8F2929'],
-  outline:   ['rgba(255,255,255,0.24)', 'rgba(0,0,0,0.22)'],
-  ghost:     ['rgba(255,255,255,0.10)', 'rgba(0,0,0,0.06)'],
-};
-
-// Concave bevel: reversed — dark on top, light on bottom
-const bevelConcaveColors: Record<Variant, readonly [string, string]> = {
-  primary:   ['#2F2A89', '#9590EF'],
-  secondary: ['#0A6F4D', '#6FD5B3'],
-  danger:    ['#8F2929', '#F58F8F'],
-  outline:   ['rgba(0,0,0,0.22)', 'rgba(255,255,255,0.24)'],
-  ghost:     ['rgba(0,0,0,0.06)', 'rgba(255,255,255,0.10)'],
-};
-
 const innerBg: Record<Variant, string> = {
   primary:   colors.primary,
   secondary: colors.secondary,
   danger:    '#EF4444',
   outline:   'rgba(22,36,58,0.72)',
   ghost:     'rgba(255,255,255,0.04)',
+  accent:    '#F97316',
 };
-
-// Convex depth: bright top, dark bottom
-const DEPTH: readonly [string, string, string, string] = [
-  'rgba(255,255,255,0.22)',
-  'rgba(255,255,255,0)',
-  'rgba(0,0,0,0)',
-  'rgba(0,0,0,0.18)',
-];
-
-// Concave depth: dark top, bright bottom
-const DEPTH_CONCAVE: readonly [string, string, string, string] = [
-  'rgba(0,0,0,0.18)',
-  'rgba(0,0,0,0)',
-  'rgba(255,255,255,0)',
-  'rgba(255,255,255,0.22)',
-];
 
 const textColors: Record<Variant, string> = {
   primary:   colors.white,
@@ -82,6 +72,7 @@ const textColors: Record<Variant, string> = {
   danger:    colors.white,
   outline:   colors.white,
   ghost:     colors.primaryLight,
+  accent:    colors.white,
 };
 
 const bevelShadow: Record<Variant, ViewStyle> = {
@@ -118,6 +109,16 @@ const bevelShadow: Record<Variant, ViewStyle> = {
     elevation: 4,
   },
   ghost: {},
+  // Bigger than the other variants — this is the app's primary CTA (Home's
+  // "Zagraj", Game's "Start"), which already had a more pronounced shadow.
+  accent: {
+    backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.58,
+    shadowRadius: 10,
+    elevation: 12,
+  },
 };
 
 const sizeStyles: Record<Size, ViewStyle> = {
@@ -168,22 +169,12 @@ export function Button({
       {/* Shadow wrapper — no overflow:hidden so iOS shadow renders */}
       <View style={[styles.wrapper, { borderRadius: radius }, bevelShadow[variant]]}>
         {/* Convex bevel — fades out on press */}
-        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: radius, opacity: convexOpacity }]}>
-          <LinearGradient
-            colors={bevelColors[variant]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
-          />
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: radius, opacity: convexOpacity, overflow: 'hidden' }]}>
+          <Image source={BEVEL_IMG[variant].convex} resizeMode="stretch" style={IMAGE_FILL} />
         </Animated.View>
         {/* Concave bevel — fades in on press */}
-        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: radius, opacity: pressAnim }]}>
-          <LinearGradient
-            colors={bevelConcaveColors[variant]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
-          />
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: radius, opacity: pressAnim, overflow: 'hidden' }]}>
+          <Image source={BEVEL_IMG[variant].concave} resizeMode="stretch" style={IMAGE_FILL} />
         </Animated.View>
         {/* Inner face */}
         <View
@@ -195,25 +186,11 @@ export function Button({
         >
           {/* Convex depth overlay — fades out on press */}
           <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity }]}>
-            <LinearGradient
-              colors={DEPTH}
-              locations={[0, 0.38, 0.62, 1]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-              pointerEvents="none"
-            />
+            <Image source={DEPTH_IMG} resizeMode="stretch" style={IMAGE_FILL} />
           </Animated.View>
           {/* Concave depth overlay — fades in on press */}
           <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim }]}>
-            <LinearGradient
-              colors={DEPTH_CONCAVE}
-              locations={[0, 0.38, 0.62, 1]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={StyleSheet.absoluteFill}
-              pointerEvents="none"
-            />
+            <Image source={DEPTH_CONCAVE_IMG} resizeMode="stretch" style={IMAGE_FILL} />
           </Animated.View>
           {loading ? (
             <ActivityIndicator color={textColors[variant]} testID="button-loading-indicator" />
