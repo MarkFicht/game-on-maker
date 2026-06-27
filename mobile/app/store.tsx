@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePayments } from '../src/core/payments/usePayments';
-import { GradientBackground, PageHeader, Button } from '../src/shared/components';
+import { GradientBackground, Button, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import { useSettings } from '../src/game/hooks/useSettings';
 import { playClickSound } from '../src/shared/sound/clickSound';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
@@ -111,12 +111,17 @@ export default function StoreScreen() {
     startEntranceAll(anims);
   }, []);
 
+  useHeaderConfig({
+    title: isLoading ? 'Sklep' : isPremium ? 'Premium' : 'Go Premium',
+    showBack: true,
+  });
+
   // ── Already premium ────────────────────────────────────────────────
   if (!isLoading && isPremium) {
     return (
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
-          <PageHeader title="Premium" showBack />
+          <View style={{ height: HEADER_BAR_HEIGHT }} />
           <View style={styles.premiumState}>
             <Animated.Text style={[styles.crownEmoji, { transform: [{ rotate: crownRotate }] }]}>👑</Animated.Text>
             <Text style={styles.premiumTitle}>Masz Premium!</Text>
@@ -141,7 +146,7 @@ export default function StoreScreen() {
     return (
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
-          <PageHeader title="Sklep" showBack />
+          <View style={{ height: HEADER_BAR_HEIGHT }} />
           <View style={styles.centered}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
@@ -154,7 +159,7 @@ export default function StoreScreen() {
   return (
     <GradientBackground>
       <SafeAreaView style={styles.safe}>
-        <PageHeader title="Go Premium" showBack />
+        <View style={{ height: HEADER_BAR_HEIGHT }} />
 
         <ScrollView
           contentContainerStyle={styles.container}
@@ -347,6 +352,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
   },
   pkgWrapperBest: {
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.55,

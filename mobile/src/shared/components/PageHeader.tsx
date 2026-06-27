@@ -1,12 +1,13 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
-import { router, useFocusEffect } from 'expo-router';
+import { router } from 'expo-router';
 import { MuteButton } from './MuteButton';
 import { colors, spacing, borderRadius } from '../theme';
 import { useSettings } from '../../game/hooks/useSettings';
 import { playClickSound } from '../sound/clickSound';
+import { usePersistentHeaderConfig } from './HeaderConfig';
 
 interface PageHeaderProps {
   title?: string;
@@ -19,6 +20,11 @@ interface PageHeaderProps {
 }
 
 const BTN = 52;
+// Bar's own height (excludes the safe-area top inset, which the persistent
+// header and each screen's own SafeAreaView both add identically on top of
+// this) — screens reserve this much space so their content starts right
+// where the floating header ends.
+export const HEADER_BAR_HEIGHT = BTN + spacing.md + spacing.sm;
 
 function BackChevron() {
   return (
@@ -104,16 +110,34 @@ function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
   );
 }
 
+/**
+ * Purely presentational — animates its title badge only when the `title`
+ * text it receives actually changes. Mounted once at the app root via
+ * `PersistentPageHeader` below; never remounts on navigation, so it has no
+ * notion of focus, splash timing, or what any given screen is doing.
+ */
 export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, onBack }: PageHeaderProps) {
-  const titleOpacity = useRef(new Animated.Value(0)).current;
-  const titleSlide   = useRef(new Animated.Value(-18)).current;
-  const titleAnim    = useRef<Animated.CompositeAnimation | null>(null);
+  const titleOpacity  = useRef(new Animated.Value(1)).current;
+  const titleSlide    = useRef(new Animated.Value(0)).current;
+  const titleAnim     = useRef<Animated.CompositeAnimation | null>(null);
+  const prevTitleRef  = useRef(title);
+  // What's actually drawn — lags behind `title` until the exit animation
+  // finishes, so the OLD text is still what's visible while it slides away.
+  const [displayTitle, setDisplayTitle] = useState(title);
 
-  useFocusEffect(
-    useCallback(() => {
-      titleAnim.current?.stop();
-      titleOpacity.setValue(0);
-      titleSlide.setValue(-18);
+  useEffect(() => {
+    if (prevTitleRef.current === title) return;
+    prevTitleRef.current = title;
+    titleAnim.current?.stop();
+
+    // Exit: current title fades + slides up (mirror of the entrance).
+    titleAnim.current = Animated.parallel([
+      Animated.timing(titleOpacity, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(titleSlide, { toValue: -18, duration: 150, useNativeDriver: true }),
+    ]);
+    titleAnim.current.start(({ finished }) => {
+      if (!finished) return; // superseded by a newer title change — let that one finish the job
+      setDisplayTitle(title);
       titleAnim.current = Animated.parallel([
         // Fast opacity so the (mostly-opaque) badge covers the busy page
         // background quickly — only the slide should read as "slow".
@@ -121,9 +145,9 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
         Animated.spring(titleSlide, { toValue: 0, tension: 32, friction: 11, useNativeDriver: true }),
       ]);
       titleAnim.current.start();
-      return () => { titleAnim.current?.stop(); };
-    }, [title])
-  );
+    });
+    return () => { titleAnim.current?.stop(); };
+  }, [title]);
 
   // Show left button when: home screen (gear), explicit showBack, or custom onBack provided
   const showLeft = isHome || showBack || !!onBack;
@@ -141,7 +165,7 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
         {showLeft && <HeaderBtn onPress={handleLeft} label={isHome ? '⚙️' : '←'} />}
       </View>
 
-      {/* Center — title badge animates in from top on each title change */}
+      {/* Center — title badge animates in from top only when title changes */}
       <View style={styles.centerSlot}>
         <Animated.View style={{ opacity: titleOpacity, transform: [{ translateY: titleSlide }] }}>
         <View style={styles.titleShadow}>
@@ -161,7 +185,7 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
                 style={StyleSheet.absoluteFill}
                 pointerEvents="none"
               />
-              <Text style={styles.titleText}>{title}</Text>
+              <Text style={styles.titleText}>{displayTitle}</Text>
             </View>
           </LinearGradient>
         </View>
@@ -176,6 +200,20 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
   );
 }
 
+/** Rendered exactly once, at the app root — see _layout.tsx. */
+export function PersistentPageHeader() {
+  const config = usePersistentHeaderConfig();
+  if (config.visible === false) return null;
+  return (
+    <PageHeader
+      title={config.title}
+      isHome={config.isHome}
+      showBack={config.showBack}
+      onBack={config.onBack}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
@@ -183,6 +221,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
+    minHeight: HEADER_BAR_HEIGHT,
   },
 
   // Fixed-width side slots — center is always truly centered
@@ -241,11 +280,16 @@ const styles = StyleSheet.create({
   // ── Title badge ───────────────────────────────────────────
   titleShadow: {
     borderRadius: borderRadius.lg,
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.42,
     shadowRadius: 8,
-    elevation: 5,
+    // No `elevation` at all — Android renders it as a separate native
+    // Material surface that can flash white during a re-render (e.g. the
+    // text swap mid-animation), independent of this view's own opacity.
+    // iOS ignores `elevation` anyway and still gets the shadowXxx above.
+    elevation: 0,
   },
   titleBevel: {
     borderRadius: borderRadius.lg,

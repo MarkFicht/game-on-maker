@@ -22,7 +22,8 @@ import { useSoundManager } from '../src/game/hooks/useSoundManager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as StoreReview from 'expo-store-review';
 import { useInterstitialAd } from '../src/core/ads';
-import { Button, GradientBackground, MuteButton, PageHeader } from '../src/shared/components';
+import { Button, GradientBackground, MuteButton, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
+import type { HeaderConfig } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
 type GamePhase = 'ready' | 'countdown' | 'playing';
@@ -206,11 +207,20 @@ export default function GameScreen() {
     router.replace('/');
   };
 
+  const headerConfig: HeaderConfig = !deck
+    ? { title: 'Talia', onBack: () => router.back() }
+    : gamePhase === 'ready' || gamePhase === 'countdown'
+    ? { title: deck.name, onBack: handleCancel }
+    : gamePhase === 'playing' && state.status === 'paused'
+    ? { title: 'Gra wstrzymana', onBack: resumeGame }
+    : { visible: false };
+  useHeaderConfig(headerConfig);
+
   if (!deck) {
     return (
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
-          <PageHeader title="Talia" onBack={() => router.back()} />
+          <View style={{ height: HEADER_BAR_HEIGHT }} />
           <View style={styles.centered}>
             <Text style={styles.errorText}>Nie znaleziono talii</Text>
             <Button
@@ -230,7 +240,7 @@ export default function GameScreen() {
     return (
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
-          <PageHeader title={deck.name} onBack={handleCancel} />
+          <View style={{ height: HEADER_BAR_HEIGHT }} />
           <Animated.View style={[styles.centeredFull, entranceStyle(readyAnim)]}>
             {deck.image
               ? <Image source={deck.image} style={[styles.deckImage, { marginBottom: -10 }]} />
@@ -275,7 +285,7 @@ export default function GameScreen() {
     return (
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
-          <PageHeader title={deck.name} onBack={handleCancel} />
+          <View style={{ height: HEADER_BAR_HEIGHT }} />
           <View style={styles.centeredFull}>
             {deck.image
               ? <Image source={deck.image} style={[styles.deckImage, { marginBottom: -38, marginTop: -20 }]} />
@@ -315,7 +325,7 @@ export default function GameScreen() {
     return (
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
-          <PageHeader title="Gra wstrzymana" onBack={resumeGame} />
+          <View style={{ height: HEADER_BAR_HEIGHT }} />
           <View style={styles.centeredFull}>
             {deck?.image ? (
               <Animated.Image
@@ -470,6 +480,7 @@ const styles = StyleSheet.create({
   startBevel: {
     borderRadius: borderRadius.xl,
     minWidth: 200,
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.58,
@@ -512,6 +523,7 @@ const styles = StyleSheet.create({
   getReadyShadow: {
     marginTop: spacing.md,
     borderRadius: borderRadius.lg,
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.42,

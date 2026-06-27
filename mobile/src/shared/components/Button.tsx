@@ -86,6 +86,7 @@ const textColors: Record<Variant, string> = {
 
 const bevelShadow: Record<Variant, ViewStyle> = {
   primary: {
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.55,
@@ -93,6 +94,7 @@ const bevelShadow: Record<Variant, ViewStyle> = {
     elevation: 8,
   },
   secondary: {
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.55,
@@ -100,6 +102,7 @@ const bevelShadow: Record<Variant, ViewStyle> = {
     elevation: 8,
   },
   danger: {
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.55,
@@ -107,6 +110,7 @@ const bevelShadow: Record<Variant, ViewStyle> = {
     elevation: 8,
   },
   outline: {
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.30,

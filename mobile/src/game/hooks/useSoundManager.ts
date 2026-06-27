@@ -28,12 +28,19 @@ export function useSoundManager(soundEnabled: boolean) {
   enabledRef.current = soundEnabled;
 
   useEffect(() => {
-    for (const [key, source] of Object.entries(SOURCES) as [SoundKey, number][]) {
-      try {
-        players.current[key] = createAudioPlayer(source);
-      } catch { }
-    }
+    // Deferred one tick — creating 5 native players synchronously on mount
+    // competes with this same screen's own entrance animations (e.g.
+    // PageHeader's title slide-in) for the JS thread, showing up as a
+    // delayed/janky entrance specifically on screens that use this hook.
+    const timer = setTimeout(() => {
+      for (const [key, source] of Object.entries(SOURCES) as [SoundKey, number][]) {
+        try {
+          players.current[key] = createAudioPlayer(source);
+        } catch { }
+      }
+    }, 0);
     return () => {
+      clearTimeout(timer);
       Object.values(players.current).forEach(p => { try { p?.pause(); p?.remove(); } catch {} });
       players.current = {};
     };

@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { GradientBackground, PageHeader } from '../src/shared/components';
+import { GradientBackground, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
 import { useAppReady } from '../src/core/AppReadyContext';
 import { useSettings } from '../src/game/hooks/useSettings';
@@ -22,6 +22,7 @@ export default function HomeScreen() {
   const { isPremium } = usePaymentsContext();
   const { settings } = useSettings();
   const appReady = useAppReady();
+  useHeaderConfig({ title: 'WordRushMF', isHome: true });
 
   const emojiScale  = useRef(new Animated.Value(0)).current;
   const emojiRotate = useRef(new Animated.Value(-0.3)).current;
@@ -92,8 +93,8 @@ export default function HomeScreen() {
     <GradientBackground>
       <SafeAreaView style={styles.safe}>
 
-        {/* Universal transparent header */}
-        <PageHeader title="WordRushMF" isHome />
+        {/* Space reserved for the persistent header rendered at the app root */}
+        <View style={{ height: HEADER_BAR_HEIGHT }} />
 
         {/* Main content */}
         <View style={styles.main}>
@@ -233,6 +234,7 @@ const styles = StyleSheet.create({
   // Play button
   playBevel: {
     borderRadius: borderRadius.xl,
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.58,
@@ -265,6 +267,7 @@ const styles = StyleSheet.create({
   // Premium button — solid opaque colors
   premBevel: {
     borderRadius: borderRadius.lg,
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.55,

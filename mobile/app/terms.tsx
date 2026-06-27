@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { GradientBackground, PageHeader } from '../src/shared/components';
+import { GradientBackground, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import { colors, spacing } from '../src/shared/theme';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -27,10 +27,11 @@ function Li({ children }: { children: string }) {
 }
 
 export default function TermsScreen() {
+  useHeaderConfig({ title: 'Regulamin', showBack: true });
   return (
     <GradientBackground>
       <SafeAreaView style={styles.safe}>
-        <PageHeader title="Regulamin" showBack />
+        <View style={{ height: HEADER_BAR_HEIGHT }} />
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.container}

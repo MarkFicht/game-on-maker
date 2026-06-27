@@ -146,6 +146,7 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
 const styles = StyleSheet.create({
   shadow: {
     borderRadius: borderRadius.lg,
+    backgroundColor: 'transparent',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.30,
     shadowRadius: 12,

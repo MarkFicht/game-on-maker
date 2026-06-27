@@ -1,24 +1,48 @@
-import React, { useMemo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Animated } from 'react-native';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
-import { LinearGradient } from 'expo-linear-gradient';
+
+// Pre-baked PNGs for the fixed (non-dynamic) gradients below — see
+// scripts/generate-gradients.js. A bitmap blit is cheaper for the GPU to
+// composite than computing a gradient shader, and this screen renders a
+// lot of these at once. Re-run the script if these color stops change.
+const GRAD = {
+  durationActive: require('../assets/gradients/duration_active.png'),
+  durationInactive: require('../assets/gradients/duration_inactive.png'),
+  durationActivePressed: require('../assets/gradients/duration_active_pressed.png'),
+  durationInactivePressed: require('../assets/gradients/duration_inactive_pressed.png'),
+  durationDepthConvex: require('../assets/gradients/duration_depth_convex.png'),
+  durationDepthConcave: require('../assets/gradients/duration_depth_concave.png'),
+  switchOff: require('../assets/gradients/switch_off.png'),
+  switchOn: require('../assets/gradients/switch_on.png'),
+  switchSheen: require('../assets/gradients/switch_sheen.png'),
+  // Fill + depth pre-composited — both shared the exact same absoluteFill
+  // bounds in the thumb, so this is one fewer Image per switch for free.
+  switchThumbCombined: require('../assets/gradients/switch_thumb_combined.png'),
+} as const;
 import { useSettings } from '../src/game/hooks/useSettings';
 import { usePayments } from '../src/core/payments/usePayments';
-import { GradientBackground, PageHeader, Button } from '../src/shared/components';
+import { GradientBackground, Button, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import { playClickSound } from '../src/shared/sound/clickSound';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 
 const DURATIONS = [30, 60, 90, 120] as const;
 
+// Like StyleSheet.absoluteFill, but overshoots every edge by 1px. Image's
+// own borderRadius clipping anti-aliases very slightly differently from
+// LinearGradient's, leaving a hairline gap of the dark background showing
+// at the rounded corners otherwise — the parent's overflow:hidden crops
+// this overscan away, so it's invisible everywhere except that seam.
+const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
+
 function GlassCard({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) {
+  // No LinearGradient here — the rgba(255,255,255,0.05→0.01) sheen this used
+  // to render was almost imperceptible against the card's own background,
+  // so it wasn't worth a GPU compositing pass on every one of these (×4).
   return (
     <View style={styles.card}>
-      <LinearGradient
-        colors={['rgba(255,255,255,0.05)', 'rgba(255,255,255,0.01)']}
-        style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.lg }]}
-      />
       <View style={styles.cardHeader}>
         <Text style={styles.cardIcon}>{icon}</Text>
         <Text style={styles.cardTitle}>{title}</Text>
@@ -28,17 +52,24 @@ function GlassCard({ title, icon, children }: { title: string; icon: string; chi
   );
 }
 
-const SW_TRACK_W = 52;
-const SW_TRACK_H = 30;
-const SW_THUMB   = 22;
-const SW_MARGIN  = 4;
-const SW_TRAVEL  = SW_TRACK_W - SW_THUMB - SW_MARGIN * 2;
+const SW_TRACK_W  = 52;
+const SW_TRACK_H  = 32;
+const SW_THUMB    = 22;
+const SW_MARGIN   = 3;
+const SW_BORDER   = 1.5;
+// switchWrap's borderWidth eats into the area available to its absolutely
+// positioned children (border-box sizing) — without subtracting it here,
+// the thumb's cumulative rightward travel overshoots its intended resting
+// margin, landing almost flush against the track's right edge.
+const SW_TRAVEL   = SW_TRACK_W - SW_THUMB - SW_MARGIN * 2 - SW_BORDER * 2;
 
 function CustomSwitch({ value, onValueChange }: { value: boolean; onValueChange: (v: boolean) => void }) {
   const { settings } = useSettings();
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
     Animated.spring(anim, { toValue: value ? 1 : 0, tension: 90, friction: 10, useNativeDriver: true }).start();
   }, [value]);
 
@@ -53,32 +84,24 @@ function CustomSwitch({ value, onValueChange }: { value: boolean; onValueChange:
 
   return (
     <Pressable onPress={handlePress} style={styles.switchWrap}>
-      {/* OFF */}
-      <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2, opacity: offAlpha }]}>
-        <LinearGradient colors={['rgba(51,65,85,0.95)', 'rgba(15,23,42,0.95)']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2 }]} />
+      {/* OFF/ON — always mounted (not conditional on isAnimating/value): a
+          freshly-mounted local Image needs a frame to decode before its
+          first paint, which showed up as a flicker specifically on whichever
+          track was mounting fresh mid-crossfade. Two extra Images at rest
+          isn't worth that visual glitch. */}
+      <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2, opacity: offAlpha, overflow: 'hidden' }]}>
+        <Image source={GRAD.switchOff} resizeMode="stretch" style={IMAGE_FILL} />
       </Animated.View>
-      {/* ON */}
-      <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2, opacity: onAlpha }]}>
-        <LinearGradient colors={['#9590EF', '#4F46E5']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2 }]} />
+      <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2, opacity: onAlpha, overflow: 'hidden' }]}>
+        <Image source={GRAD.switchOn} resizeMode="stretch" style={IMAGE_FILL} />
       </Animated.View>
       {/* Convex sheen */}
-      <LinearGradient
-        colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.14)']}
-        locations={[0, 0.4, 0.6, 1]}
-        start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-        style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2 }]}
-        pointerEvents="none"
-      />
+      <View style={[StyleSheet.absoluteFill, { borderRadius: SW_TRACK_H / 2, overflow: 'hidden' }]}>
+        <Image source={GRAD.switchSheen} resizeMode="stretch" style={IMAGE_FILL} />
+      </View>
       {/* Thumb */}
       <Animated.View style={[styles.switchThumb, { transform: [{ translateX: thumbX }] }]}>
-        <LinearGradient colors={['#34D399', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} />
-        <LinearGradient
-          colors={['rgba(255,255,255,0.55)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.20)']}
-          locations={[0, 0.4, 0.6, 1]}
-          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
+        <Image source={GRAD.switchThumbCombined} resizeMode="stretch" style={IMAGE_FILL} />
       </Animated.View>
     </Pressable>
   );
@@ -88,37 +111,41 @@ function DurationBtn({ duration, isActive, onPress }: { duration: number; isActi
   const { settings } = useSettings();
   const pressAnim    = useRef(new Animated.Value(0)).current;
   const convexOpacity = useMemo(() => pressAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), []);
+  // The "pressed" (concave) gradient layers only exist in the tree while
+  // actually pressed — at rest (the vast majority of this screen's
+  // lifetime, especially right after mount) there's nothing to crossfade,
+  // so don't pay the GPU compositing cost for a layer nobody can see.
+  const [isPressed, setIsPressed] = useState(false);
   const onPressIn    = () => {
     if (settings.soundEnabled) playClickSound();
+    setIsPressed(true);
     Animated.timing(pressAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
   };
-  const onPressOut   = () => Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+  const onPressOut   = () => {
+    Animated.timing(pressAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start(() => setIsPressed(false));
+  };
 
   return (
     <Pressable onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut} style={styles.durationBtn}>
-      <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.md, opacity: convexOpacity }]}>
-        <LinearGradient
-          colors={isActive ? ['#9590EF', '#2F2A89'] : ['rgba(149,144,239,0.22)', 'rgba(47,42,137,0.22)']}
-          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.md }]}
-        />
+      <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.md, opacity: convexOpacity, overflow: 'hidden' }]}>
+        <Image source={isActive ? GRAD.durationActive : GRAD.durationInactive} resizeMode="stretch" style={IMAGE_FILL} />
       </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.md, opacity: pressAnim }]}>
-        <LinearGradient
-          colors={isActive ? ['#2F2A89', '#9590EF'] : ['rgba(47,42,137,0.22)', 'rgba(149,144,239,0.22)']}
-          start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-          style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.md }]}
-        />
-      </Animated.View>
+      {isPressed && (
+        <Animated.View style={[StyleSheet.absoluteFill, { borderRadius: borderRadius.md, opacity: pressAnim, overflow: 'hidden' }]}>
+          <Image source={isActive ? GRAD.durationActivePressed : GRAD.durationInactivePressed} resizeMode="stretch" style={IMAGE_FILL} />
+        </Animated.View>
+      )}
       <View style={[styles.durationInner, isActive && styles.durationInnerActive, { overflow: 'hidden' }]}>
         {isActive && (
           <>
             <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity }]}>
-              <LinearGradient colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
+              <Image source={GRAD.durationDepthConvex} resizeMode="stretch" style={IMAGE_FILL} />
             </Animated.View>
-            <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim }]}>
-              <LinearGradient colors={['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.22)']} locations={[0, 0.38, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={StyleSheet.absoluteFill} pointerEvents="none" />
-            </Animated.View>
+            {isPressed && (
+              <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim }]}>
+                <Image source={GRAD.durationDepthConcave} resizeMode="stretch" style={IMAGE_FILL} />
+              </Animated.View>
+            )}
           </>
         )}
         <Text style={[styles.durationText, isActive && styles.durationTextActive]}>{duration}s</Text>
@@ -140,6 +167,7 @@ function SettingRow({ label, children }: { label: string; children: React.ReactN
 export default function SettingsScreen() {
   const { settings, updateSettings, loading } = useSettings();
   const { restore, isRestoring } = usePayments();
+  useHeaderConfig({ title: 'Ustawienia', showBack: true });
 
   const anims = useMemo(() => [
     makeEntranceAnim(), // Gra
@@ -154,6 +182,7 @@ export default function SettingsScreen() {
     return (
       <GradientBackground>
         <SafeAreaView style={styles.safe}>
+          <View style={{ height: HEADER_BAR_HEIGHT }} />
           <View style={styles.centered}>
             <Text style={styles.loadingText}>Ładowanie…</Text>
           </View>
@@ -165,7 +194,7 @@ export default function SettingsScreen() {
   return (
     <GradientBackground>
       <SafeAreaView style={styles.safe}>
-        <PageHeader title="Ustawienia" showBack />
+        <View style={{ height: HEADER_BAR_HEIGHT }} />
 
         <ScrollView
           style={styles.scroll}
@@ -339,6 +368,7 @@ const styles = StyleSheet.create({
     borderRadius: SW_TRACK_H / 2,
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -347,11 +377,20 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   switchThumb: {
-    marginLeft: SW_MARGIN,
+    // Explicit absolute position (not flex flow + marginLeft) — mixed with
+    // the absolutely-positioned OFF/ON/sheen siblings, the flex-flow
+    // position wasn't landing at the same offset from each edge, leaving
+    // the thumb's padding from the track border asymmetric between states.
+    position: 'absolute',
+    left: SW_MARGIN,
+    // Same border-box correction as SW_TRAVEL — the track's effective
+    // content height is SW_TRACK_H minus the border on top+bottom.
+    top: (SW_TRACK_H - SW_BORDER * 2 - SW_THUMB) / 2,
     width: SW_THUMB,
     height: SW_THUMB,
     borderRadius: SW_THUMB / 2,
     overflow: 'hidden',
+    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.45,

@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { DeckCard } from '../src/game/components';
 import { getFreeDecks, getPremiumDecks } from '../src/game/decks';
 import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
-import { GradientBackground, PageHeader } from '../src/shared/components';
+import { GradientBackground, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 import type { Deck } from '../src/game/types';
 
@@ -46,6 +46,7 @@ function SectionTitle({ children, icon }: { children: string; icon?: string }) {
 
 export default function DecksScreen() {
   const { isPremium } = usePaymentsContext();
+  useHeaderConfig({ title: 'Wybierz talię', showBack: true });
 
   const freeDecks = getFreeDecks();
   const premiumDecks = getPremiumDecks();
@@ -83,7 +84,7 @@ export default function DecksScreen() {
   return (
     <GradientBackground>
       <SafeAreaView style={styles.safe}>
-        <PageHeader title="Wybierz talię" showBack />
+        <View style={{ height: HEADER_BAR_HEIGHT }} />
 
         <ScrollView
           style={styles.scroll}

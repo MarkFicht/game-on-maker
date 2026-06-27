@@ -5,4 +5,6 @@ export { LoadingScreen } from './LoadingScreen';
 export { AppSplashScreen } from './AppSplashScreen';
 export { GradientBackground } from './GradientBackground';
 export { MuteButton } from './MuteButton';
-export { PageHeader } from './PageHeader';
+export { PageHeader, PersistentPageHeader, HEADER_BAR_HEIGHT } from './PageHeader';
+export { HeaderConfigProvider, useHeaderConfig } from './HeaderConfig';
+export type { HeaderConfig } from './HeaderConfig';
