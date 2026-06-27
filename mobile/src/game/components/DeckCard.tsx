@@ -7,6 +7,22 @@ import { useSettings } from '../hooks/useSettings';
 import { playClickSound } from '../../shared/sound/clickSound';
 import type { Deck } from '../types';
 
+// Pre-baked PNGs for each deck's own `color` — see scripts/generate-gradients.js.
+// Only covers the fixed, known set of colors in src/game/decks.ts; any other
+// color (a deck added later, before the script is re-run for it) falls back
+// to the original live LinearGradient computation below.
+const DECK_GRADIENT_MAP: Record<string, { bevel: number; tint: number }> = {
+  '#4F46E5': { bevel: require('../../../assets/gradients/deckcard_bevel_4f46e5.png'), tint: require('../../../assets/gradients/deckcard_tint_4f46e5.png') },
+  '#10B981': { bevel: require('../../../assets/gradients/deckcard_bevel_10b981.png'), tint: require('../../../assets/gradients/deckcard_tint_10b981.png') },
+  '#F59E0B': { bevel: require('../../../assets/gradients/deckcard_bevel_f59e0b.png'), tint: require('../../../assets/gradients/deckcard_tint_f59e0b.png') },
+  '#EF4444': { bevel: require('../../../assets/gradients/deckcard_bevel_ef4444.png'), tint: require('../../../assets/gradients/deckcard_tint_ef4444.png') },
+  '#8B5CF6': { bevel: require('../../../assets/gradients/deckcard_bevel_8b5cf6.png'), tint: require('../../../assets/gradients/deckcard_tint_8b5cf6.png') },
+  '#EC4899': { bevel: require('../../../assets/gradients/deckcard_bevel_ec4899.png'), tint: require('../../../assets/gradients/deckcard_tint_ec4899.png') },
+};
+const DECK_DEPTH_IMG = require('../../../assets/gradients/deckcard_depth.png');
+const DECK_PROBADGE_IMG = require('../../../assets/gradients/deckcard_probadge.png');
+const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
+
 function hexToRgba(hex: string, alpha: number): string {
   const clean = hex.replace('#', '');
   const r = parseInt(clean.slice(0, 2), 16);
@@ -50,6 +66,7 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
   const tintHigh = hexToRgba(tintColor, 0.18);
   const tintLow = hexToRgba(tintColor, 0.04);
   const [bevelTop, bevelBot] = computeBevel(tintColor);
+  const baked = DECK_GRADIENT_MAP[tintColor.toUpperCase()];
 
   const handlePressIn = () => {
     if (settings.soundEnabled) playClickSound();
@@ -67,7 +84,58 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
 
   return (
     <Animated.View style={[styles.shadow, { shadowColor: tintColor, transform: [{ scale }] }]}>
-      {/* 3D bevel border — colored tints derived from deck's own color */}
+      {/* 3D bevel border — colored tints derived from deck's own color.
+          Pre-baked image when this exact color was baked ahead of time
+          (every color in decks.ts is); live gradient as a fallback so a
+          newly-added deck color still renders correctly before the next
+          `node scripts/generate-gradients.js` run. */}
+      {baked ? (
+        <View style={[styles.bevel, { overflow: 'hidden' }]}>
+          <Image source={baked.bevel} resizeMode="stretch" style={IMAGE_FILL} />
+          <Pressable
+            onPress={handlePress}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={styles.card}
+          >
+            <Image source={baked.tint} resizeMode="stretch" style={IMAGE_FILL} />
+            <Image source={DECK_DEPTH_IMG} resizeMode="stretch" style={IMAGE_FILL} />
+            {isLocked && (
+              <View style={styles.lockOverlay}>
+                <Text style={styles.lockEmoji}>🔒</Text>
+                <Text style={styles.lockLabel}>PREMIUM</Text>
+              </View>
+            )}
+            <View style={[styles.content, isLocked && styles.contentLocked]}>
+              {deck.image ? (
+                <Image source={deck.image} style={styles.deckImage} />
+              ) : (
+                <Text style={styles.icon}>{deck.icon}</Text>
+              )}
+              <View style={styles.info}>
+                <View style={styles.titleRow}>
+                  <Text style={styles.name} numberOfLines={1}>{deck.name}</Text>
+                  {deck.isPremium && (
+                    <View style={[styles.proBadge, { overflow: 'hidden' }]}>
+                      <Image source={DECK_PROBADGE_IMG} resizeMode="stretch" style={IMAGE_FILL} />
+                      <Text style={styles.proText}>PRO</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.description} numberOfLines={2}>{deck.description}</Text>
+                <View style={styles.meta}>
+                  {showWordCount && deck.words.length > 0 && (
+                    <Text style={styles.metaText}>{deck.words.length} słów</Text>
+                  )}
+                  {deck.difficulty && (
+                    <Text style={styles.metaText}>· {DIFFICULTY_LABEL[deck.difficulty] ?? deck.difficulty}</Text>
+                  )}
+                </View>
+              </View>
+            </View>
+          </Pressable>
+        </View>
+      ) : (
       <LinearGradient
         colors={[bevelTop, bevelBot]}
         start={{ x: 0, y: 0 }}
@@ -139,6 +207,7 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
           </View>
         </Pressable>
       </LinearGradient>
+      )}
     </Animated.View>
   );
 }

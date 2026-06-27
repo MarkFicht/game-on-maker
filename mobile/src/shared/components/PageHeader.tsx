@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { router } from 'expo-router';
 import { MuteButton } from './MuteButton';
@@ -13,6 +12,11 @@ import { usePersistentHeaderConfig } from './HeaderConfig';
 // no press state, so these are just two always-rendered static images.
 const BADGE_BEVEL_IMG = require('../../../assets/gradients/badge_bevel.png');
 const BADGE_DEPTH_TITLE_IMG = require('../../../assets/gradients/badge_depth_title.png');
+// HeaderBtn's bevel/depth — same colors as MuteButton, shared images.
+const CIRCLE_BEVEL_CONVEX_IMG = require('../../../assets/gradients/circle_bevel_convex.png');
+const CIRCLE_BEVEL_CONCAVE_IMG = require('../../../assets/gradients/circle_bevel_concave.png');
+const CIRCLE_DEPTH_CONVEX_IMG = require('../../../assets/gradients/circle_depth_convex.png');
+const CIRCLE_DEPTH_CONCAVE_IMG = require('../../../assets/gradients/circle_depth_concave.png');
 const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
 
 interface PageHeaderProps {
@@ -69,45 +73,22 @@ function HeaderBtn({ onPress, label }: { onPress: () => void; label: string }) {
         style={styles.btnClip}
         accessibilityRole="button"
       >
-        {/* Convex bevel — fades out on press */}
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity, borderRadius: BTN / 2 }]}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.35)', 'rgba(0,0,0,0.12)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={[StyleSheet.absoluteFill, { borderRadius: BTN / 2 }]}
-          />
+        {/* btnClip (above) is the ONLY clip boundary for this whole button —
+            documented Android RN bug: nested Views/Images that each repeat
+            the same borderRadius render the circle as a faceted polygon.
+            None of the layers below declare their own borderRadius/overflow. */}
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity }]}>
+          <Image source={CIRCLE_BEVEL_CONVEX_IMG} resizeMode="stretch" style={IMAGE_FILL} />
         </Animated.View>
-        {/* Concave bevel — fades in on press */}
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim, borderRadius: BTN / 2 }]}>
-          <LinearGradient
-            colors={['rgba(0,0,0,0.22)', 'rgba(255,255,255,0.22)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={[StyleSheet.absoluteFill, { borderRadius: BTN / 2 }]}
-          />
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim }]}>
+          <Image source={CIRCLE_BEVEL_CONCAVE_IMG} resizeMode="stretch" style={IMAGE_FILL} />
         </Animated.View>
-        {/* Inner circle — overlays cross-fade, clips content to circle */}
         <View style={styles.btnInner}>
-          <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity, borderRadius: BTN / 2 }]}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.24)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.20)']}
-              locations={[0, 0.38, 0.62, 1]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={[StyleSheet.absoluteFill, { borderRadius: BTN / 2 }]}
-              pointerEvents="none"
-            />
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: convexOpacity }]}>
+            <Image source={CIRCLE_DEPTH_CONVEX_IMG} resizeMode="stretch" style={IMAGE_FILL} />
           </Animated.View>
-          <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim, borderRadius: BTN / 2 }]}>
-            <LinearGradient
-              colors={['rgba(0,0,0,0.18)', 'rgba(0,0,0,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.18)']}
-              locations={[0, 0.38, 0.62, 1]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={[StyleSheet.absoluteFill, { borderRadius: BTN / 2 }]}
-              pointerEvents="none"
-            />
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: pressAnim }]}>
+            <Image source={CIRCLE_DEPTH_CONCAVE_IMG} resizeMode="stretch" style={IMAGE_FILL} />
           </Animated.View>
           {label === '←' ? <BackChevron /> : <Text style={styles.btnLabel}>{label}</Text>}
         </View>
@@ -245,10 +226,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.40,
     shadowRadius: 6,
     // Android only honors `elevation` (shadowColor/Offset/Opacity/Radius are
-    // iOS-only) and renders it as its own fixed Material shadow shape —
-    // toned down from 5 since it was showing as a halo/ring around the
-    // circular button on Android.
-    elevation: 2,
+    // iOS-only). Confirmed by direct A/B test (elevation:0 vs >0, identical
+    // screenshot region otherwise): any non-zero elevation on this perfectly
+    // circular view makes Android render its Material outline as a faceted
+    // octagon instead of a smooth circle — not a clipping/Image issue at
+    // all. 0 trades away the Android drop shadow for a correct circle;
+    // iOS keeps its shadowXxx (unaffected, those are iOS-only already).
+    elevation: 0,
   },
   btnClip: {
     width: BTN,
@@ -256,15 +240,14 @@ const styles = StyleSheet.create({
     borderRadius: BTN / 2,
     overflow: 'hidden',
   },
-  // Explicit circular inner — clips overlay gradients to circle
+  // No borderRadius/overflow of its own — btnClip above is the single clip
+  // boundary for the whole button (see comment at the JSX call site).
   btnInner: {
     width: BTN,
     height: BTN,
-    borderRadius: BTN / 2,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
-    overflow: 'hidden',
   },
   btnLabel: {
     fontSize: 22,

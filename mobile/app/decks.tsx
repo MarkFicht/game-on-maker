@@ -1,15 +1,17 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet, Animated } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Animated, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
 import { router } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { DeckCard } from '../src/game/components';
 import { getFreeDecks, getPremiumDecks } from '../src/game/decks';
 import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
 import { GradientBackground, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
 import type { Deck } from '../src/game/types';
+
+const PREMIUM_BANNER_IMG = require('../assets/gradients/decks_premium_banner.png');
+const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
 
 function SlideCard({ delay, children }: { delay: number; children: React.ReactNode }) {
   const opacity = useRef(new Animated.Value(0)).current;
@@ -166,16 +168,14 @@ export default function DecksScreen() {
           ))}
 
           {!isPremium && (
-            <LinearGradient
-              colors={['rgba(67,56,202,0.60)', 'rgba(49,46,129,0.50)']}
-              style={styles.premiumBanner}
-            >
+            <View style={styles.premiumBanner}>
+              <Image source={PREMIUM_BANNER_IMG} resizeMode="stretch" style={IMAGE_FILL} />
               <Text style={styles.bannerEmoji}>👑</Text>
               <View style={styles.bannerContent}>
                 <Text style={styles.bannerTitle}>Odblokuj Premium</Text>
                 <Text style={styles.bannerSub}>Dostęp do wszystkich {premiumDecks.length} talii premium</Text>
               </View>
-            </LinearGradient>
+            </View>
           )}
 
           </Animated.View>
@@ -237,6 +237,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md,
     borderRadius: borderRadius.lg,
+    overflow: 'hidden',
     marginTop: spacing.sm,
     borderWidth: 1,
     borderColor: 'rgba(129,120,255,0.40)',

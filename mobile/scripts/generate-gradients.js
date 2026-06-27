@@ -60,13 +60,19 @@ function over(top, bottom) {
   return [blend(tr, br), blend(tg, bg), blend(tb, bb), outA * 255];
 }
 
-function writePng(name, pixelAt) {
-  const png = new PNG({ width: WIDTH, height: HEIGHT });
-  for (let y = 0; y < HEIGHT; y++) {
-    const t = y / (HEIGHT - 1);
-    const [r, g, b, a] = pixelAt(t);
-    for (let x = 0; x < WIDTH; x++) {
-      const idx = (WIDTH * y + x) << 2;
+// pixelAt(t) — same color for every x in a row (t = y/(h-1)). Used for
+// vertical gradients, where every row is a solid color.
+function writePng(name, pixelAt, w = WIDTH, h = HEIGHT) {
+  writePng2D(name, (x, y) => pixelAt(y / (h - 1)), w, h);
+}
+
+// pixelAt2D(x, y) — full per-pixel control. Used for radial gradients.
+function writePng2D(name, pixelAt2D, w = WIDTH, h = HEIGHT) {
+  const png = new PNG({ width: w, height: h });
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const [r, g, b, a] = pixelAt2D(x, y);
+      const idx = (w * y + x) << 2;
       png.data[idx] = Math.round(r);
       png.data[idx + 1] = Math.round(g);
       png.data[idx + 2] = Math.round(b);
@@ -78,23 +84,49 @@ function writePng(name, pixelAt) {
   png.pack().pipe(fs.createWriteStream(outPath)).on('finish', () => console.log('wrote', outPath));
 }
 
-// colors: string[], locations: number[] in [0,1] same length as colors (or omitted = evenly spaced)
-function generateVerticalGradient(name, colors, locations) {
-  writePng(name, (t) => colorAt(colors, locations, t));
+// colors: string[], locations: number[] in [0,1] same length as colors (or omitted = evenly spaced).
+// dims: optional {width, height} override — e.g. for circular buttons, whose
+// bounding box is square rather than a wide rectangle like Button.tsx.
+function generateVerticalGradient(name, colors, locations, dims) {
+  writePng(name, (t) => colorAt(colors, locations, t), dims?.width, dims?.height);
+}
+
+// Same as generateVerticalGradient but left-to-right (DeckCard's tint/PRO
+// badge gradients use start={x:0,y:0} end={x:1,y:0} — horizontal).
+function generateHorizontalGradient(name, colors, locations, dims) {
+  const w = dims?.width ?? WIDTH;
+  const h = dims?.height ?? HEIGHT;
+  writePng2D(name, (x) => colorAt(colors, locations, x / (w - 1)), w, h);
+}
+
+// Radial gradient — t=0 at the image center, t=1 at the inscribed circle's
+// edge (not the square's corner, which sits outside the circular clip and
+// would never be visible). For "3D sphere" bevels on perfectly round
+// buttons, where a vertical gradient doesn't read as a dome/dent at all.
+function generateRadialGradient(name, colors, locations, dims) {
+  const w = dims?.width ?? WIDTH;
+  const h = dims?.height ?? HEIGHT;
+  const cx = (w - 1) / 2, cy = (h - 1) / 2;
+  const maxR = Math.min(w, h) / 2;
+  writePng2D(name, (x, y) => {
+    const d = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+    const t = Math.min(d / maxR, 1);
+    return colorAt(colors, locations, t);
+  }, w, h);
 }
 
 // Pre-composites one or more overlay gradients on top of a base gradient —
 // only valid when every layer shares the exact same clip bounds (otherwise
 // the combined image won't match having drawn them as separate, separately
 // clipped, layers).
-function generateComposite(name, layers) {
+function generateComposite(name, layers, dims) {
   writePng(name, (t) => {
     let px = colorAt(layers[0].colors, layers[0].locations, t);
     for (let i = 1; i < layers.length; i++) {
       px = over(colorAt(layers[i].colors, layers[i].locations, t), px);
     }
     return px;
-  });
+  }, dims?.width, dims?.height);
 }
 
 // Must mirror app/settings.tsx's color stops exactly.
@@ -184,3 +216,68 @@ generateVerticalGradient(
   ['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.18)'],
   [0, 0.38, 0.62, 1],
 );
+
+// ── Circular icon buttons (PageHeader's HeaderBtn ⚙️/←, MuteButton — the
+// latter is reused as-is for the in-game HUD's mute/pause buttons, so this
+// covers all three call sites). Square bounding box, not a wide rectangle
+// like Button.tsx — a 1024-wide source would over-magnify the *height* axis
+// here, so these get their own near-square source instead. HeaderBtn and
+// MuteButton already shared identical colors, so one set covers both.
+// Small — radial gradients don't compress nearly as well as vertical ones
+// (no repeated rows), and the button itself is only ~52dp; 256px made each
+// of these ~40KB. Uniform square upscale (not a disproportionate
+// width-vs-height stretch like Button.tsx needed), so a small source is safe.
+const CIRCLE_DIMS = { width: 64, height: 64 };
+// Radial, not vertical — a top-to-bottom gradient clipped into a circle
+// doesn't read as a 3D dome/dent at all. Center→edge instead — swapped
+// once more per direct user feedback, this direction is the one that
+// actually reads as a convincing press-down on this device.
+generateRadialGradient('circle_bevel_convex', ['rgba(255,255,255,0.20)', 'rgba(0,0,0,0.24)'], undefined, CIRCLE_DIMS);
+generateRadialGradient('circle_bevel_concave', ['rgba(0,0,0,0.16)', 'rgba(255,255,255,0.20)'], undefined, CIRCLE_DIMS);
+generateRadialGradient('circle_depth_convex', ['rgba(255,255,255,0.12)', 'rgba(0,0,0,0.10)'], undefined, CIRCLE_DIMS);
+generateRadialGradient('circle_depth_concave', ['rgba(0,0,0,0.10)', 'rgba(255,255,255,0.12)'], undefined, CIRCLE_DIMS);
+
+// ── DeckCard (decks screen) — bevel/tint depend on each deck's own
+// `color`, but that's a small, fixed set (one hex per deck in decks.ts).
+// Pre-bake one bevel+tint pair per color; DeckCard.tsx falls back to a
+// live LinearGradient for any color not in this list (e.g. a deck added
+// later, before this script is re-run for it).
+function hexToRgb(hex) {
+  const n = parseInt(hex.replace('#', ''), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+// Mirrors DeckCard.tsx's computeBevel(): top = color blended 40% toward
+// white, bottom = color at 60% brightness.
+function deckBevelColors(hex) {
+  const [r, g, b] = hexToRgb(hex);
+  const top = `rgb(${Math.round(0.4 * 255 + 0.6 * r)},${Math.round(0.4 * 255 + 0.6 * g)},${Math.round(0.4 * 255 + 0.6 * b)})`;
+  const bot = `rgb(${Math.round(0.6 * r)},${Math.round(0.6 * g)},${Math.round(0.6 * b)})`;
+  return [top, bot];
+}
+function hexToRgba(hex, alpha) {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+// Must mirror every `color:` value in src/game/decks.ts (DeckCard.tsx's
+// DECK_COLOR_KEYS below maps deck.color back to these same hex strings).
+const DECK_COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+// DeckCard is ~118px tall in practice — closer to that than the global
+// HEIGHT keeps the vertical stretch factor small.
+const DECKCARD_DIMS = { width: WIDTH, height: 118 };
+for (const hex of DECK_COLORS) {
+  const key = hex.slice(1).toLowerCase();
+  generateVerticalGradient(`deckcard_bevel_${key}`, deckBevelColors(hex), undefined, DECKCARD_DIMS);
+  generateHorizontalGradient(`deckcard_tint_${key}`, [hexToRgba(hex, 0.18), hexToRgba(hex, 0.04)], undefined, DECKCARD_DIMS);
+}
+// Depth overlay and PRO badge are color-independent (PRO badge is always
+// primary→violet regardless of the deck), so just one shared image each.
+generateVerticalGradient(
+  'deckcard_depth',
+  ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.12)'],
+  [0, 0.35, 0.65, 1],
+  DECKCARD_DIMS,
+);
+generateHorizontalGradient('deckcard_probadge', ['#4F46E5', '#7C3AED']);
+
+// decks.tsx's "Odblokuj Premium" banner — static, single instance on screen.
+generateVerticalGradient('decks_premium_banner', ['rgba(67,56,202,0.60)', 'rgba(49,46,129,0.50)']);
