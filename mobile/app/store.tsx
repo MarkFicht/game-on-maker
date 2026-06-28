@@ -10,7 +10,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router } from '../src/shared/navigation';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePayments } from '../src/core/payments/usePayments';
 import { GradientBackground, Button, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';

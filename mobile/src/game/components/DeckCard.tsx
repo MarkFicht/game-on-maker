@@ -11,15 +11,17 @@ import type { Deck } from '../types';
 // Only covers the fixed, known set of colors in src/game/decks.ts; any other
 // color (a deck added later, before the script is re-run for it) falls back
 // to the original live LinearGradient computation below.
-const DECK_GRADIENT_MAP: Record<string, { bevel: number; tint: number }> = {
-  '#4F46E5': { bevel: require('../../../assets/gradients/deckcard_bevel_4f46e5.png'), tint: require('../../../assets/gradients/deckcard_tint_4f46e5.png') },
-  '#10B981': { bevel: require('../../../assets/gradients/deckcard_bevel_10b981.png'), tint: require('../../../assets/gradients/deckcard_tint_10b981.png') },
-  '#F59E0B': { bevel: require('../../../assets/gradients/deckcard_bevel_f59e0b.png'), tint: require('../../../assets/gradients/deckcard_tint_f59e0b.png') },
-  '#EF4444': { bevel: require('../../../assets/gradients/deckcard_bevel_ef4444.png'), tint: require('../../../assets/gradients/deckcard_tint_ef4444.png') },
-  '#8B5CF6': { bevel: require('../../../assets/gradients/deckcard_bevel_8b5cf6.png'), tint: require('../../../assets/gradients/deckcard_tint_8b5cf6.png') },
-  '#EC4899': { bevel: require('../../../assets/gradients/deckcard_bevel_ec4899.png'), tint: require('../../../assets/gradients/deckcard_tint_ec4899.png') },
+// `combined` is the color tint + the white/black depth sheen pre-composited
+// into one image (they shared the exact same absoluteFill bounds) — one
+// fewer <Image> per card than rendering them as two separate layers.
+const DECK_GRADIENT_MAP: Record<string, { bevel: number; combined: number }> = {
+  '#4F46E5': { bevel: require('../../../assets/gradients/deckcard_bevel_4f46e5.png'), combined: require('../../../assets/gradients/deckcard_combined_4f46e5.png') },
+  '#10B981': { bevel: require('../../../assets/gradients/deckcard_bevel_10b981.png'), combined: require('../../../assets/gradients/deckcard_combined_10b981.png') },
+  '#F59E0B': { bevel: require('../../../assets/gradients/deckcard_bevel_f59e0b.png'), combined: require('../../../assets/gradients/deckcard_combined_f59e0b.png') },
+  '#EF4444': { bevel: require('../../../assets/gradients/deckcard_bevel_ef4444.png'), combined: require('../../../assets/gradients/deckcard_combined_ef4444.png') },
+  '#8B5CF6': { bevel: require('../../../assets/gradients/deckcard_bevel_8b5cf6.png'), combined: require('../../../assets/gradients/deckcard_combined_8b5cf6.png') },
+  '#EC4899': { bevel: require('../../../assets/gradients/deckcard_bevel_ec4899.png'), combined: require('../../../assets/gradients/deckcard_combined_ec4899.png') },
 };
-const DECK_DEPTH_IMG = require('../../../assets/gradients/deckcard_depth.png');
 const DECK_PROBADGE_IMG = require('../../../assets/gradients/deckcard_probadge.png');
 const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
 
@@ -98,8 +100,7 @@ export function DeckCard({ deck, onSelect, isLocked = false, onUnlock, showWordC
             onPressOut={handlePressOut}
             style={styles.card}
           >
-            <Image source={baked.tint} resizeMode="stretch" style={IMAGE_FILL} />
-            <Image source={DECK_DEPTH_IMG} resizeMode="stretch" style={IMAGE_FILL} />
+            <Image source={baked.combined} resizeMode="stretch" style={IMAGE_FILL} />
             {isLocked && (
               <View style={styles.lockOverlay}>
                 <Text style={styles.lockEmoji}>🔒</Text>
@@ -219,7 +220,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.30,
     shadowRadius: 12,
-    elevation: 6,
+    // Android renders elevation's Material outline as a faceted rectangle
+    // halo while this view is animating (opacity/transform, via SlideCard
+    // and DecksScreen's section entrance) — same root cause as the circular
+    // icon buttons (see PageHeader.tsx/MuteButton.tsx). 0 drops the Android
+    // shadow; iOS keeps its shadowXxx above, unaffected.
+    elevation: 0,
     marginBottom: spacing.sm,
   },
   bevel: {

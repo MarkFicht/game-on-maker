@@ -1,10 +1,12 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, Animated, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
+import { Asset } from 'expo-asset';
 import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
-import { router } from 'expo-router';
+import { router } from '../src/shared/navigation';
 import { DeckCard } from '../src/game/components';
-import { getFreeDecks, getPremiumDecks } from '../src/game/decks';
+import { getFreeDecks, getPremiumDecks, sampleDecks } from '../src/game/decks';
 import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
 import { GradientBackground, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import { colors, spacing, borderRadius } from '../src/shared/theme';
@@ -12,23 +14,41 @@ import type { Deck } from '../src/game/types';
 
 const PREMIUM_BANNER_IMG = require('../assets/gradients/decks_premium_banner.png');
 const IMAGE_FILL = { position: 'absolute', top: -1, left: -1, right: -1, bottom: -1 } as const;
+const RANDOM_DECK_IMGS = [require('../assets/decks/random.png'), require('../assets/decks/random_premium.png')];
 
+// Self-contained: this card's own useFocusEffect is the *only* trigger for
+// its entrance, for both the very first mount (push/back never remounts an
+// already-mounted screen, so a mount-only effect never replayed on
+// refocus) and every later refocus — one mechanism, so both cases produce
+// the exact same animation with no parent coordination (no replay prop,
+// no key bump) needed.
 function SlideCard({ delay, children }: { delay: number; children: React.ReactNode }) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateX = useRef(new Animated.Value(-55)).current;
+  // expo-router's unstable useNavigation() (see app/settings.tsx) can fire
+  // this twice for one logical focus, in immediate succession — debounced.
+  const lastFocusRef = useRef(0);
 
-  useEffect(() => {
-    Animated.parallel([
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      ]),
-      Animated.sequence([
-        Animated.delay(delay + 100),
-        Animated.spring(translateX, { toValue: 0, tension: 50, friction: 5, useNativeDriver: true }),
-      ]),
-    ]).start();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const now = Date.now();
+      if (now - lastFocusRef.current < 200) return;
+      lastFocusRef.current = now;
+      opacity.setValue(0);
+      translateX.setValue(-55);
+      Animated.parallel([
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.delay(delay + 100),
+          Animated.spring(translateX, { toValue: 0, tension: 50, friction: 5, useNativeDriver: true }),
+        ]),
+      ]).start();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
 
   return (
     <Animated.View style={{ opacity, transform: [{ translateX }] }}>
@@ -47,11 +67,21 @@ function SectionTitle({ children, icon }: { children: string; icon?: string }) {
 }
 
 export default function DecksScreen() {
+  console.log('[PERF] DecksScreen render', Date.now());
   const { isPremium } = usePaymentsContext();
   useHeaderConfig({ title: 'Wybierz talię', showBack: true });
 
   const freeDecks = getFreeDecks();
   const premiumDecks = getPremiumDecks();
+
+  // TEMP PERF: see app/settings.tsx for the same pattern.
+  const layoutCounts = useRef<Record<string, number>>({});
+  const logLayout = (label: string) => (e: { nativeEvent: { layout: { y: number; height: number } } }) => {
+    const n = (layoutCounts.current[label] ?? 0) + 1;
+    layoutCounts.current[label] = n;
+    const { y, height } = e.nativeEvent.layout;
+    console.log(`[PERF] layout #${n} "${label}" y=${y} h=${height}`, Date.now());
+  };
 
   const anims = useMemo(() => [
     makeEntranceAnim(), // random section
@@ -59,7 +89,39 @@ export default function DecksScreen() {
     makeEntranceAnim(), // premium section
   ], []);
 
-  useEffect(() => { startEntranceAll(anims, 90); }, []);
+  // Pre-decode every deck image while the user is still browsing this list
+  // (they're already shown here, just smaller) — game.tsx's "ready" screen
+  // waits for its own larger Image's onLoad before animating in, so having
+  // it already decoded/cached by then avoids that wait almost entirely.
+  // Fire-and-forget: no loading state needed, this is purely a head start.
+  useEffect(() => {
+    Promise.all(
+      [...sampleDecks.map(d => d.image), ...RANDOM_DECK_IMGS]
+        .filter(Boolean)
+        .map(img => Asset.fromModule(img).downloadAsync()),
+    ).catch(() => {});
+  }, []);
+
+  // useFocusEffect (not useEffect) — router.back() refocuses this screen
+  // without remounting it (push keeps it mounted), so a plain useEffect
+  // with [] deps only ever ran once, on the very first visit. Replays just
+  // the section-level fade+slide on every focus — see SlideCard above for
+  // why per-card replay isn't worth it.
+  //
+  // expo-router's unstable useNavigation() (see app/settings.tsx) can tear
+  // down and recreate this whole effect twice for one logical focus, in
+  // immediate succession — debounced below.
+  const lastFocusRef = useRef(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      const now = Date.now();
+      if (now - lastFocusRef.current < 200) return;
+      lastFocusRef.current = now;
+      startEntranceAll(anims, 90);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
 
   const handleSelect = (deck: Deck) => {
     router.push({ pathname: '/game', params: { deckId: deck.id } });
@@ -94,7 +156,7 @@ export default function DecksScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Random */}
-          <Animated.View style={entranceStyle(anims[0])}>
+          <Animated.View style={entranceStyle(anims[0])} onLayout={logLayout('Random')}>
           <SectionTitle icon="🎲">Losowe talie</SectionTitle>
           <SlideCard delay={0}>
           <DeckCard
@@ -136,7 +198,7 @@ export default function DecksScreen() {
           <View style={styles.separator} />
 
           {/* Free */}
-          <Animated.View style={entranceStyle(anims[1])}>
+          <Animated.View style={entranceStyle(anims[1])} onLayout={logLayout('Free')}>
           <SectionTitle icon="🆓">Darmowe talie</SectionTitle>
           {freeDecks.map((deck, i) => (
             <SlideCard key={deck.id} delay={90 + i * 130}>
@@ -149,7 +211,7 @@ export default function DecksScreen() {
           <View style={styles.separator} />
 
           {/* Premium */}
-          <Animated.View style={entranceStyle(anims[2])}>
+          <Animated.View style={entranceStyle(anims[2])} onLayout={logLayout('Premium')}>
           <View style={styles.premiumHeader}>
             <SectionTitle icon="👑">Talie premium</SectionTitle>
             {!isPremium && (

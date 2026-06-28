@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useState, useRef, useMemo } from 'react';
-import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
+import { makeEntranceAnim, startEntranceAll, entranceStyle, deferEntrance } from '../src/shared/animation/entrance';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { router } from '../src/shared/navigation';
 import * as Haptics from 'expo-haptics';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { TimerRing, WordCard, ResultsView } from '../src/game/components';
@@ -55,6 +56,16 @@ export default function GameScreen() {
   showAdRef.current = showAd;
 
   const deck = deckId ? getDeckById(deckId) : null;
+
+  // The "ready" entrance animation used to start before deck.image had
+  // actually decoded — Image has an explicit width/height so it doesn't
+  // look like an obvious culprit, but the decode completing mid-spring
+  // still triggered a real layout pass (measured via onLayout: height and
+  // y both shifted partway through), visible as the card/button pausing
+  // then snapping the rest of the way. Gate the animation start on the
+  // image actually being ready, not just "interactions" having settled.
+  const [imageReady, setImageReady] = useState(() => !deck?.image);
+  useEffect(() => { setImageReady(!deck?.image); }, [deck]);
 
   // Screen rotation — unlock only during active game, portrait everywhere else
   const isActivelyPlaying = gamePhase === 'playing' && state.status === 'playing';
@@ -150,8 +161,13 @@ export default function GameScreen() {
   );
 
   useLayoutEffect(() => {
-    if (gamePhase === 'ready') startEntranceAll([readyAnim]);
-  }, [gamePhase]);
+    if (gamePhase !== 'ready' || !imageReady) return;
+    // Also see app/settings.tsx for the expo-router redundant-re-render
+    // explanation — deferEntrance dodges that, separately from the
+    // imageReady gate above which dodges the image-decode layout shift.
+    const handle = deferEntrance(() => startEntranceAll([readyAnim]));
+    return () => handle.cancel();
+  }, [gamePhase, imageReady]);
 
   useEffect(() => {
     if (state.status !== 'paused') return;
@@ -244,7 +260,7 @@ export default function GameScreen() {
           <View style={{ height: HEADER_BAR_HEIGHT }} />
           <Animated.View style={[styles.centeredFull, entranceStyle(readyAnim)]}>
             {deck.image
-              ? <Image source={deck.image} style={[styles.deckImage, { marginBottom: -10 }]} />
+              ? <Image source={deck.image} style={[styles.deckImage, { marginBottom: -10 }]} onLoad={() => setImageReady(true)} />
               : <Text style={styles.deckEmoji}>{deck.icon}</Text>}
             <Text style={styles.deckName}>{deck.name}</Text>
             <Text style={styles.deckMeta}>{deck.words.length} słów · {deck.difficulty}</Text>

@@ -19,6 +19,7 @@ interface PaymentsProviderProps {
 export function PaymentsProvider({ children }: PaymentsProviderProps) {
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  console.log('[PERF] PaymentsProvider render', Date.now());
 
   useEffect(() => {
     initializePurchases(setIsPremium, setIsLoading);

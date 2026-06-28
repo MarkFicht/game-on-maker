@@ -1,8 +1,8 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Animated, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { makeEntranceAnim, startEntranceAll, entranceStyle } from '../src/shared/animation/entrance';
+import { router } from '../src/shared/navigation';
+import { makeEntranceAnim, startEntranceAll, entranceStyle, deferEntrance } from '../src/shared/animation/entrance';
 
 // Pre-baked PNGs for the fixed (non-dynamic) gradients below — see
 // scripts/generate-gradients.js. A bitmap blit is cheaper for the GPU to
@@ -166,7 +166,8 @@ function SettingRow({ label, children }: { label: string; children: React.ReactN
 
 export default function SettingsScreen() {
   const { settings, updateSettings, loading } = useSettings();
-  const { restore, isRestoring } = usePayments();
+  const { restore, isRestoring, isPremium, isLoading: paymentsLoading } = usePayments();
+  console.log('[PERF] SettingsScreen render', JSON.stringify({ loading, roundDuration: settings.roundDuration, soundEnabled: settings.soundEnabled, isRestoring, isPremium, paymentsLoading }), Date.now());
   useHeaderConfig({ title: 'Ustawienia', showBack: true });
 
   const anims = useMemo(() => [
@@ -176,7 +177,34 @@ export default function SettingsScreen() {
     makeEntranceAnim(), // Prawne
   ], []);
 
-  useEffect(() => { startEntranceAll(anims); }, []);
+  useEffect(() => {
+    console.log('[PERF] SettingsScreen mounted (useEffect)', Date.now());
+    // expo-router's useNavigation() (used internally by useHeaderConfig's
+    // useFocusEffect) returns an unstable reference that changes on *any*
+    // navigation in the app — confirmed via its source in
+    // node_modules/expo-router/build/useFocusEffect.js, deps array
+    // [effect, navigation, optionalNavigation]. That causes a redundant
+    // re-render of this screen ~300-400ms after mount (known, accepted,
+    // unfixed expo-router issue: expo/expo#35383, #40443) — landing right
+    // as "Gra" (the only section with delay:0) is mid-entrance-animation,
+    // visible as a stutter. runAfterInteractions defers the animation start
+    // until that settles, instead of guessing a fixed delay.
+    const handle = deferEntrance(() => {
+      startEntranceAll(anims);
+    });
+    return () => handle.cancel();
+  }, []);
+
+  // TEMP PERF: logs every onLayout call per section, including any *repeat*
+  // calls after the first — a section re-laying-out after its first pass is
+  // exactly what a "jump" would look like (position changing post-mount).
+  const layoutCounts = useRef<Record<string, number>>({});
+  const logLayout = (label: string) => (e: { nativeEvent: { layout: { y: number; height: number } } }) => {
+    const n = (layoutCounts.current[label] ?? 0) + 1;
+    layoutCounts.current[label] = n;
+    const { y, height } = e.nativeEvent.layout;
+    console.log(`[PERF] layout #${n} "${label}" y=${y} h=${height}`, Date.now());
+  };
 
   if (loading) {
     return (
@@ -202,7 +230,7 @@ export default function SettingsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Game settings */}
-          <Animated.View style={entranceStyle(anims[0])}>
+          <Animated.View style={entranceStyle(anims[0])} onLayout={logLayout('Gra')}>
           <GlassCard title="Gra" icon="🎮">
             <Text style={styles.durationLabel}>
               Czas rundy: <Text style={styles.durationValue}>{settings.roundDuration}s</Text>
@@ -222,7 +250,7 @@ export default function SettingsScreen() {
           </Animated.View>
 
           {/* Sound & Haptics */}
-          <Animated.View style={entranceStyle(anims[1])}>
+          <Animated.View style={entranceStyle(anims[1])} onLayout={logLayout('Dzwiek')}>
           <GlassCard title="Dźwięk i haptyka" icon="🔔">
             <SettingRow label="Efekty dźwiękowe">
               <CustomSwitch value={settings.soundEnabled} onValueChange={v => updateSettings({ soundEnabled: v })} />
@@ -236,7 +264,7 @@ export default function SettingsScreen() {
           </Animated.View>
 
           {/* Purchases */}
-          <Animated.View style={entranceStyle(anims[2])}>
+          <Animated.View style={entranceStyle(anims[2])} onLayout={logLayout('Zakupy')}>
           <GlassCard title="Zakupy" icon="💳">
             <Button
               label={isRestoring ? 'Przywracanie…' : 'Przywróć zakupy'}
@@ -250,7 +278,7 @@ export default function SettingsScreen() {
           </Animated.View>
 
           {/* Legal — mirrors web's Settings legal section */}
-          <Animated.View style={entranceStyle(anims[3])}>
+          <Animated.View style={entranceStyle(anims[3])} onLayout={logLayout('Prawne')}>
           <GlassCard title="Prawne" icon="📄">
             <Button
               label="Polityka prywatności"

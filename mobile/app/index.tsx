@@ -7,7 +7,8 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
+import { router } from '../src/shared/navigation';
 import { Button, GradientBackground, useHeaderConfig, HEADER_BAR_HEIGHT } from '../src/shared/components';
 import { usePaymentsContext } from '../src/core/payments/PaymentsProvider';
 import { useAppReady } from '../src/core/AppReadyContext';

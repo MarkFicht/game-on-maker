@@ -1,9 +1,24 @@
-import { Animated } from 'react-native';
+import { Animated, InteractionManager, Platform } from 'react-native';
 
 export type EntranceAnim = {
   opacity: Animated.Value;
   translateY: Animated.Value;
 };
+
+// InteractionManager.runAfterInteractions exists to dodge a *native*
+// timing issue (expo-router's unstable useNavigation() re-rendering the
+// screen ~300-400ms after mount — see app/settings.tsx). Web doesn't have
+// that problem, and react-native-web's InteractionManager isn't tuned the
+// same way — deferring through it there just adds a visible delay before
+// content fades in, on top of an already-empty background. Run directly
+// on web, defer on native.
+export function deferEntrance(run: () => void): { cancel: () => void } {
+  if (Platform.OS === 'web') {
+    run();
+    return { cancel: () => {} };
+  }
+  return InteractionManager.runAfterInteractions(run);
+}
 
 // ── Sway (continuous oscillation) ────────────────────────────────────────────
 // Full-cycle sequence: 0 → +amp → -amp → 0
@@ -65,12 +80,20 @@ function makeOne(anim: EntranceAnim, delay: number): Animated.CompositeAnimation
   ]);
 }
 
-export function startEntranceAll(anims: EntranceAnim[], delayBetween = 110): void {
+// Returns the composite animation so a caller whose effect can re-fire more
+// than once per logical event (e.g. useFocusEffect under expo-router's
+// unstable useNavigation() — see app/settings.tsx) can .stop() a still-running
+// previous play-through before starting a new one. Restarting via setValue()
+// while the old animation is still mid-flight and driving the same values
+// fights it instead of replacing it — looks like "some other animation".
+export function startEntranceAll(anims: EntranceAnim[], delayBetween = 110): Animated.CompositeAnimation {
   anims.forEach(a => {
     a.opacity.setValue(0);
     a.translateY.setValue(24);
   });
-  Animated.parallel(anims.map((anim, i) => makeOne(anim, i * delayBetween))).start();
+  const composite = Animated.parallel(anims.map((anim, i) => makeOne(anim, i * delayBetween)));
+  composite.start();
+  return composite;
 }
 
 export function entranceStyle(anim: EntranceAnim): {

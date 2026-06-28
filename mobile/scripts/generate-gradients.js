@@ -129,6 +129,21 @@ function generateComposite(name, layers, dims) {
   }, dims?.width, dims?.height);
 }
 
+// Composites a HORIZONTAL base gradient with a VERTICAL overlay gradient —
+// each pixel depends on both x and y, unlike generateComposite above (same
+// axis only). For layers that share identical absoluteFill bounds but were
+// drawn in different directions (e.g. DeckCard's color tint, left-to-right,
+// under its white/black depth sheen, top-to-bottom).
+function generateCombinedAxes(name, base, overlay, dims) {
+  const w = dims?.width ?? WIDTH;
+  const h = dims?.height ?? HEIGHT;
+  writePng2D(name, (x, y) => {
+    const basePx = colorAt(base.colors, base.locations, x / (w - 1));
+    const overlayPx = colorAt(overlay.colors, overlay.locations, y / (h - 1));
+    return over(overlayPx, basePx);
+  }, w, h);
+}
+
 // Must mirror app/settings.tsx's color stops exactly.
 generateVerticalGradient('duration_active', ['#9590EF', '#2F2A89']);
 generateVerticalGradient('duration_inactive', ['rgba(149,144,239,0.22)', 'rgba(47,42,137,0.22)']);
@@ -264,19 +279,25 @@ const DECK_COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC
 // DeckCard is ~118px tall in practice — closer to that than the global
 // HEIGHT keeps the vertical stretch factor small.
 const DECKCARD_DIMS = { width: WIDTH, height: 118 };
+// Color tint (horizontal) and the white/black depth sheen (vertical) sit
+// directly on top of each other with identical absoluteFill bounds inside
+// `card` — pre-compositing them drops one <Image> per DeckCard for free.
+const DECKCARD_DEPTH_OVERLAY = {
+  colors: ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.12)'],
+  locations: [0, 0.35, 0.65, 1],
+};
 for (const hex of DECK_COLORS) {
   const key = hex.slice(1).toLowerCase();
   generateVerticalGradient(`deckcard_bevel_${key}`, deckBevelColors(hex), undefined, DECKCARD_DIMS);
-  generateHorizontalGradient(`deckcard_tint_${key}`, [hexToRgba(hex, 0.18), hexToRgba(hex, 0.04)], undefined, DECKCARD_DIMS);
+  generateCombinedAxes(
+    `deckcard_combined_${key}`,
+    { colors: [hexToRgba(hex, 0.18), hexToRgba(hex, 0.04)] },
+    DECKCARD_DEPTH_OVERLAY,
+    DECKCARD_DIMS,
+  );
 }
-// Depth overlay and PRO badge are color-independent (PRO badge is always
-// primary→violet regardless of the deck), so just one shared image each.
-generateVerticalGradient(
-  'deckcard_depth',
-  ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.12)'],
-  [0, 0.35, 0.65, 1],
-  DECKCARD_DIMS,
-);
+// PRO badge is color-independent (always primary→violet regardless of the
+// deck), so just one shared image.
 generateHorizontalGradient('deckcard_probadge', ['#4F46E5', '#7C3AED']);
 
 // decks.tsx's "Odblokuj Premium" banner — static, single instance on screen.

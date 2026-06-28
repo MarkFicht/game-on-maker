@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated, Image } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { router } from 'expo-router';
+import { router } from '../navigation';
 import { MuteButton } from './MuteButton';
 import { colors, spacing, borderRadius } from '../theme';
 import { useSettings } from '../../game/hooks/useSettings';

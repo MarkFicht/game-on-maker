@@ -1,5 +1,6 @@
-import React, { createContext, useCallback, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useLayoutEffect, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
+import { unlockNavGuard } from '../navigation/navGuard';
 
 export interface HeaderConfig {
   title?: string;
@@ -26,6 +27,7 @@ const HeaderConfigSetterContext = createContext<(config: HeaderConfig) => void>(
 
 export function HeaderConfigProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<HeaderConfig>(DEFAULT_CONFIG);
+  console.log('[PERF] HeaderConfigProvider render', Date.now());
   return (
     <HeaderConfigSetterContext.Provider value={setConfig}>
       <HeaderConfigValueContext.Provider value={config}>
@@ -48,9 +50,32 @@ export function usePersistentHeaderConfig(): HeaderConfig {
  */
 export function useHeaderConfig(config: HeaderConfig): void {
   const setConfig = useContext(HeaderConfigSetterContext);
+
+  // expo-router's useFocusEffect doesn't actually fire until its own
+  // useOptionalNavigation() resolves (starts at null, needs an extra
+  // effect round-trip) — measured ~150-400ms after this screen's first
+  // render, even though the screen's own data (and thus the title it
+  // wants to show) was already correct on that first render. That gap
+  // was very visible on game.tsx: deck content showing instantly while
+  // the header still showed the previous screen's title. useLayoutEffect
+  // fires synchronously right after this screen's own first paint, so the
+  // header catches up immediately instead of waiting on that hook.
+  useLayoutEffect(() => {
+    setConfig(config);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.title, config.isHome, config.showBack, config.onBack, config.visible]);
+
   useFocusEffect(
     useCallback(() => {
       setConfig(config);
+      // This screen is now the focused one — whatever navigation got it
+      // here (push or back) is done. Every screen calls useHeaderConfig,
+      // so this is the one place that needs to know about it; no per-screen
+      // wiring, and it naturally covers both push (fresh mount, redundant
+      // with the layout effect above but harmless) and back (refocusing an
+      // already-mounted screen, where the layout effect above does *not*
+      // re-run) the same way.
+      unlockNavGuard();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [config.title, config.isHome, config.showBack, config.onBack, config.visible]),
   );
