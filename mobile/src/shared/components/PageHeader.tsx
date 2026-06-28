@@ -107,6 +107,7 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
   const titleOpacity  = useRef(new Animated.Value(1)).current;
   const titleSlide    = useRef(new Animated.Value(0)).current;
   const titleAnim     = useRef<Animated.CompositeAnimation | null>(null);
+  const enterTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevTitleRef  = useRef(title);
   // What's actually drawn — lags behind `title` until the exit animation
   // finishes, so the OLD text is still what's visible while it slides away.
@@ -116,6 +117,7 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
     if (prevTitleRef.current === title) return;
     prevTitleRef.current = title;
     titleAnim.current?.stop();
+    if (enterTimer.current) clearTimeout(enterTimer.current);
 
     // Exit: current title fades + slides up (mirror of the entrance).
     titleAnim.current = Animated.parallel([
@@ -125,15 +127,28 @@ export function PageHeader({ title = 'Dummy', isHome = false, showBack = false, 
     titleAnim.current.start(({ finished }) => {
       if (!finished) return; // superseded by a newer title change — let that one finish the job
       setDisplayTitle(title);
-      titleAnim.current = Animated.parallel([
-        // Fast opacity so the (mostly-opaque) badge covers the busy page
-        // background quickly — only the slide should read as "slow".
-        Animated.timing(titleOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-        Animated.spring(titleSlide, { toValue: 0, tension: 32, friction: 11, useNativeDriver: true }),
-      ]);
-      titleAnim.current.start();
+      // One tick so React's re-render for the new displayTitle actually
+      // commits+paints before the enter motion starts ramping opacity up.
+      // setState here and Animated's native-driven enter both fire from
+      // this same callback, but the *enter* motion runs on the native
+      // thread immediately, independent of React's own render — without
+      // this yield, a screen with heavy mount-time work competing for the
+      // JS thread (e.g. game.tsx) could still be painting the *old* text
+      // for the first few ms the badge is visibly fading back in.
+      enterTimer.current = setTimeout(() => {
+        titleAnim.current = Animated.parallel([
+          // Fast opacity so the (mostly-opaque) badge covers the busy page
+          // background quickly — only the slide should read as "slow".
+          Animated.timing(titleOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
+          Animated.spring(titleSlide, { toValue: 0, tension: 32, friction: 11, useNativeDriver: true }),
+        ]);
+        titleAnim.current.start();
+      }, 1);
     });
-    return () => { titleAnim.current?.stop(); };
+    return () => {
+      titleAnim.current?.stop();
+      if (enterTimer.current) clearTimeout(enterTimer.current);
+    };
   }, [title]);
 
   // Show left button when: home screen (gear), explicit showBack, or custom onBack provided
