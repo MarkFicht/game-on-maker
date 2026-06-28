@@ -40,12 +40,13 @@ Play Console → Zarabianie → Produkty kupowane raz → Utwórz
 
 ### 3. RevenueCat
 ```
-[x] Konto usługi dodane jako użytkownik konta dewelopera (Konto dewelopera → Użytkownicy i uprawnienia →
-    Zaprosić użytkowników, uprawnienie Finanse) — UWAGA: strona "Dostęp do API" w Ustawieniach już nie
-    istnieje, to nie wymaga produkcyjnego wydania
+[x] Konto usługi dodane jako użytkownik konta dewelopera
 [x] JSON klucza wgrany w RevenueCat → Apps → WordRushMF → Service Account Credentials
 [x] RevenueCat: produkt premium_lifetime → entitlement "premium" → offering "default"
 [x] .env → EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID
+[x] Zakup testowy (sandbox) przechodzi end-to-end — 2026-06-28, patrz PROGRESS.md log sesji
+    po szczegóły (samo "Finance" nie wystarczyło — potrzebne 3 konkretne uprawnienia +
+    explicit dostęp do apki + 3 włączone API w Google Cloud)
 ```
 
 ### 4. Prawdziwe IDs AdMob
@@ -67,13 +68,29 @@ Play Console → Zarabianie → Produkty kupowane raz → Utwórz
 ## Rzeczy do przetestowania przed submitem
 
 ```
-[ ] Zakup premium sandbox → talie odblokowane + brak reklam
+[x] Zakup premium sandbox → przechodzi end-to-end (2026-06-28). Do potwierdzenia jeszcze:
+    talie faktycznie się odblokowują + reklamy faktycznie znikają po zakupie (sprawdzić w UI)
 [ ] Restore purchases → premium wraca
 [ ] Interstitial po 2. grze
 [ ] Firebase Auth — UID w Firebase Console po uruchomieniu
 [ ] Firestore rules — sprawdzić datę wygaśnięcia (30 dni od stworzenia projektu!)
 [ ] Offline — apka nie crashuje bez internetu
 [ ] Crash na urządzeniu z aktualnym GPS (P30 Lite ma za stary GPS — nie testuj na nim)
+```
+
+---
+
+## Dodatkowe zadania zgłoszone 2026-06-28
+
+```
+[ ] Poprawki na ekranie "wybrany deck" (app/game.tsx, faza "ready" — ekran z obrazkiem/ikoną
+    decku, nazwą, przyciskiem Start). Zakres nie sprecyzowany jeszcze — dopytać przy starcie.
+[ ] Rozbudowa systemu pakietów kupowania — dziś tylko premium_lifetime (jednorazowy zakup).
+    Zaprojektować PaymentsProvider/usePayments/store.tsx tak, by dodanie kolejnego pakietu
+    (np. kolejny tier, subskrypcja) nie wymagało przepisywania istniejącego flow zakupu —
+    sprawdzić obecną strukturę offerings (RevenueCat już wspiera wiele "packages" per
+    "offering" — store.tsx już mapuje offerings.availablePackages, więc backend może już być
+    gotowy; zweryfikować przy starcie tego zadania, nie zakładać).
 ```
 
 ---

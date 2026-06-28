@@ -5,8 +5,8 @@
 ## Aktualny status
 
 **Faza:** 8 — Publikacja (w toku)
-**Ostatnia sesja:** 2026-06-27
-**Następny krok:** Dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty, opis), potem produkt `premium_lifetime` + content rating + testy sandbox przed submitem
+**Ostatnia sesja:** 2026-06-28
+**Następny krok:** Dokończyć stronę sklepu w Play Console (grafika: ikona 512×512, feature graphic, screenshoty, opis) + content rating + produkcyjny build. Zakup sandbox `premium_lifetime` już działa end-to-end — zostało: poprawki ekranu "wybrany deck" i rozbudowa systemu pakietów (patrz ROADMAP.md, sekcja "Dodatkowe zadania zgłoszone 2026-06-28")
 
 ---
 
@@ -128,12 +128,12 @@
 **RevenueCat + AdMob:**
 - [x] RevenueCat: produkt `premium_lifetime` + entitlement `premium` + offering `default` skonfigurowane
 - [x] `.env` → `EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=goog_xxx`
-- [x] RevenueCat: service account JSON — `revenuecat@plated-client-491815-q9.iam.gserviceaccount.com` dodane jako użytkownik w Play Console (Użytkownicy i uprawnienia, uprawnienie Finanse) + JSON wgrany w RevenueCat (Service Account Credentials). Nie był potrzebny żaden "Dostęp do API" ani produkcyjne wydanie — wcześniejsza notatka o blokadzie była błędna/nieaktualna.
+- [x] RevenueCat: service account JSON — `revenuecat@plated-client-491815-q9.iam.gserviceaccount.com` dodane jako użytkownik w Play Console + JSON wgrany w RevenueCat (Service Account Credentials). "Finance" permission samo nie wystarczyło — patrz log sesji 2026-06-28 po pełną listę wymaganych uprawnień/API.
 - [x] AdMob: prawdziwe App ID → `app.json`; Interstitial + Banner Ad Units → `.env` (Rewarded ID pozostaje `TODO_FILL_LATER` — niewpięty w UI, "planowane")
-- [ ] Testowe zakupy na sandbox (fizyczne urządzenie z kontem na liście License Testers)
+- [x] Testowe zakupy na sandbox — działa end-to-end od 2026-06-28 (fizyczne urządzenie, License Tester account)
 
 **Testy przed submitem:**
-- [ ] Zakup premium sandbox → talie odblokowane + brak reklam
+- [x] Zakup premium sandbox → przechodzi end-to-end (2026-06-28). Jeszcze do potwierdzenia w UI: talie faktycznie odblokowane + reklamy faktycznie znikają po zakupie
 - [ ] Restore purchases → premium wraca
 - [ ] Firebase Auth — UID widoczny w Firebase Console po uruchomieniu
 - [ ] Firestore rules — sprawdzić datę wygaśnięcia (30 dni od stworzenia projektu!)
@@ -273,3 +273,37 @@ Po naprawie kształtu — kolejne nieporozumienie: użytkownikowi chodziło o **
 `tsc` 0 błędów, 139/139 testów, wszystko potwierdzone wizualnie przez użytkownika na urządzeniu.
 
 `tsc` 0 błędów, 139/139 testów. **Nie zbudowano jeszcze versionCode 6** — runda 2 ma być testowana przez dev client/tunnel, nie kolejny cloud build, żeby przyspieszyć iterację.
+
+### 2026-06-28 — Faza 8: Decks/Game wydajność + nawigacja — navGuard, deferEntrance, fix timingu tytułu PageHeader
+**`DeckCard.tsx` dalsza optymalizacja:** `tint` (kolor talii, poziomy gradient) i `depth` (połysk, pionowy) miały identyczne granice (absoluteFill w `card`, bez wcięcia) — połączone w jeden obrazek per kolor (`deckcard_combined_<hex>`) przez nową `generateCombinedAxes()` w `scripts/generate-gradients.js` (per-piksel kompozycja: bazowy kolor zależny od X, nakładka zależna od Y). Jeden `<Image>` mniej na kartę × 6 kolorów. `DeckCard`'s `shadow.elevation` → `0` (ten sam bug ośmiokąta/halo z poprzedniej sesji, tym razem widoczny podczas animacji wjazdu kart).
+
+**`src/shared/navigation/navGuard.ts` + `index.ts`** (nowe) — `router.push/replace/back` (re-export z `expo-router`) teraz synchronicznie sprawdza `isNavGuarded()` PRZED wykonaniem nawigacji — drugi tap w oknie `MIN_LOCK_MS` (800ms na native, zmierzone z logów jako bezpieczny margines nad realnym czasem mount+focus Decks; `0` na web, gdzie mount jest natychmiastowy) jest po prostu odrzucany, nie kolejkowany. `unlockNavGuard()` wołane z `useHeaderConfig` przy faktycznym zafokusowaniu ekranu docelowego. Wcześniejsza wersja z widzialną nakładką (`NavGuardOverlay`) — usunięta, zastąpiona tym prostszym mechanizmem.
+
+**`src/shared/animation/entrance.ts`**: nowy `deferEntrance()` — na native owija start animacji w `InteractionManager.runAfterInteractions` (dodge na redundantny re-render z niestabilnego `useNavigation()` w `expo-router`, patrz niżej), na web wywołuje natychmiast (web nie ma tego problemu, a `InteractionManager` na `react-native-web` tylko dodawał zbędne opóźnienie przed wczytaniem treści).
+
+**Naprawiony prawdziwy root cause przeskoku tytułu `PageHeader` przy zmianie ekranu:** `useHeaderConfig`'s `useFocusEffect` (z `expo-router`) nie odpala się od razu — jego wewnętrzny `useOptionalNavigation()` startuje od `null` i potrzebuje dodatkowego cyklu efektu, żeby się rozwiązać (zmierzone: ~150-400ms po pierwszym renderze ekranu, NAWET gdy dane ekranu, np. nazwa decku, były dostępne od razu). Efekt: treść ekranu (np. `game.tsx`'s deck) widoczna natychmiast, header z poprzednim tytułem jeszcze ~kilkaset ms. Fix: `useHeaderConfig` dostał DRUGI trigger — `useLayoutEffect` wołający `setConfig` synchronicznie po pierwszym renderze (działa dla ŚWIEŻEGO mountu, gdzie `config.title` itd. faktycznie się zmieniają w deps); `useFocusEffect` zostaje jako jedyny trigger dla REFOCUSU bez remountu (np. `back()` na ekran, który już był zamontowany — tam `useLayoutEffect` się nie odpala, bo deps nie zmieniły się dla TEGO ekranu).
+
+**Drugi, subtelniejszy timing bug**, znaleziony PO powyższym fixie: nawet z natychmiastowym `setConfig`, podczas fazy "enter" animacji tytułu (po zamianie `displayTitle` w callbacku `.start()`) potrafiło się przez kilka ms migać starą wartością — `setDisplayTitle` (React state) i start animacji wejścia (Animated, native-driven, niezależny od cyklu renderowania Reacta) dzieją się w TYM SAMYM callbacku, ale re-render Reacta mógł nie zdążyć się zacommitować, zanim badge zaczął być widoczny — zwłaszcza gdy ekran docelowy (np. `game.tsx`) miał ciężki mount konkurujący o wątek JS w tym samym momencie. Fix: `setTimeout(..., 1)` między swapem tekstu a startem animacji wejścia (`PageHeader.tsx`) — jeden tick dla Reacta, żeby zdążył przed animacją.
+
+**`game.tsx`'s ekran "ready"** (wybrany deck): animacja wjazdu (`readyAnim`) zatrzymywała się w połowie i doskakiwała bez animacji — przyczyna: `deck.image`'s `onLoad` (dekodowanie obrazka) kończyło się W TRAKCIE trwania sprężyny, wywołując realny przeliczenie layoutu (zmierzone: wysokość 694→626px, Y 76→103px) niezależne od postępu animacji. Fix: nowy stan `imageReady` (`true` od razu jeśli deck nie ma obrazka, inaczej ustawiany w `onLoad`) — `startEntranceAll` czeka na TO, nie tylko na `deferEntrance`.
+
+### 2026-06-28 — Faza 8: Animacja wjazdu kart na Decks — saga z antywzorcami, finalne rozwiązanie
+Użytkownik chciał, żeby powrót Game→Decks (push nie odmontowuje ekranu, więc bez dodatkowej pracy karty po powrocie po prostu stoją w finalnej pozycji, bez animacji) wyglądał identycznie jak pierwsza wizyta Home→Decks (karty wjeżdżające z lewej, sekcje fade+slide). **Trzy podejścia odrzucone po realnych bugach** (każde potwierdzone na urządzeniu jako zepsute, nie tylko teoretycznie):
+1. **`key` bumpowany przez rodzica, wymuszający pełny remount `SlideCard`** — antywzorzec (ciężki, pełne odmontowanie/zamontowanie tylko by powtórzyć 2 `Animated.timing`); dodatkowo miał bug podwójnego montowania na PIERWSZEJ wizycie (figurował zarówno w naturalnym mount-efekcie karty, jak i w bumpie z `useFocusEffect`, który ZAWSZE odpala się też synchronicznie przy mount).
+2. **`replayKey` jako zwykły prop + dependency w `useEffect`** (bez `key`) — poprawny co do zasady wzorzec React, ale wymagał ręcznego śledzenia "czy to pierwszy focus" (żeby nie zduplikować naturalnej animacji mountu) ORAZ debounce na znany bug niestabilnego `useFocusEffect` (patrz niżej) — działało, ale fragile, dużo bookkeeping do utrzymania w jednym, scentralizowanym miejscu.
+3. Stąd: **finalne rozwiązanie — `SlideCard` ma WŁASNY, samodzielny `useFocusEffect`** (nie `useEffect`), z lokalnym debounce (`if (now - lastFocusRef.current < 200) return;`). Brak `key`, brak propa od rodzica, brak koordynacji z `DecksScreen` w ogóle. Jeden mechanizm odpowiada za pierwszy mount I każdy refocus — identyczne zachowanie za darmo, bez specjalnego "pierwszy raz" bookkeepingu, bo nie ma DRUGIEGO, konkurującego triggera do zsynchronizowania.
+
+**Kluczowe odkrycie (źródło, nie spekulacja):** `node_modules/expo-router/build/useFocusEffect.js` ma `useEffect(..., [effect, navigation, optionalNavigation])` — `navigation`/`optionalNavigation` z `useNavigation()` zwraca niestabilną referencję, zmieniającą się przy KAŻDEJ nawigacji w całej apce (nie tylko tego ekranu) — to re-triggeruje CAŁY efekt (nie tylko wewnętrzny focus listener), wywołując callback dwa razy pod rząd dla jednego logicznego zafokusowania. **Nie zwracać `.stop()` w cleanupie tego efektu** — React i tak wywoła cleanup poprzedniej instancji przy wymuszonym re-run, niezależnie od tego, co robi debounce w NOWYM wywołaniu; jeśli cleanup zatrzymuje animację a debounce dropuje restart, animacja zostaje zatrzymana w pół drogi na zawsze.
+
+Zapisano jako memory (`feedback_animation_replay_on_focus.md`) — pełna lekcja na przyszłość, żeby nie odtwarzać tej samej serii bugów w innym miejscu.
+
+### 2026-06-28 — Faza 8: RevenueCat — prawdziwa przyczyna `InvalidCredentialsError` / "Credentials need attention"
+Test zakupu (konto testowe) kończył się błędem widocznym w `adb logcat`: `PurchasesError(code=InvalidCredentialsError, underlyingErrorMessage=Invalid Play Store credentials.)`, z dodatkowym (skutkowym, nie głównym) `Error computing offline CustomerInfo... Offline entitlements are not supported for one time purchases`.
+
+**Przyczyna — "Finance" permission (jedyne nadane wcześniej) nie wystarcza.** RevenueCat wymaga w Play Console (Użytkownicy i uprawnienia → konto usługi `revenuecat@...`):
+1. **Uprawnienia konta** (3 konkretne, nie ogólne "Finanse"): "Wyświetlanie informacji o aplikacji i pobieranie zbiorczych raportów" (read-only), "Wyświetlanie danych finansowych, zamówień i odpowiedzi na ankiety dotyczące rezygnacji", "Zarządzanie zamówieniami i subskrypcjami".
+2. **Uprawnienia do aplikacji** — explicit dodanie WordRushMF (samo uprawnienie na poziomie konta nie wystarcza).
+3. **3 API włączone w Google Cloud Console** (APIs & Services → Library): `androidpublisher.googleapis.com` (Google Play Android Developer API), `playdeveloperreporting.googleapis.com` (Google Play Developer Reporting API), `pubsub.googleapis.com` (Cloud Pub/Sub API) — wyszukiwanie w bibliotece czasem nie łapie dokładnej nazwy, bezpośrednie linki `console.cloud.google.com/apis/library/<api-id>` działają zawsze.
+4. **Trik "przebudzenia" walidacji** (nie trzeba czekać do 36h): Play Console → Zarabianie → Produkty kupowane raz → `premium_lifetime` → drobna zmiana opisu → Zapisz. Wymusza natychmiastową re-walidację uprawnień przez Google.
+
+Po tych 4 krokach RevenueCat dashboard wciąż pokazywał czerwone "Permissions to call subscriptions API" (jedyne z 3) — OK do zignorowania: apka ma tylko `premium_lifetime` (jednorazowy zakup), zero produktów typu subskrypcja, więc to API nie ma czego zwalidować. `inappproducts API` (istotne dla `premium_lifetime`) i `monetization API` przeszły — **zakup testowy przeszedł end-to-end**. Zaktualizowano `ROADMAP.md` (oznaczono jako zrobione + nowa sekcja "Dodatkowe zadania zgłoszone 2026-06-28": poprawki ekranu wybranego decku, rozbudowa systemu pakietów kupowania — oba bez sprecyzowanego zakresu jeszcze, do dopytania przy starcie).
